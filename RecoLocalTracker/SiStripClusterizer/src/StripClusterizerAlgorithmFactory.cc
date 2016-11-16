@@ -20,7 +20,7 @@ create(const edm::ParameterSet& conf) {
 	       conf.getParameter<unsigned>("MaxAdjacentBad"),
 	       conf.getParameter<std::string>("QualityLabel"),
 	       conf.getParameter<bool>("RemoveApvShots"),
-               clusterChargeCut(conf)
+               clusterChargeCut(conf), conf
            ));
   }
 

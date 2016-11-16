@@ -122,7 +122,8 @@ initialize(const edm::EventSetup& es) {
       COUT << "gain " << dum.size() << " " <<nn<< std::endl;
     }
   }
-  
+
+  es.get<TrackerTopologyRcd>().get(topoHandle);
 }
   
 StripClusterizerAlgorithm::Det

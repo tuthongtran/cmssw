@@ -9,10 +9,18 @@
 
 ThreeThresholdAlgorithm::
 ThreeThresholdAlgorithm(float chan, float seed, float cluster, unsigned holes, unsigned bad, unsigned adj, std::string qL, 
-			bool removeApvShots, float minGoodCharge) 
+			bool removeApvShots, float minGoodCharge,
+                        const edm::ParameterSet& pset)
   : ChannelThreshold( chan ), SeedThreshold( seed ), ClusterThresholdSquared( cluster*cluster ),
-    MaxSequentialHoles( holes ), MaxSequentialBad( bad ), MaxAdjacentBad( adj ), RemoveApvShots(removeApvShots), minGoodCharge(minGoodCharge) {
+    MaxSequentialHoles( holes ), MaxSequentialBad( bad ), MaxAdjacentBad( adj ), RemoveApvShots(removeApvShots), minGoodCharge(minGoodCharge)
+  , UsePerStripNoiseParam{pset.getUntrackedParameter<bool>("usePerStripNoiseParam", false)}
+{
   qualityLabel = (qL);
+  if ( UsePerStripNoiseParam ) {
+    NoiseParamA = SiStripParameterPerLayer(pset, "NoiseParamA");
+    NoiseParamB = SiStripParameterPerLayer(pset, "NoiseParamB");
+    NoiseParamC = SiStripParameterPerLayer(pset, "NoiseParamC");
+  }
 }
 
 template<class digiDetSet>
@@ -63,9 +71,17 @@ candidateEnded(State const & state, const uint16_t& testStrip) const {
 inline 
 void ThreeThresholdAlgorithm::
 addToCandidate(State & state, uint16_t strip, uint8_t adc) const { 
-  float Noise = state.det().noise( strip );
-  if(  adc < static_cast<uint8_t>( Noise * ChannelThreshold) || state.det().bad(strip) )
-    return;
+  float Noise{0.};
+  if ( ! UsePerStripNoiseParam ) {
+    float Noise = state.det().noise( strip );
+    if(  adc < static_cast<uint8_t>( Noise * ChannelThreshold) || state.det().bad(strip) )
+      return;
+    LogDebug("ThreeThresholdAlgorithm") << "Module " << std::hex << state.det().detId << std::dec << " noise from conditions: " << Noise;
+  } else {
+    SiStripParameterPerLayer::index sl = SiStripParameterPerLayer::getIndex(trackerTopology(), state.det().detId);
+    Noise = NoiseParamA.get(sl)*strip*strip + NoiseParamB.get(sl)*strip + NoiseParamC.get(sl);
+    LogDebug("ThreeThresholdAlgorithm") << "Module " << std::hex << state.det().detId << std::dec << " strip " << strip << " parameterized noise: " << Noise;
+  }
 
   if(state.candidateLacksSeed) state.candidateLacksSeed  =  adc < static_cast<uint8_t>( Noise * SeedThreshold);
   if(state.ADCs.empty()) state.lastStrip = strip - 1; // begin candidate

@@ -90,6 +90,7 @@ class StripClusterizerAlgorithm {
 
   std::string qualityLabel;
 
+  const TrackerTopology* const trackerTopology() const { return topoHandle.product(); }
  private:
 
   template<class T> void clusterize_(const T& input, output_t& output) const {
@@ -112,6 +113,7 @@ class StripClusterizerAlgorithm {
   edm::ESHandle<SiStripGain> gainHandle;
   edm::ESHandle<SiStripNoises> noiseHandle;
   edm::ESHandle<SiStripQuality> qualityHandle;
+  edm::ESHandle<TrackerTopology> topoHandle;
   SiStripDetCabling const * theCabling = nullptr;
   uint32_t noise_cache_id, gain_cache_id, quality_cache_id;
     

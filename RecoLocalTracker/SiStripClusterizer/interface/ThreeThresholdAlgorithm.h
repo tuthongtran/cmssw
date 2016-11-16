@@ -3,6 +3,9 @@
 #include "RecoLocalTracker/SiStripClusterizer/interface/StripClusterizerAlgorithm.h"
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripApvShotCleaner.h"
 
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "SiStripParameterPerLayer.h" // FIXME
+
 class ThreeThresholdAlgorithm final : public StripClusterizerAlgorithm {
 
   friend class StripClusterizerAlgorithmFactory;
@@ -48,7 +51,7 @@ class ThreeThresholdAlgorithm final : public StripClusterizerAlgorithm {
   template<class T> void clusterizeDetUnit_(const T&, output_t::TSFastFiller&) const;
 
   ThreeThresholdAlgorithm(float, float, float, unsigned, unsigned, unsigned, std::string qualityLabel,
-			  bool removeApvShots, float minGoodCharge);
+			  bool removeApvShots, float minGoodCharge, const edm::ParameterSet& pset);
 
 
     //constant methods with state information
@@ -69,6 +72,8 @@ class ThreeThresholdAlgorithm final : public StripClusterizerAlgorithm {
   bool RemoveApvShots;
   float minGoodCharge;
 
+  bool UsePerStripNoiseParam;
+  SiStripParameterPerLayer NoiseParamA, NoiseParamB, NoiseParamC;
 };
 
 #endif
