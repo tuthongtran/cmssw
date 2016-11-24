@@ -13,13 +13,13 @@ ThreeThresholdAlgorithm(float chan, float seed, float cluster, unsigned holes, u
                         const edm::ParameterSet& pset)
   : ChannelThreshold( chan ), SeedThreshold( seed ), ClusterThresholdSquared( cluster*cluster ),
     MaxSequentialHoles( holes ), MaxSequentialBad( bad ), MaxAdjacentBad( adj ), RemoveApvShots(removeApvShots), minGoodCharge(minGoodCharge)
-  , UsePerStripNoiseParam{pset.getUntrackedParameter<bool>("usePerStripNoiseParam", false)}
+  , UseCorrelNoiseParam{pset.getUntrackedParameter<bool>("useCorrelNoiseParam", false)}
 {
   qualityLabel = (qL);
-  if ( UsePerStripNoiseParam ) {
-    NoiseParamA = SiStripParameterPerLayer(pset, "NoiseParamA");
-    NoiseParamB = SiStripParameterPerLayer(pset, "NoiseParamB");
-    NoiseParamC = SiStripParameterPerLayer(pset, "NoiseParamC");
+  if ( UseCorrelNoiseParam ) {
+    NoiseCorrelParamA = SiStripParameterPerLayer(pset, "NoiseCorrelParamA");
+    NoiseCorrelParamB = SiStripParameterPerLayer(pset, "NoiseCorrelParamB");
+    NoiseCorrelParamC = SiStripParameterPerLayer(pset, "NoiseCorrelParamC");
   }
 }
 
@@ -71,24 +71,27 @@ candidateEnded(State const & state, const uint16_t& testStrip) const {
 inline 
 void ThreeThresholdAlgorithm::
 addToCandidate(State & state, uint16_t strip, uint8_t adc) const { 
-  float Noise{0.};
-  if ( ! UsePerStripNoiseParam ) {
-    float Noise = state.det().noise( strip );
-    if(  adc < static_cast<uint8_t>( Noise * ChannelThreshold) || state.det().bad(strip) )
-      return;
-    LogDebug("ThreeThresholdAlgorithm") << "Module " << std::hex << state.det().detId << std::dec << " noise from conditions: " << Noise;
-  } else {
-    SiStripParameterPerLayer::index sl = SiStripParameterPerLayer::getIndex(trackerTopology(), state.det().detId);
-    Noise = NoiseParamA.get(sl)*strip*strip + NoiseParamB.get(sl)*strip + NoiseParamC.get(sl);
-    LogDebug("ThreeThresholdAlgorithm") << "Module " << std::hex << state.det().detId << std::dec << " strip " << strip << " parameterized noise: " << Noise;
-  }
+  const float Noise = state.det().noise( strip );
+  if(  adc < static_cast<uint8_t>( Noise * ChannelThreshold) || state.det().bad(strip) )
+    return;
 
   if(state.candidateLacksSeed) state.candidateLacksSeed  =  adc < static_cast<uint8_t>( Noise * SeedThreshold);
-  if(state.ADCs.empty()) state.lastStrip = strip - 1; // begin candidate
+  const bool isFirstOfCand = state.ADCs.empty();
+  if(isFirstOfCand) state.lastStrip = strip - 1; // begin candidate
   while( ++state.lastStrip < strip ) state.ADCs.push_back(0); // pad holes
 
   state.ADCs.push_back( adc );
-  state.noiseSquared += Noise*Noise;
+
+  if ( UseCorrelNoiseParam && ( ! isFirstOfCand ) ) {
+    const uint16_t prevStrip = strip-1;
+    const SiStripParameterPerLayer::index sl = SiStripParameterPerLayer::getIndex(trackerTopology(), state.det().detId);
+    const float NoisePrev = state.det().noise(prevStrip);
+    const float correlNoiseContrib = 2.*Noise*NoisePrev*(NoiseCorrelParamA.get(sl)*prevStrip*prevStrip + NoiseCorrelParamB.get(sl)*prevStrip + NoiseCorrelParamC.get(sl));
+    state.noiseSquared += Noise*Noise + correlNoiseContrib;
+    LogDebug("ThreeThresholdAlgorithm") << "Module " << std::hex << state.det().detId << std::dec << " strip " << strip << " noise: " << Noise << ", previous: " << NoisePrev << " --> adding noise**2 contribution due to correlation: " << correlNoiseContrib;
+  } else {
+    state.noiseSquared += Noise*Noise;
+  }
 }
 
 template <class T>

@@ -72,8 +72,8 @@ class ThreeThresholdAlgorithm final : public StripClusterizerAlgorithm {
   bool RemoveApvShots;
   float minGoodCharge;
 
-  bool UsePerStripNoiseParam;
-  SiStripParameterPerLayer NoiseParamA, NoiseParamB, NoiseParamC;
+  bool UseCorrelNoiseParam;
+  SiStripParameterPerLayer NoiseCorrelParamA, NoiseCorrelParamB, NoiseCorrelParamC;
 };
 
 #endif
