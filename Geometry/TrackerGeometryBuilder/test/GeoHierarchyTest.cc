@@ -40,6 +40,8 @@
 #include "Geometry/TrackerGeometryBuilder/interface/trackerHierarchy.h"
 
 #include "DataFormats/Common/interface/Trie.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
 
 #include<string>
@@ -82,7 +84,7 @@ GeoHierarchy::~GeoHierarchy()
 {}
 
 template<typename Iter>
-void constructAndDumpTrie(Iter b, Iter e) {
+void constructAndDumpTrie(const TrackerTopology* tTopo, Iter b, Iter e) {
   typedef typename std::iterator_traits<Iter>::value_type Det;
   edm::Trie<Det> trie(0);
   typedef edm::TrieNode<Det> Node;
@@ -96,7 +98,7 @@ void constructAndDumpTrie(Iter b, Iter e) {
     for(;b!=e; ++b) {
       last = b;
       unsigned int rawid = (*b)->geographicalId().rawId();
-      trie.insert(trackerHierarchy(rawid), *b); 
+      trie.insert(trackerHierarchy(tTopo, rawid), *b); 
     }
   }
   catch(edm::Exception const & ex) {
@@ -154,16 +156,19 @@ GeoHierarchy::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
   //first instance tracking geometry
   edm::ESHandle<TrackerGeometry> pDD;
   iSetup.get<TrackerDigiGeometryRecord> ().get (pDD);
+  edm::ESHandle<TrackerTopology> tTopo_handle;
+  iSetup.get<TrackerTopologyRcd>().get(tTopo_handle);
+  const TrackerTopology* tTopo = tTopo_handle.product();
   //
   GeometricDet const * rDD = pDD->trackerDet();
   std::vector<const GeometricDet*> modules; 
   (*rDD).deepComponents(modules);
   
   std::cout << "\nGeometricDet Hierarchy\n" << std::endl;
-  constructAndDumpTrie(modules.begin(),modules.end());
+  constructAndDumpTrie(tTopo, modules.begin(),modules.end());
   
   std::cout << "\nGDet Hierarchy\n" << std::endl;
-  constructAndDumpTrie(pDD->dets().begin(),pDD->dets().end());
+  constructAndDumpTrie(tTopo, pDD->dets().begin(),pDD->dets().end());
   
 
 

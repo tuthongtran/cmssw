@@ -44,10 +44,7 @@
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 #include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
 #include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
-#include "DataFormats/SiStripDetId/interface/TIBDetId.h"
-#include "DataFormats/SiStripDetId/interface/TIDDetId.h"
-#include "DataFormats/SiStripDetId/interface/TOBDetId.h"
-#include "DataFormats/SiStripDetId/interface/TECDetId.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 #include "Geometry/TrackerNumberingBuilder/interface/CmsTrackerStringToEnum.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "DetectorDescription/Core/interface/DDRoot.h"
@@ -120,6 +117,9 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
   //first instance tracking geometry
   edm::ESHandle<TrackerGeometry> pDD;
   iSetup.get<TrackerDigiGeometryRecord> ().get (pDD);
+  edm::ESHandle<TrackerTopology> tTopo_handle;
+  iSetup.get<TrackerTopologyRcd>().get(tTopo_handle);
+  const TrackerTopology* tTopo = tTopo_handle.product();
   //
   
   // counters
@@ -282,10 +282,9 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	if(name == "TIBActiveRphi0") tib_L12_rphiN++;
 	if(name == "TIBActiveSter0") tib_L12_sterN++;
 	if(name == "TIBActiveRphi2") tib_L34_rphiN++;
-	TIBDetId module(rawid);
-	unsigned int              theLayer  = module.layer();
-	std::vector<unsigned int> theString = module.string();
-	unsigned int              theModule = module.module();
+	unsigned int              theLayer  = tTopo->layer(rawid);
+	std::vector<unsigned int> theString = tTopo->tibStringInfo(rawid);
+	unsigned int              theModule = tTopo->module(rawid);
 	std::string side;
 	std::string part;
 	side = (theString[0] == 1 ) ? "-" : "+";
@@ -315,16 +314,14 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	if(name == "TIDModule1RphiActive")   tid_r2_rphiN++;
 	if(name == "TIDModule1StereoActive") tid_r2_sterN++;
 	if(name == "TIDModule2RphiActive")   tid_r3_rphiN++;
-	TIDDetId module(rawid);
-	unsigned int         theDisk   = module.wheel();
-	unsigned int         theRing   = module.ring();
-	std::vector<unsigned int> theModule = module.module();
+	unsigned int         theDisk   = tTopo->tidWheel(rawid);
+	unsigned int         theRing   = tTopo->tidRing(rawid);
 	std::string side;
 	std::string part;
-	side = (module.side() == 1 ) ? "-" : "+";
-	part = (theModule[0] == 1 ) ? "back" : "front";
+	side = (tTopo->tidSide(rawid) == 1 ) ? "-" : "+";
+	part = (tTopo->tidOrder(rawid) == 1 ) ? "back" : "front";
 	Output << " TID" << side << "\t" << "Disk " << theDisk << " Ring " << theRing << " " << part
-	       << "\t" << " module " << theModule[1] << "\t" << name << "\t";
+	       << "\t" << " module " << tTopo->tidModule(rawid) << "\t" << name << "\t";
 	if ( fromDDD_ && printDDD_ ) {
 	  Output << "son of " << gdei->parents()[gdei->parents().size()-3].logicalPart().name();
 	} else {
@@ -346,16 +343,14 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	if(name == "TOBActiveSter0") tob_L12_sterN++;
 	if(name == "TOBActiveRphi2") tob_L34_rphiN++;
 	if(name == "TOBActiveRphi4") tob_L56_rphiN++;
-	TOBDetId module(rawid);
-	unsigned int              theLayer  = module.layer();
-	std::vector<unsigned int> theRod    = module.rod();
-	unsigned int              theModule = module.module();
+	unsigned int              theLayer  = tTopo->layer(rawid);
+	unsigned int              theModule = tTopo->module(rawid);
 	std::string side;
 	std::string part;
-	side = (theRod[0] == 1 ) ? "-" : "+";
+	side = (tTopo->tobSide(rawid) == 1 ) ? "-" : "+";
 	
 	Output << " TOB" << side << "\t" << "Layer " << theLayer 
-	       << "\t" << "rod " << theRod[1] << " module " << theModule << "\t" << name << "\t" ;
+	       << "\t" << "rod " << tTopo->tobRod(rawid) << " module " << theModule << "\t" << name << "\t" ;
 	if ( fromDDD_ && printDDD_ ) {
 	  Output << "son of " << gdei->parents()[gdei->parents().size()-3].logicalPart().name();
 	} else {
@@ -383,16 +378,14 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	if(name == "TECModule4StereoActive") tec_r5_sterN++;
 	if(name == "TECModule5RphiActive")   tec_r6_rphiN++;
 	if(name == "TECModule6RphiActive")   tec_r7_rphiN++;
-	TECDetId module(rawid);
-	unsigned int              theWheel  = module.wheel();
-	unsigned int              theModule = module.module();
-	std::vector<unsigned int> thePetal  = module.petal();
-	unsigned int              theRing   = module.ring();
+	unsigned int              theWheel  = tTopo->tecWheel(rawid);
+	unsigned int              theModule = tTopo->module(rawid);
+	unsigned int              theRing   = tTopo->tecRing(rawid);
 	std::string side;
 	std::string petal;
-	side  = (module.side() == 1 ) ? "-" : "+";
-	petal = (thePetal[0] == 1 ) ? "back" : "front";
-	Output << " TEC" << side << "\t" << "Wheel " << theWheel << " Petal " << thePetal[1] << " " << petal << " Ring " << theRing << "\t"
+	side  = (tTopo->tecSide(rawid) == 1 ) ? "-" : "+";
+	petal = (tTopo->tecOrder(rawid) == 1 ) ? "back" : "front";
+	Output << " TEC" << side << "\t" << "Wheel " << theWheel << " Petal " << tTopo->tecPetalNumber(rawid) << " " << petal << " Ring " << theRing << "\t"
 	       << "\t" << " module " << theModule << "\t" << name << "\t";
 	if ( fromDDD_ && printDDD_ ) {
 	  Output << "son of " << gdei->parents()[gdei->parents().size()-3].logicalPart().name();
@@ -402,10 +395,10 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	Output << " " << modules[i]->translation().X() << "   \t" << modules[i]->translation().Y() << "   \t" << modules[i]->translation().Z() << std::endl;
 	
 	// TEC output as Martin Weber's
-	int out_side  = (module.side() == 1 ) ? -1 : 1;
-	unsigned int out_disk = module.wheel();
-	unsigned int out_sector = thePetal[1];
-	int out_petal = (thePetal[0] == 1 ) ? 1 : -1;
+	int out_side  = (tTopo->tecSide(rawid) == 1 ) ? -1 : 1;
+	unsigned int out_disk = tTopo->tecWheel(rawid);
+	unsigned int out_sector = tTopo->tecPetalNumber(rawid);
+	int out_petal = (tTopo->tecOrder(rawid) == 1 ) ? 1 : -1;
 	// swap sector numbers for TEC-
 	if (out_side == -1) {
 	  // fine for back petals, substract 1 for front petals
@@ -413,7 +406,7 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	    out_sector = (out_sector+6) % 8 + 1;
 	  }
 	}
-	unsigned int out_ring = module.ring();
+	unsigned int out_ring = tTopo->tecRing(rawid);
 	int out_sensor = 0;
 	if(name == "TECModule0RphiActive")   out_sensor = -1;
 	if(name == "TECModule0StereoActive") out_sensor =  1;
@@ -429,7 +422,7 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	if (out_ring == 1 || out_ring == 2 || out_ring == 5) {
 	  // rings with stereo modules
 	  // create number odd by default
-	  out_module = 2*(module.module()-1)+1;
+	  out_module = 2*(tTopo->module(rawid)-1)+1;
 	  if (out_sensor == 1) {
 	    // in even rings, stereo modules are the even ones
 	    if (out_ring == 2)
@@ -441,7 +434,7 @@ ModuleInfo::analyze( const edm::Event& iEvent, const edm::EventSetup& iSetup )
 	      out_module += 1;
 	}
 	else {
-	  out_module = module.module();
+	  out_module = tTopo->module(rawid);
 	}
 	double out_x = modules[i]->translation().X();
 	double out_y = modules[i]->translation().Y();
