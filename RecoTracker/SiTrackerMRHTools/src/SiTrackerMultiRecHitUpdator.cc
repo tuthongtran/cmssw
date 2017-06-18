@@ -11,9 +11,6 @@
 #include "TrackingTools/TransientTrackingRecHit/interface/TrackingRecHitProjector.h"
 #include "Geometry/CommonDetUnit/interface/GeomDetType.h"
 
-#include "DataFormats/SiStripDetId/interface/TIDDetId.h"
-#include "DataFormats/SiStripDetId/interface/TECDetId.h"
-
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 SiTrackerMultiRecHitUpdator::SiTrackerMultiRecHitUpdator(const TransientTrackingRecHitBuilder* builder,
