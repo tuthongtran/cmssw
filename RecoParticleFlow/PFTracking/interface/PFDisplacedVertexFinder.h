@@ -1,8 +1,8 @@
 #ifndef RecoParticleFlow_PFTracking_PFDisplacedVertexFinder_h
 #define RecoParticleFlow_PFTracking_PFDisplacedVertexFinder_h 
+// TODO piedavid put back edm::ESHandle include
 
 #include "RecoParticleFlow/PFTracking/interface/PFDisplacedVertexHelper.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertexCandidate.h"
 #include "DataFormats/ParticleFlowReco/interface/PFDisplacedVertexCandidateFwd.h"
@@ -74,11 +74,15 @@ class PFDisplacedVertexFinder {
 
   /// Sets parameters for track extrapolation and hits study
   void setEdmParameters( const MagneticField* magField,
+                         // TODO piedaiv see if we really cannot change this into a const pointer (TransientTrack constructor)
 			 edm::ESHandle<GlobalTrackingGeometry> globTkGeomHandle,
-			 edm::ESHandle<TrackerGeometry> tkerGeomHandle){ 
+                         // TODO piedavid: maybe these should be const product* in the first place
+                         const TrackerTopology* tkerTopo,
+			 const TrackerGeometry* tkerGeom){
     magField_ = magField; 
     globTkGeomHandle_ = globTkGeomHandle;
-    tkerGeomHandle_ = tkerGeomHandle; 
+    tkerTopo_ = tkerTopo;
+    tkerGeom_ = tkerGeom;
   }
 
   void setTracksSelector(const edm::ParameterSet& ps){
@@ -181,7 +185,8 @@ class PFDisplacedVertexFinder {
   edm::ESHandle<GlobalTrackingGeometry> globTkGeomHandle_;
 
   /// doc? 
-  edm::ESHandle<TrackerGeometry> tkerGeomHandle_;
+  const TrackerTopology* tkerTopo_;
+  const TrackerGeometry* tkerGeom_;
 
   /// to be able to extrapolate tracks f
   const MagneticField* magField_;

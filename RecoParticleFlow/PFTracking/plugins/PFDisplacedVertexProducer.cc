@@ -117,6 +117,10 @@ PFDisplacedVertexProducer::produce(Event& iEvent,
   ESHandle<GlobalTrackingGeometry> globTkGeomHandle;
   iSetup.get<GlobalTrackingGeometryRecord>().get(globTkGeomHandle);
 
+  ESHandle<TrackerTopology> tkerTopoHandle;
+  // TODO piedavid check record name, dependency, include (probably from deeper)
+  iSetup.get<TrackerTopologyRcd>().get(tkerTopoHandle);
+
   ESHandle<TrackerGeometry> tkerGeomHandle;
   iSetup.get<TrackerDigiGeometryRecord>().get(tkerGeomHandle);
 
@@ -130,7 +134,7 @@ PFDisplacedVertexProducer::produce(Event& iEvent,
   iEvent.getByToken(inputTagBeamSpot_, beamSpotHandle);
 
   // Fill useful event information for the Finder
-  pfDisplacedVertexFinder_.setEdmParameters(theMagField, globTkGeomHandle, tkerGeomHandle); 
+  pfDisplacedVertexFinder_.setEdmParameters(theMagField, globTkGeomHandle, tkerTopoHandle, tkerGeomHandle);
   pfDisplacedVertexFinder_.setPrimaryVertex(mainVertexHandle, beamSpotHandle);
   pfDisplacedVertexFinder_.setInput(vertexCandidates);
 
