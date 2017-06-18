@@ -14,7 +14,6 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "RecoVertex/VertexPrimitives/interface/TransientVertex.h"
 #include "Geometry/CommonDetUnit/interface/TrackingGeometry.h"
-// TODO piedavid include TrackerTopology*?
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 
 #define DEBUG_CHECKHITPATTERN

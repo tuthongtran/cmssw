@@ -16,7 +16,6 @@ class StripRecHit1D;
 
 class SimpleDAFHitCollector :public MultiRecHitCollector {
 	public:
-        // TODO piedavid check include...
 	explicit SimpleDAFHitCollector(const TrackerTopology* trackerTopology,
                                  const MeasurementTracker* measurementTracker,
 				 const SiTrackerMultiRecHitUpdator* updator,

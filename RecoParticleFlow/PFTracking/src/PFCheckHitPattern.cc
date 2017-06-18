@@ -4,12 +4,11 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
-// TODO piedavid check if we need this include, it's in the header
-// TODO piedavid CMS recommendation on fw decl? compilation times?
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 
 // To convert detId to subdet/layer number.
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 
@@ -72,7 +71,7 @@ PFCheckHitPattern::DetInfo PFCheckHitPattern::interpretDetId(DetId detId, const 
   // Convert detId to a pair<uint32, uint32> consisting of the numbers used by HitPattern 
   // to identify subdetector and layer number respectively.
   const auto subdetId = detId.subdetId();
-  uint32 second{};
+  uint32_t second{};
   switch (subdetId) {
     case StripSubdetector::TIB:
       second = tkerTopo->tibLayer(detId);

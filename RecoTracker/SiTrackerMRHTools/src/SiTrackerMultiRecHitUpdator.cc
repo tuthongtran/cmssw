@@ -2,6 +2,7 @@
 #include "DataFormats/TrackingRecHit/interface/KfComponentsHolder.h"
 #include "DataFormats/Math/interface/invertPosDefMatrix.h"
 #include "DataFormats/Math/interface/ProjectMatrix.h"
+#include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 
 #include "RecoTracker/SiTrackerMRHTools/interface/GenericProjectedRecHit2D.h"
 #include "RecoTracker/SiTrackerMRHTools/interface/SiTrackerMultiRecHitUpdator.h"

@@ -53,7 +53,6 @@ public:
 		     const StripClusterParameterEstimator* stripCPE,
 		     const SiStripRecHitMatcher*  hitMatcher,
 		     const TrackerTopology*  trackerTopology,
-                     // TODO piedavid include TrackerTopology header here if needed at all
 		     const TrackerGeometry*  trackerGeom,
 		     const GeometricSearchTracker* geometricSearchTracker,
                      const SiStripQuality *stripQuality,

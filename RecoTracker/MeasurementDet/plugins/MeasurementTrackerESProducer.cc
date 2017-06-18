@@ -133,10 +133,6 @@ MeasurementTrackerESProducer::produce(const CkfComponentsRecord& iRecord)
   iRecord.getRecord<TkStripCPERecord>().get(stripCPEName,stripCPE);
   iRecord.getRecord<TkStripCPERecord>().get(matcherName,hitMatcher);
   iRecord.getRecord<TrackerTopologyRcd>().get(trackerTopology);
-  // TODO piedavid CHECK that the record type is correct
-  // TODO piedavid and that it depends on CkfComponentsRecord
-  // TODO piedavid (otherwise TrackerDigiGeometryRecord, below, does)!!!
-  // TODO piedavid may also need to include the TrackerTopology header (no, comes through MeasurementTrackerImpl)
   iRecord.getRecord<TrackerDigiGeometryRecord>().get(trackerGeom);
   iRecord.getRecord<TrackerRecoGeometryRecord>().get(geometricSearchTracker);
 

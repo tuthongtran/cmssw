@@ -50,9 +50,8 @@ MultiRecHitCollectorESProducer::produce(const MultiRecHitRecord& iRecord){
   iRecord.getRecord<CkfComponentsRecord>().getRecord<TrackingComponentsRecord>().get(estimatorName, estimatorhandle);
   ESHandle<MeasurementTracker> measurementhandle;
   iRecord.getRecord<CkfComponentsRecord>().get(measurementTrackerName, measurementhandle);
-  // TODO piedavid check name, dep, include like the other ones
   ESHandle<TrackerTopology> trackerTopologyHandle;
-  iRecord.getRecord<TrackerTopologyRcd>(trackerTopologyHandle);
+  iRecord.getRecord<CkfComponentsRecord>().getRecord<TrackerTopologyRcd>().get(trackerTopologyHandle);
  
   if (mode == "Grouped"){
 	std::string propagatorOppositeName = conf_.getParameter<std::string>("propagatorOpposite");  

@@ -9,6 +9,7 @@
 #include "RecoTracker/TransientTrackingRecHit/interface/ProjectedRecHit2D.h"
 #include "RecHitPropagator.h"
 #include "TrackingTools/TransientTrackingRecHit/interface/InvalidTransientRecHit.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include <iostream>
@@ -81,7 +82,7 @@ void TkGluedMeasurementDet::init(const MeasurementDet* monoDet,
                                  const TrackerTopology* tTopo) {
   theMonoDet = dynamic_cast<const TkStripMeasurementDet *>(monoDet);
   theStereoDet = dynamic_cast<const TkStripMeasurementDet *>(stereoDet);
-  theTopo = tTopo;
+  theTopology = tTopo;
   
   if ((theMonoDet == 0) || (theStereoDet == 0)) {
     throw MeasurementDetException("TkGluedMeasurementDet ERROR: Trying to glue a det which is not a TkStripMeasurementDet");
@@ -135,7 +136,7 @@ bool TkGluedMeasurementDet::measurements( const TrajectoryStateOnSurface& stateO
    if (result.size()>oldSize) return true;
    
    auto id = geomDet().geographicalId().subdetId()-3;
-   auto l = theTopo->tobLayer(geomDet().geographicalId());
+   auto l = theTopology->tobLayer(geomDet().geographicalId());
    bool killHIP = (1==l) && (2==id); //TOB1
    killHIP &= stateOnThisDet.globalMomentum().perp2()>est.minPt2ForHitRecoveryInGluedDet();
    if (killHIP) {
