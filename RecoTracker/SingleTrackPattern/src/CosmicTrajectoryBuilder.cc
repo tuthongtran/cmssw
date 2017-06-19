@@ -66,16 +66,21 @@ void CosmicTrajectoryBuilder::init(const edm::EventSetup& es, bool seedplus){
   RHBuilder=   theBuilder.product();
   hitCloner = static_cast<TkTransientTrackingRecHitBuilder const *>(RHBuilder)->cloner();
 
+  edm::ESHandle<TrackerTopology> tTopo;
+  es.get<TrackerTopologyRcd>().get(tTopo);
+
 
 
   theFitter=        new KFTrajectoryFitter(*thePropagator,
 					   *theUpdator,	
-					   *theEstimator) ;
+					   *theEstimator,
+					   tTopo.product()) ;
   theFitter->setHitCloner(&hitCloner);
 
   theSmoother=      new KFTrajectorySmoother(*thePropagatorOp,
 					     *theUpdator,	
-					     *theEstimator);
+					     *theEstimator,
+					     tTopo.product());
   theSmoother->setHitCloner(&hitCloner);
 }
 

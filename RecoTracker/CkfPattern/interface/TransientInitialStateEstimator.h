@@ -8,6 +8,7 @@
 
 #include <utility>
 
+class TrackerTopology;
 class Propagator;
 class GeomDet;
 class Trajectory;
@@ -35,6 +36,7 @@ private:
   const std::string thePropagatorOppositeName;
   const Propagator *thePropagatorAlong;
   const Propagator *thePropagatorOpposite; // not used? can we remove it?
+  const TrackerTopology* theTopology;
   TkClonerImpl theHitCloner;
   const int theNumberMeasurementsForFit;
 };

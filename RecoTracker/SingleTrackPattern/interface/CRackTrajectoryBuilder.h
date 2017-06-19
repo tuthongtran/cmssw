@@ -242,6 +242,8 @@ class CRackTrajectoryBuilder
    PropagatorWithMaterial  *thePropagator;
    PropagatorWithMaterial  *thePropagatorOp;
 
+   const TrackerTopology* theTopology;
+
 //   AnalyticalPropagator *thePropagator;
 //   AnalyticalPropagator *thePropagatorOp;
 

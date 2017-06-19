@@ -23,8 +23,10 @@ using namespace std;
 
 
 StandAloneMuonSmoother::StandAloneMuonSmoother(const ParameterSet& par, 
-					       const MuonServiceProxy* service):theService(service){
-
+					       const MuonServiceProxy* service, const TrackerTopology* trackerTopology)
+: theService(service)
+, theTopology(trackerTopology)
+{
   // The max allowed chi2 to accept a rechit in the fit
   theMaxChi2 = par.getParameter<double>("MaxChi2");
   
@@ -64,12 +66,14 @@ void StandAloneMuonSmoother::renewTheSmoother(){
     if (theSmoother) delete theSmoother;
     theSmoother = new KFTrajectorySmoother(propagator(),
 					   updator(),
-					   estimator());
+					   estimator(),
+					   theTopology);
   }
   if (!theSmoother)
     theSmoother = new KFTrajectorySmoother(propagator(),
 					   updator(),
-					   estimator());
+					   estimator(),
+					   theTopology);
   
 }
 

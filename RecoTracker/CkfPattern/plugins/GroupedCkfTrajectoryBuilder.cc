@@ -172,6 +172,9 @@ GroupedCkfTrajectoryBuilder::GroupedCkfTrajectoryBuilder(const edm::ParameterSet
 */
 
 void GroupedCkfTrajectoryBuilder::setEvent_(const edm::Event& event, const edm::EventSetup& iSetup) {
+  edm::ESHandle<TrackerTopology> tTopo;
+  iSetup.get<TrackerTopologyRcd>().get(tTopo);
+  theTopology = tTopo.product();
 }
 
 GroupedCkfTrajectoryBuilder::TrajectoryContainer 
@@ -827,7 +830,7 @@ GroupedCkfTrajectoryBuilder::rebuildSeedingRegion(const TrajectorySeed&seed,
   // might change between different starting trajectories)
   //
   auto hitCloner = static_cast<TkTransientTrackingRecHitBuilder const *>(hitBuilder())->cloner();
-  KFTrajectoryFitter fitter(backwardPropagator(seed),&updator(),&estimator(),3,nullptr,&hitCloner);
+  KFTrajectoryFitter fitter(backwardPropagator(seed),&updator(),&estimator(),theTopology,3,nullptr,&hitCloner);
   //
   TrajectorySeed::range rseedHits = seed.recHits();
   std::vector<const TrackingRecHit*> seedHits;

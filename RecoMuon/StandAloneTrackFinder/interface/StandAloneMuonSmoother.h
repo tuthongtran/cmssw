@@ -13,6 +13,7 @@
 #include "TrackingTools/PatternTools/interface/Trajectory.h"
 
 class MuonServiceProxy;
+class TrackerTopology;
 class TrajectoryStateUpdator;
 class MeasurementEstimator;
 class Propagator;
@@ -29,7 +30,7 @@ class StandAloneMuonSmoother{
 
  public:
   /// Constructor
-  StandAloneMuonSmoother(const edm::ParameterSet& par, const MuonServiceProxy* service);
+  StandAloneMuonSmoother(const edm::ParameterSet& par, const MuonServiceProxy* service, const TrackerTopology* trackerTopology);
 
   /// Destructor
   virtual ~StandAloneMuonSmoother();
@@ -76,6 +77,7 @@ class StandAloneMuonSmoother{
   TrajectoryStateUpdator *theUpdator;
 
   const MuonServiceProxy* theService;
+  const TrackerTopology* theTopology;
 
   TrajectorySmoother *theSmoother;
 

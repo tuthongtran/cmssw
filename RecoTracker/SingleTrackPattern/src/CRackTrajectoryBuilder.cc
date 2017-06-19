@@ -89,15 +89,20 @@ void CRackTrajectoryBuilder::init(const edm::EventSetup& es, bool seedplus){
 
 
 
+  edm::ESHandle<TrackerTopology> tTopo;
+  es.get<TrackerTopologyRcd>().get(tTopo);
+  theTopology = tTopo.product();
 
   theFitter=        new KFTrajectoryFitter(*thePropagator,
 					   *theUpdator,	
-					   *theEstimator) ;
+					   *theEstimator,
+					   tTopo.product()) ;
   
 
   theSmoother=      new KFTrajectorySmoother(*thePropagatorOp,
 					     *theUpdator,	
-					     *theEstimator);
+					     *theEstimator,
+					     tTopo.product());
   
 }
 
@@ -908,7 +913,8 @@ CRackTrajectoryBuilder::innerState( const Trajectory& traj) const
 
   KFTrajectoryFitter backFitter( *thePropagator,
 				 KFUpdator(),
-				 Chi2MeasurementEstimator( 100., 3));
+				 Chi2MeasurementEstimator( 100., 3),
+				 theTopology);
 
   PropagationDirection backFitDirection = traj.direction() == alongMomentum ? oppositeToMomentum: alongMomentum;
 

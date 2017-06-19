@@ -1382,21 +1382,27 @@ void GlobalTrackerMuonAlignment::analyzeTrackTrajectory
   if(defineFitter){
     if(debug_)
       std::cout<<" ............... DEFINE FITTER ..................."<<std::endl;
+    edm::ESHandle<TrackerTopology> tTopo;
+    iSetup.get<TrackerTopologyRcd>().get(tTopo);
     KFUpdator* theUpdator = new KFUpdator();
     //Chi2MeasurementEstimator* theEstimator = new Chi2MeasurementEstimator(30);
     Chi2MeasurementEstimator* theEstimator = new Chi2MeasurementEstimator(100000,100000);
     theFitter = new KFTrajectoryFitter(alongSmPr, 
 				       *theUpdator, 
-				       *theEstimator);
+				       *theEstimator,
+				       tTopo.product());
     theSmoother = new KFTrajectorySmoother(alongSmPr,
 					   *theUpdator,     
-					   *theEstimator);
+					   *theEstimator,
+					   tTopo.product());
     theFitterOp = new KFTrajectoryFitter(oppositeSmPr, 
 					 *theUpdator, 
-					 *theEstimator);
+					 *theEstimator,
+					 tTopo.product());
     theSmootherOp = new KFTrajectorySmoother(oppositeSmPr,
 					     *theUpdator,     
-					     *theEstimator);
+					     *theEstimator,
+					     tTopo.product());
     
     edm::ESHandle<TransientTrackingRecHitBuilder> builder;
     iSetup.get<TransientRecHitRecord>().get("WithTrackAngle",builder);

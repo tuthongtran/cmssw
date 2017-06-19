@@ -23,6 +23,7 @@ TransientInitialStateEstimator::TransientInitialStateEstimator(const edm::Parame
   thePropagatorOppositeName(conf.getParameter<std::string>("propagatorOppositeTISE")),
   thePropagatorAlong(nullptr),
   thePropagatorOpposite(nullptr),
+  theTopology(nullptr),
   theNumberMeasurementsForFit(conf.getParameter<int>("numberMeasurementsForFit"))
 {}
 
@@ -36,6 +37,10 @@ void TransientInitialStateEstimator::setEventSetup( const edm::EventSetup& es, c
   es.get<TrackingComponentsRecord>().get(thePropagatorOppositeName, hopposite);
   thePropagatorAlong = halong.product();
   thePropagatorOpposite = hopposite.product();
+
+  edm::ESHandle<TrackerTopology> tTopo;
+  es.get<TrackerTopologyRcd>().get(tTopo);
+  theTopology = tTopo.product();
 }
 
 std::pair<TrajectoryStateOnSurface, const GeomDet*> 
@@ -82,6 +87,7 @@ TransientInitialStateEstimator::innerState( const Trajectory& traj, bool doBackF
   KFTrajectoryFitter backFitter( thePropagatorAlong,
 				 &aKFUpdator,
 				 &aChi2MeasurementEstimator,
+				 theTopology,
 				 firstHits.size(),nullptr,&theHitCloner);
 
   PropagationDirection backFitDirection = traj.direction() == alongMomentum ? oppositeToMomentum: alongMomentum;
