@@ -91,6 +91,7 @@ public:
   const Propagator* propagator() const {return thePropagator;}
   const TrajectoryStateUpdator* updator() const {return theUpdator;}
   const MeasurementEstimator* estimator() const {return theEstimator;}
+  const TrackerTopology* trackerTopology() const {return theTopology;}
 
   virtual std::unique_ptr<TrajectoryFitter> clone() const override
   {

@@ -25,20 +25,23 @@ public:
 
   KFSplittingFitter(const Propagator& aPropagator,
                     const TrajectoryStateUpdator& aUpdator,
-                    const MeasurementEstimator& aEstimator) :
-    fitter(aPropagator, aUpdator, aEstimator) {}
+                    const MeasurementEstimator& aEstimator,
+                    const TrackerTopology* trackerTopology) :
+    fitter(aPropagator, aUpdator, aEstimator, trackerTopology) {}
 
 
   KFSplittingFitter(const Propagator* aPropagator,
 		    const TrajectoryStateUpdator* aUpdator,
-		    const MeasurementEstimator* aEstimator) :
-    fitter(aPropagator, aUpdator, aEstimator) {}
+		    const MeasurementEstimator* aEstimator,
+		    const TrackerTopology* trackerTopology) :
+    fitter(aPropagator, aUpdator, aEstimator, trackerTopology) {}
 
     virtual std::unique_ptr<TrajectoryFitter> clone() const override {
       return std::unique_ptr<TrajectoryFitter>(
           new KFSplittingFitter(fitter.propagator(),
                                 fitter.updator(),
-                                fitter.estimator()));
+                                fitter.estimator(),
+                                fitter.trackerTopology()));
   }
 
   Trajectory fitOne(const Trajectory& aTraj,
