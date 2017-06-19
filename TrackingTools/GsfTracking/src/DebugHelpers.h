@@ -1,5 +1,7 @@
 #ifdef EDM_ML_DEBUG
 
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+
 #include "DataFormats/MuonDetId/interface/CSCDetId.h"
 #include "DataFormats/MuonDetId/interface/DTWireId.h"
 #include "DataFormats/MuonDetId/interface/RPCDetId.h"
@@ -84,6 +86,7 @@ namespace {
       << tsos;
    }
 #else
+class TrackerTopology;
 namespace {
    inline void dump(TrackingRecHit const &, int, const TrackerTopology*) {}
    inline void dump(TrajectoryStateOnSurface const &, const char *){}

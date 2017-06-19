@@ -12,6 +12,7 @@
 
 #include <vector>
 
+class TrackerTopology;
 class MultiTrajectoryStateMerger;
 
 /** A GSF fitter, similar to KFTrajectoryFitter.
