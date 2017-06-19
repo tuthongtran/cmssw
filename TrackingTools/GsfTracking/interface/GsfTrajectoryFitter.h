@@ -32,6 +32,7 @@ public:
 		      const TrajectoryStateUpdator& aUpdator,
 		      const MeasurementEstimator& aEstimator,
 		      const MultiTrajectoryStateMerger& aMerger,
+		      const TrackerTopology* trackerTopology,
 		      const DetLayerGeometry* detLayerGeometry=0);
 
   virtual ~GsfTrajectoryFitter();
@@ -58,6 +59,7 @@ public:
                                 *theUpdator,
                                 *theEstimator,
                                 *theMerger,
+                                theTopology,
                                 theGeometry));
   }
 
@@ -72,6 +74,7 @@ private:
   const MeasurementEstimator* theEstimator;
   const MultiTrajectoryStateMerger* theMerger;
   TkCloner const * theHitCloner=nullptr;
+  const TrackerTopology* theTopology;
   const DetLayerGeometry dummyGeometry;
   const DetLayerGeometry* theGeometry;
 

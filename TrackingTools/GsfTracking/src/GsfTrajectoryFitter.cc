@@ -16,11 +16,13 @@ GsfTrajectoryFitter::GsfTrajectoryFitter(const Propagator& aPropagator,
 					 const TrajectoryStateUpdator& aUpdator,
 					 const MeasurementEstimator& aEstimator,
 					 const MultiTrajectoryStateMerger& aMerger,
+					 const TrackerTopology* trackerTopology,
 					 const DetLayerGeometry* detLayerGeometry) :
   thePropagator(aPropagator.clone()),
   theUpdator(aUpdator.clone()),
   theEstimator(aEstimator.clone()),
   theMerger(aMerger.clone()),
+  theTopology(trackerTopology),
   theGeometry(detLayerGeometry)
 {
   if(!theGeometry) theGeometry = &dummyGeometry;
@@ -74,7 +76,7 @@ Trajectory GsfTrajectoryFitter::fitOne(const TrajectorySeed& aSeed,
      assert( (!(ihit)->canImproveWithTrack()) | (nullptr!=theHitCloner));
      assert( (!(ihit)->canImproveWithTrack()) | (nullptr!=dynamic_cast<BaseTrackerRecHit const*>(ihit.get())));
      auto preciseHit = theHitCloner->makeShared(ihit,predTsos);
-     dump(*preciseHit,1);
+     dump(*preciseHit,1,theTopology);
     {
       currTsos = updator()->update(predTsos, *preciseHit);
     }
@@ -132,7 +134,7 @@ Trajectory GsfTrajectoryFitter::fitOne(const TrajectorySeed& aSeed,
       assert( (!(*ihit)->canImproveWithTrack()) | (nullptr!=theHitCloner));
       assert( (!(*ihit)->canImproveWithTrack()) | (nullptr!=dynamic_cast<BaseTrackerRecHit const*>((*ihit).get())));
       auto preciseHit = theHitCloner->makeShared(*ihit,predTsos);
-      dump(*preciseHit,hitcounter);
+      dump(*preciseHit,hitcounter,theTopology);
       currTsos = updator()->update(predTsos, *preciseHit);     
       if (!predTsos.isValid() || !currTsos.isValid()){
 	edm::LogError("InvalidState")<<"inside hit";

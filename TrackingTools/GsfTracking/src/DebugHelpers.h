@@ -6,16 +6,10 @@
 #include "DataFormats/MuonDetId/interface/GEMDetId.h"
 #include "DataFormats/MuonDetId/interface/ME0DetId.h"
 #include "DataFormats/MuonDetId/interface/MuonSubdetId.h"
-#include "DataFormats/SiStripDetId/interface/TIBDetId.h"
-#include "DataFormats/SiStripDetId/interface/TOBDetId.h"
-#include "DataFormats/SiStripDetId/interface/TIDDetId.h"
-#include "DataFormats/SiStripDetId/interface/TECDetId.h"
-#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
-#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
 
 namespace {
    inline
-   void dump(TrackingRecHit const & hit, int hitcounter) {
+   void dump(TrackingRecHit const & hit, int hitcounter, const TrackerTopology* trackerTopology) {
     if (hit.isValid()) {
       LogTrace("GsfTrackFitters")<< " ----------------- HIT #" << hitcounter << " (VALID)-----------------------\n"
 	<< "  HIT IS AT R   " << hit.globalPosition().perp() << "\n"
@@ -35,20 +29,22 @@ namespace {
       LogDebug("GsfTrackFitters") << " hit det=" << hitId.rawId();
 
       if(hitId.det() == DetId::Tracker) {
-	if (hitId.subdetId() == StripSubdetector::TIB )
-	  LogDebug("GsfTrackFitters") << " I am TIB " << TIBDetId(hitId).layer();
-	else if (hitId.subdetId() == StripSubdetector::TOB )
-	  LogDebug("GsfTrackFitters") << " I am TOB " << TOBDetId(hitId).layer();
-	else if (hitId.subdetId() == StripSubdetector::TEC )
-	  LogDebug("GsfTrackFitters") << " I am TEC " << TECDetId(hitId).wheel();
-	else if (hitId.subdetId() == StripSubdetector::TID )
-	  LogDebug("GsfTrackFitters") << " I am TID " << TIDDetId(hitId).wheel();
-	else if (hitId.subdetId() == (int) PixelSubdetector::PixelBarrel )
-	  LogDebug("GsfTrackFitters") << " I am PixBar " << PXBDetId(hitId).layer();
-	else if (hitId.subdetId() == (int) PixelSubdetector::PixelEndcap )
-	  LogDebug("GsfTrackFitters") << " I am PixFwd " << PXFDetId(hitId).disk();
-	else
-	  LogDebug("GsfTrackFitters") << " UNKNOWN TRACKER HIT TYPE ";
+	switch(hitId.subdetId()) {
+	  case StripSubdetector::TIB:
+	    LogDebug("GsfTrackFitters") << " I am TIB " << trackerTopology->tibLayer(hitId); break;
+	  case StripSubdetector::TOB:
+	    LogDebug("GsfTrackFitters") << " I am TOB " << trackerTopology->tobLayer(hitId); break;
+	  case StripSubdetector::TEC:
+	    LogDebug("GsfTrackFitters") << " I am TEC " << trackerTopology->tecWheel(hitId); break;
+	  case StripSubdetector::TID:
+	    LogDebug("GsfTrackFitters") << " I am TID " << trackerTopology->tidWheel(hitId); break;
+	  case PixelSubdetector::PixelBarrel:
+	    LogDebug("GsfTrackFitters") << " I am PixBar " << trackerTopology->pxbLayer(hitId); break;
+	  case PixelSubdetector::PixelEndcap:
+	    LogDebug("GsfTrackFitters") << " I am PixFwd " << trackerTopology->pxfDisk(hitId); break;
+	  default:
+	    LogDebug("GsfTrackFitters") << " UNKNOWN TRACKER HIT TYPE ";
+	}
       }
       else if(hitId.det() == DetId::Muon) {
 	if(hitId.subdetId() == MuonSubdetId::DT)
@@ -89,7 +85,7 @@ namespace {
    }
 #else
 namespace {
-   inline void dump(TrackingRecHit const &, int) {}
+   inline void dump(TrackingRecHit const &, int, const TrackerTopology*) {}
    inline void dump(TrajectoryStateOnSurface const &, const char *){}
 }
 #endif

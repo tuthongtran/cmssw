@@ -64,11 +64,14 @@ GsfTrajectoryFitterESProducer::produce(const TrajectoryFitterRecord & iRecord){
   std::string gname = pset_.getParameter<std::string>("RecoGeometry");
   edm::ESHandle<DetLayerGeometry> geo;
   iRecord.getRecord<RecoGeometryRecord>().get(gname,geo);
+  edm::ESHandle<TrackerTopology> tTopo;
+  iRecord.getRecord<RecoGeometryRecord>().getRecord<TrackerRecoGeometryRecord>().getRecord<TrackerTopologyRcd>().get(tTopo);
   //
   // create algorithm
   //
   return std::shared_ptr<TrajectoryFitter>(new GsfTrajectoryFitter(propagator,
 								     GsfMultiStateUpdator(), 
 								     estimator,merger,
+								     tTopo.product(),
 								     geo.product()));
 }
