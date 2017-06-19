@@ -65,15 +65,18 @@ namespace {
     edm::ESHandle<TrajectoryStateUpdator> upd;
     edm::ESHandle<Chi2MeasurementEstimatorBase> est;
     edm::ESHandle<DetLayerGeometry> geo;
+    edm::ESHandle<TrackerTopology> tTopo;
     
     iRecord.getRecord<TrackingComponentsRecord>().get(pname, prop);
     iRecord.getRecord<TrackingComponentsRecord>().get(uname, upd);
     iRecord.getRecord<TrackingComponentsRecord>().get(ename, est);
     iRecord.getRecord<RecoGeometryRecord>().get(gname,geo);
+    iRecord.getRecord<RecoGeometryRecord>().getRecord<TrackerRecoGeometryRecord>().getRecord<TrackerTopologyRcd>().get(tTopo);
 
     return std::make_shared<KFTrajectoryFitter>(prop.product(),
 				                upd.product(),
 				                est.product(),
+				                tTopo.product(),
 				                minHits,
 				                geo.product());
   }

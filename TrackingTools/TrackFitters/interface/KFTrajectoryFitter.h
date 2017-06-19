@@ -34,12 +34,14 @@ public:
   KFTrajectoryFitter(const Propagator& aPropagator,
 		     const TrajectoryStateUpdator& aUpdator,
 		     const MeasurementEstimator& aEstimator,
+		     const TrackerTopology* trackerTopology,
 		     int minHits = 3,
 		     const DetLayerGeometry* detLayerGeometry=0, 
                      TkCloner const * hc=nullptr) :
     thePropagator(aPropagator.clone()),
     theUpdator(aUpdator.clone()),
     theEstimator(aEstimator.clone()),
+    theTopology(trackerTopology),
     theHitCloner(hc),
     theGeometry(detLayerGeometry),
     minHits_(minHits),
@@ -53,12 +55,14 @@ public:
   KFTrajectoryFitter(const Propagator* aPropagator,
 		     const TrajectoryStateUpdator* aUpdator,
 		     const MeasurementEstimator* aEstimator,
+		     const TrackerTopology* trackerTopology,
 		     int minHits = 3,
 		     const DetLayerGeometry* detLayerGeometry=0,
                      TkCloner const * hc=nullptr) :
     thePropagator(aPropagator),
     theUpdator(aUpdator),
     theEstimator(aEstimator),
+    theTopology(trackerTopology),
     theHitCloner(hc),
     theGeometry(detLayerGeometry),
     minHits_(minHits),
@@ -92,10 +96,12 @@ public:
         std::unique_ptr<TrajectoryFitter>(new KFTrajectoryFitter(*thePropagator,
                                                                  *theUpdator,
                                                                  *theEstimator,
+                                                                 theTopology,
                                                                  minHits_,theGeometry,theHitCloner)) :
         std::unique_ptr<TrajectoryFitter>(new KFTrajectoryFitter(thePropagator,
                                                                  theUpdator,
                                                                  theEstimator,
+                                                                 theTopology,
                                                                  minHits_,
                                                                  theGeometry,theHitCloner));
   }
@@ -113,6 +119,7 @@ private:
   const TrajectoryStateUpdator* theUpdator;
   const MeasurementEstimator* theEstimator;
   TkCloner const * theHitCloner=nullptr;
+  const TrackerTopology* theTopology;
   const DetLayerGeometry* theGeometry;
   int minHits_;
   bool owner;

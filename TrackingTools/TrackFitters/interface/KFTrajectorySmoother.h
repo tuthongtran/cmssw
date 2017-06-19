@@ -30,12 +30,14 @@ public:
   KFTrajectorySmoother(const Propagator& aPropagator,
                        const TrajectoryStateUpdator& aUpdator,
                        const MeasurementEstimator& aEstimator,
+                       const TrackerTopology* trackerTopology,
 		       float errorRescaling = 100.f,
 		       int minHits = 3) :
   theAlongPropagator(nullptr),
     theOppositePropagator(nullptr),
     theUpdator(aUpdator.clone()),
     theEstimator(aEstimator.clone()),
+    theTopology(trackerTopology),
     theErrorRescaling(errorRescaling),
     minHits_(minHits),
     theGeometry(nullptr){ // to be fixed. Why this first constructor is needed? who is using it? Can it be removed?
@@ -52,6 +54,7 @@ public:
   KFTrajectorySmoother(const Propagator* aPropagator,
 		       const TrajectoryStateUpdator* aUpdator, 
 		       const MeasurementEstimator* aEstimator,
+		       const TrackerTopology* trackerTopology,
 		       float errorRescaling = 100.f,
 		       int minHits = 3,
 		       const DetLayerGeometry* detLayerGeometry=nullptr,
@@ -60,6 +63,7 @@ public:
     theOppositePropagator(nullptr),
     theUpdator(aUpdator->clone()),
     theEstimator(aEstimator->clone()),
+    theTopology(trackerTopology),
     theHitCloner(hc),
     theErrorRescaling(errorRescaling),
     minHits_(minHits),
@@ -84,7 +88,7 @@ public:
   const MeasurementEstimator* estimator() const {return theEstimator;}
 
   virtual KFTrajectorySmoother* clone() const override{
-    return new KFTrajectorySmoother(theAlongPropagator,theUpdator,theEstimator,theErrorRescaling,minHits_,theGeometry,theHitCloner);
+    return new KFTrajectorySmoother(theAlongPropagator,theUpdator,theEstimator,theTopology,theErrorRescaling,minHits_,theGeometry,theHitCloner);
   }
 
  // FIXME a prototype:  final inplementaiton may differ
@@ -100,6 +104,7 @@ private:
   TkCloner const * theHitCloner=nullptr;
   float theErrorRescaling;
   int minHits_;
+  const TrackerTopology* theTopology;
   const DetLayerGeometry* theGeometry;
 };
 
