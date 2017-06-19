@@ -6,7 +6,7 @@
 #include "TrackingTools/TrackFitters/interface/TrajectoryStateCombiner.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-#include "DebugHelpers.h"
+#include "TrackingTools/TrackFitters/src/DebugHelpers.h"
 
 
 GsfTrajectorySmoother::GsfTrajectorySmoother(const GsfPropagatorWithMaterial& aPropagator,

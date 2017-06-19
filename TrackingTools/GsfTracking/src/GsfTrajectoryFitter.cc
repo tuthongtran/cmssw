@@ -9,7 +9,7 @@
 #include "DataFormats/TrackerRecHit2D/interface/TkCloner.h"
 #include "DataFormats/TrackerRecHit2D/interface/BaseTrackerRecHit.h"
 
-#include "DebugHelpers.h"
+#include "TrackingTools/TrackFitters/src/DebugHelpers.h"
 
 
 GsfTrajectoryFitter::GsfTrajectoryFitter(const Propagator& aPropagator,
