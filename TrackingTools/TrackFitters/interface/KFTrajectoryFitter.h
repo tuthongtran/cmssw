@@ -17,6 +17,8 @@
 #include "TrackingTools/DetLayers/interface/MeasurementEstimator.h"
 #include "TrackingTools/DetLayers/interface/DetLayerGeometry.h"
 
+class TrackerTopology;
+
 #include <memory>
 
 class KFTrajectoryFitter final: public TrajectoryFitter {
@@ -118,8 +120,8 @@ private:
   const Propagator* thePropagator;
   const TrajectoryStateUpdator* theUpdator;
   const MeasurementEstimator* theEstimator;
-  TkCloner const * theHitCloner=nullptr;
   const TrackerTopology* theTopology;
+  TkCloner const * theHitCloner=nullptr;
   const DetLayerGeometry* theGeometry;
   int minHits_;
   bool owner;

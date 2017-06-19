@@ -16,6 +16,7 @@
 #include "TrackingTools/DetLayers/interface/MeasurementEstimator.h"
 #include "TrackingTools/PatternTools/interface/TrajectoryMeasurement.h"
 #include "TrackingTools/DetLayers/interface/DetLayerGeometry.h"
+class TrackerTopology;
 
 class KFTrajectorySmoother final : public TrajectorySmoother {
 
@@ -101,10 +102,10 @@ private:
   const Propagator* theOppositePropagator;
   const TrajectoryStateUpdator* theUpdator;
   const MeasurementEstimator* theEstimator;
+  const TrackerTopology* theTopology;
   TkCloner const * theHitCloner=nullptr;
   float theErrorRescaling;
   int minHits_;
-  const TrackerTopology* theTopology;
   const DetLayerGeometry* theGeometry;
 };
 

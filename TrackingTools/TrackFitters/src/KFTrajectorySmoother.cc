@@ -134,7 +134,7 @@ KFTrajectorySmoother::trajectory(const Trajectory& aTraj) const {
        	assert( (preciseHit->geographicalId()!=0U) | (!preciseHit->canImproveWithTrack()) );
        	assert(preciseHit->surface()!=nullptr);
 
-        dump(hit,hitCounter,theTopology);
+        dump(*hit,hitCounter,theTopology);
 
       if unlikely(!preciseHit->isValid()){
 	  LogTrace("TrackFitters") << "THE Precise HIT IS NOT VALID: using currTsos = predTsos" << "\n";
