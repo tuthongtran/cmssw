@@ -45,7 +45,7 @@ class SiStripDetVOff
   static const unsigned int eightBitMask = 0xFFFFFFFF;
   static const short bitShift = 2;
 
-  explicit SiStripDetVOff() {}
+  SiStripDetVOff() {}
   ~SiStripDetVOff() {}
   SiStripDetVOff( const SiStripDetVOff & toCopy ) { toCopy.getVoff(v_Voff); }
 
