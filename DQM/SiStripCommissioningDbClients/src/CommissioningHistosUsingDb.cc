@@ -49,7 +49,7 @@ CommissioningHistosUsingDb::CommissioningHistosUsingDb( SiStripConfigDb* const d
   std::stringstream sss;
   sss << "[CommissioningHistosUsingDb::" << __func__ << "]"
       << " Summary of FED cabling:" << std::endl;
-  cabling_->summary(sss);
+  cabling_->summary(sss, nullptr); // FIXME FIXME FIXME this will crash
   edm::LogVerbatim(mlDqmClient_) << sss.str();
   
 }
