@@ -9,6 +9,8 @@
 #include<boost/cstdint.hpp>
 #include <string>
 
+class TrackerTopology;
+
 /**
  * This class stores the information if the HV or LV of a detId were off. <br>
  * Internally it uses two bits to store the information about HV and LV. It saves a uint32_t
@@ -43,7 +45,7 @@ class SiStripDetVOff
   static const unsigned int eightBitMask = 0xFFFFFFFF;
   static const short bitShift = 2;
 
-  SiStripDetVOff() {}
+  explicit SiStripDetVOff() {}
   ~SiStripDetVOff() {}
   SiStripDetVOff( const SiStripDetVOff & toCopy ) { toCopy.getVoff(v_Voff); }
 
@@ -67,8 +69,8 @@ class SiStripDetVOff
 
   bool IsModuleLVOff(const uint32_t DetID) const;
 
-  void printDebug(std::stringstream & ss) const;
-  void printSummary(std::stringstream & ss) const;
+  void printDebug(std::stringstream & ss, const TrackerTopology*) const;
+  void printSummary(std::stringstream & ss, const TrackerTopology*) const;
 
   /// Returns the total number of modules with LV off
   int getLVoffCounts() const;
