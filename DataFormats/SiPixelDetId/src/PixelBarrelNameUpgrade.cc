@@ -8,11 +8,11 @@
 
 using namespace std;
 
-PixelBarrelNameUpgrade::PixelBarrelNameUpgrade(const DetId & id) 
+PixelBarrelNameUpgrade::PixelBarrelNameUpgrade(const DetId & id)
   : PixelModuleName(true)
 {
- 
-//  uint32_t rawId = id.rawId(); 
+
+//  uint32_t rawId = id.rawId();
   PXBDetId cmssw_numbering(id);
 
 

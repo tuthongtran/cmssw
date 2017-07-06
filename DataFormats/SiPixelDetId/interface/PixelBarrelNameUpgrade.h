@@ -17,15 +17,18 @@ public:
   enum Shell { mO = 1, mI = 2 , pO =3 , pI =4 };
 
   /// ctor from DetId
+  // NOTE explicit
   PixelBarrelNameUpgrade(const DetId &);
 
   /// ctor for defined name with dummy parameters
+  // NOTE explicit
   PixelBarrelNameUpgrade(Shell shell=mO, int layer=0, int module=0, int ladder=0)
     : PixelModuleName(true), 
       thePart(shell), theLayer(layer), theModule(module), theLadder(ladder) 
   { }
 
   /// ctor from name string
+  // NOTE explicit
   PixelBarrelNameUpgrade(std::string name);
 
   virtual ~PixelBarrelNameUpgrade() { }
@@ -35,21 +38,21 @@ public:
 
   Shell shell() const { return thePart; }
 
-  /// layer id 
-  int layerName() const { return theLayer; }   
+  /// layer id
+  int layerName() const { return theLayer; }
 
-  /// module id (index in z) 
-  int moduleName() const { return theModule; }  
+  /// module id (index in z)
+  int moduleName() const { return theModule; }
 
-  /// ladder id (index in phi) 
-  int ladderName() const { return theLadder; } 
+  /// ladder id (index in phi)
+  int ladderName() const { return theLadder; }
 
   /// sector id
   int sectorName() const;
 
   /// full or half module
   bool isHalfModule() const;
-  
+
   /// module Type
   virtual PixelModuleName::ModuleType  moduleType() const;
 

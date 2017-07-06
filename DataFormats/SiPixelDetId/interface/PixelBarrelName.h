@@ -8,8 +8,6 @@
 #include "DataFormats/SiPixelDetId/interface/PixelModuleName.h"
 #include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
 
-#include <string>
-
 class DetId;
 class TrackerTopology;
 
@@ -19,22 +17,28 @@ public:
   enum Shell { mO = 1, mI = 2 , pO =3 , pI =4 };
 
   /// ctor from DetId
+  // NOTE suggest taking DetId by value
   PixelBarrelName(const DetId &, const TrackerTopology* tt, bool phase=false);
 
   // do not use, works only for phase0 and old pixel classes
+  // NOTE to be removed completely
   PixelBarrelName(const DetId &, bool phase=false);
 
   /// ctor for defined name with dummy parameters
+  // NOTE ??? in any case make this one explicit!!!
  PixelBarrelName(Shell shell=mO, int layer=0, int module=0, int ladder=0, bool phase=false)
    : PixelModuleName(true),
     thePart(shell), theLayer(layer), theModule(module), theLadder(ladder), phase1(phase)
   { }
 
   /// ctor from name string
+  // NOTE externalize from class? take also const TrackerTopology*?
   PixelBarrelName(std::string name, bool phase=false);
 
+  // NOTE define in cc
   virtual ~PixelBarrelName() { }
 
+  // NOTE private
   inline int convertLadderNumber(int oldLadder);
 
   /// from base class
@@ -61,6 +65,7 @@ public:
   virtual PixelModuleName::ModuleType  moduleType() const;
 
   /// return the DetId
+  // NOTE first should go, we may store the DetId to make the replacement easier
   PXBDetId getDetId();
   DetId getDetId(const TrackerTopology* tt);
 
@@ -68,6 +73,7 @@ public:
   virtual bool operator== (const PixelModuleName &) const;
 
 private:
+  // NOTE these could all be short (but is that packed efficiently?)
   Shell thePart;
   int theLayer, theModule, theLadder;
   bool phase1;

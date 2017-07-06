@@ -2,17 +2,50 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-//#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
 #include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
 
 #include <sstream>
 #include <iostream>
 
-using namespace std;
+/** NOTE Pieter David, TrackerTopology migration of DetIds
+ * Attempt at documenting what happens here, class layout
+ * - PixelModuleName (base class): bool isBarrel, common interface
+ * - PixelBarrelName: stores Shell (enum, [1,4]), int theLayer, theModule, theLadder
+ *    AND a boolean indicating phase1 or (default) not (where is phase2?)
+ *
+ * Two constructors
+ * - DetId, const TrackerTopology*, bool phase1 (aka the "good" one)
+ *    pxbLayer -> theLayer
+ *    pxbModule-4 -> (-1 if neg) -> abs -> theModule
+ *    convertLadderNumber(pxbLadder) -> abs -> theLadder
+ *    (module before abs, ladder before abs) -> thePart
+ * - DetId, bool phase1 (aka the "old" one)
+ *    PXBDetId::layer -> theLayer
+ *    oldModule, oldLadder as above (before abs)
+ *    To compare the code block in there with convertLadderNumber -> the same indeed
+ * - Another one from a string (with phase, if storing DetId needs also const TrackerTopology*)
+ *
+ * Then accessors for "names"
+ * - sectorName: lots of hardcoded things
+ * - isHalfModule: can only be true for phase0
+ * - moduleType: switch on moduleType, so can inline
+ * - operator== checks the other is barrel, then dynamic_cast and per-field comparison (part, layer, module, ladder)
+ * - name(): combine the fields, sectorName and isHalfModule
+ *
+ * getDetId(const TrackerTopology*) translates back to DetId using the transformations for the ladder and pxbDetId
+ * old getDetId(): the same with PXBDetId
+ *
+ * PixelBarrelNameUpgrade is the phase1-only version of this (used in very few places: DQM/SiPixelCommon/src/SiPixelFolderOrganizer.cc, DQM/SiPixelMonitorTrack/src/SiPixelTrackResidualSource.cc, and DQM/SiPixelMonitorRecHit/src/SiPixelRecHitModule.cc (commented))
+ *
+ * PixelEndcapName: similar, but with halfCylinder instead of Shell, and disk-blade-pannel-plqauette instead, likewise an Upgrade class that can be taken out
+ *
+ * If we store the DetId in the base class (PixelModuleName), the getDetId code can move to the construct-from-string one (will convert back-and-forth once too many... but that allows to check they are consistent, in the anyway slowest constructor)
+ */
 
 namespace {
   // ladder limits
   // for phase 0
+  // NOTE constexpr, remove most of the commented stuff here (type?)
   const int lL[2][12] ={{5,15,26, 8,24,41,11,33,56, 0, 0, 0},
 			{3, 9,16, 7,21,36,11,33,56,16,48,81}};
   // for phase 1
@@ -65,6 +98,7 @@ PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
   int oldModule = cmssw_numbering.module() -4; if (oldModule<=0) oldModule--;
   int oldLadder = cmssw_numbering.ladder();
 
+  // NOTE could do theLadder = convertLadderNumber(oldLadder) instead
   if(phase1) { // phase 1
 
     if (theLayer == 1) {
@@ -106,6 +140,7 @@ PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
       else if (oldLadder >= 34) oldLadder = 56-oldLadder;
     }
   } // end phase 0/1
+  // NOTE up till here in convertLadderNumber
 
   //
   // part
@@ -130,6 +165,10 @@ PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
 
 
 // convert ladder number
+// NOTE                        layer 1  layer 2  layer  3  layer  4
+// NOTE const int lL[2][12] ={{5,15,26, 8,24,41, 11,33,56,  0, 0, 0},  // phase0
+// NOTE                       {3, 9,16, 7,21,36, 11,33,56, 16,48,81}}; // phase1
+// phase1: ok
 int PixelBarrelName::convertLadderNumber(int oldLadder) {
   int ladder=-1;
   int ind=0;
