@@ -22,7 +22,7 @@ public:
 
   static bool isBarrel(uint32_t rawDetId) { return ( 1==((rawDetId>>25)&0x7)); }
 
-  /// associated name 
+  /// associated name
   virtual std::string name() const = 0;
 
   /// module type

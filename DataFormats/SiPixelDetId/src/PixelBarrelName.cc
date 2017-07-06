@@ -9,37 +9,37 @@
 #include <iostream>
 
 using namespace std;
- 
+
 namespace {
   // ladder limits
   // for phase 0
   const int lL[2][12] ={{5,15,26, 8,24,41,11,33,56, 0, 0, 0},
 			{3, 9,16, 7,21,36,11,33,56,16,48,81}};
   // for phase 1
-  //const int lL[12] ={ 3, 9,16, 7,21,36,11,33,56,16,48,81};  
-  //const bool phase1 = false; // this has to come from the trackerTopology class 
+  //const int lL[12] ={ 3, 9,16, 7,21,36,11,33,56,16,48,81};
+  //const bool phase1 = false; // this has to come from the trackerTopology class
 }
 
-PixelBarrelName::PixelBarrelName(const DetId & id, const TrackerTopology* tt, bool phase) 
+PixelBarrelName::PixelBarrelName(const DetId & id, const TrackerTopology* tt, bool phase)
   : PixelModuleName(true), thePart(mO), theLayer(0),
     theModule(0), theLadder(0), phase1(phase) {
 
   theLayer = tt->pxbLayer(id);
-  int oldModule = tt->pxbModule(id);  // CMSSW convention 
+  int oldModule = tt->pxbModule(id);  // CMSSW convention
   int oldLadder = tt->pxbLadder(id);  // CMSSW convention
 
   int ladder = convertLadderNumber(oldLadder); // convert to online convention
-  int module = oldModule-4; // convert 
-  if (module<=0) module--; 
+  int module = oldModule-4; // convert
+  if (module<=0) module--;
 
   //
   // part
   //
-  if      (module < 0 && ladder < 0) thePart = mO; 
+  if      (module < 0 && ladder < 0) thePart = mO;
   else if (module > 0 && ladder < 0) thePart = pO;
   else if (module < 0 && ladder > 0) thePart = mI;
   else if (module > 0 && ladder > 0) thePart = pI;
-  
+
   //
   // ladder
   //
@@ -53,11 +53,11 @@ PixelBarrelName::PixelBarrelName(const DetId & id, const TrackerTopology* tt, bo
 }
 
 // Old constructor, works with the old pixel classes  DO NOT USE
-PixelBarrelName::PixelBarrelName(const DetId & id, bool phase) 
+PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
   : PixelModuleName(true), thePart(mO), theLayer(0),
     theModule(0), theLadder(0), phase1(phase) {
- 
-  //  uint32_t rawId = id.rawId(); 
+
+  //  uint32_t rawId = id.rawId();
   PXBDetId cmssw_numbering(id);
 
   theLayer = cmssw_numbering.layer();
@@ -71,50 +71,50 @@ PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
       if (oldLadder <= 3) oldLadder = 4-oldLadder;                                // +1, ..., +3
       else if (oldLadder >= 4 && oldLadder <= 9 ) oldLadder = 3-oldLadder;        // -1, ..., -6
       else if (oldLadder >= 10) oldLadder = 16-oldLadder;                         // +6, ..., +4
-    } 
+    }
     else if (theLayer == 2) {
       if (oldLadder <= 7) oldLadder = 8-oldLadder;
       else if (oldLadder >= 8 && oldLadder <= 21) oldLadder = 7-oldLadder;
-      else if (oldLadder >= 22) oldLadder = 36-oldLadder; 
-    } 
+      else if (oldLadder >= 22) oldLadder = 36-oldLadder;
+    }
     else if (theLayer == 3) {
       if (oldLadder <= 11) oldLadder = 12-oldLadder;
       else if (oldLadder >= 12 && oldLadder <= 33) oldLadder = 11-oldLadder;
       else if (oldLadder >= 34) oldLadder = 56-oldLadder;
-    } 
+    }
     else if (theLayer == 4) {
       if (oldLadder <= 16) oldLadder = 17-oldLadder;
       else if (oldLadder >= 17 && oldLadder <= 48) oldLadder = 16-oldLadder;
       else if (oldLadder >= 49) oldLadder = 81-oldLadder;
-    } 
-    
+    }
+
   } else { // phase 0
 
     if (theLayer == 1) {
       if (oldLadder <= 5) oldLadder = 6-oldLadder;
       else if (oldLadder >= 6 && oldLadder <= 15 ) oldLadder = 5-oldLadder;
       else if (oldLadder >= 16) oldLadder = 26-oldLadder;
-    } 
+    }
     else if (theLayer == 2) {
       if (oldLadder <= 8) oldLadder = 9-oldLadder;
       else if (oldLadder >= 9 && oldLadder <= 24) oldLadder = 8-oldLadder;
-      else if (oldLadder >= 25) oldLadder = 41-oldLadder; 
-    } 
+      else if (oldLadder >= 25) oldLadder = 41-oldLadder;
+    }
     else if (theLayer == 3) {
       if (oldLadder <= 11) oldLadder = 12-oldLadder;
       else if (oldLadder >= 12 && oldLadder <= 33) oldLadder = 11-oldLadder;
       else if (oldLadder >= 34) oldLadder = 56-oldLadder;
-    } 
+    }
   } // end phase 0/1
- 
+
   //
   // part
   //
-  if      (oldModule < 0 && oldLadder < 0) thePart = mO; 
+  if      (oldModule < 0 && oldLadder < 0) thePart = mO;
   else if (oldModule > 0 && oldLadder < 0) thePart = pO;
   else if (oldModule < 0 && oldLadder > 0) thePart = mI;
   else if (oldModule > 0 && oldLadder > 0) thePart = pI;
-  
+
 
   //
   // ladder
@@ -129,54 +129,54 @@ PixelBarrelName::PixelBarrelName(const DetId & id, bool phase)
 }
 
 
-// convert ladder number 
+// convert ladder number
 int PixelBarrelName::convertLadderNumber(int oldLadder) {
   int ladder=-1;
   int ind=0;
   if(phase1) ind=1;
 
   if (theLayer == 1) {
-    if       (oldLadder <= lL[ind][0] )                         
+    if       (oldLadder <= lL[ind][0] )
       ladder =(lL[ind][0]+1)-oldLadder;
-    else if (oldLadder >= (lL[ind][0]+1) && oldLadder <= lL[ind][1]) 
+    else if (oldLadder >= (lL[ind][0]+1) && oldLadder <= lL[ind][1])
       ladder = lL[ind][0]-oldLadder;
-    else if (oldLadder >= (lL[ind][1]+1) )                      
+    else if (oldLadder >= (lL[ind][1]+1) )
       ladder = lL[ind][2]-oldLadder;
 
   } else if (theLayer == 2) {
 
-    if      (oldLadder <=  lL[ind][3])                          
+    if      (oldLadder <=  lL[ind][3])
       ladder =(lL[ind][3]+1)-oldLadder;
-    else if (oldLadder >= (lL[ind][3]+1) && oldLadder <= lL[ind][4]) 
+    else if (oldLadder >= (lL[ind][3]+1) && oldLadder <= lL[ind][4])
       ladder = lL[ind][3]-oldLadder;
-    else if (oldLadder >= (lL[ind][4]+1))                       
-      ladder = lL[ind][5]-oldLadder; 
+    else if (oldLadder >= (lL[ind][4]+1))
+      ladder = lL[ind][5]-oldLadder;
 
   } else if (theLayer == 3) {
 
-    if      (oldLadder <=  lL[ind][6])                          
+    if      (oldLadder <=  lL[ind][6])
       ladder = (lL[ind][6]+1)-oldLadder;
-    else if (oldLadder >= (lL[ind][6]+1) && oldLadder <= lL[ind][7]) 
+    else if (oldLadder >= (lL[ind][6]+1) && oldLadder <= lL[ind][7])
       ladder = lL[ind][6]-oldLadder;
-    else if (oldLadder >= (lL[ind][7]+1))                       
+    else if (oldLadder >= (lL[ind][7]+1))
       ladder = lL[ind][8]-oldLadder;
 
   } else if (theLayer == 4) {
 
-    if      (oldLadder <=  lL[ind][9])                           
+    if      (oldLadder <=  lL[ind][9])
       ladder =(lL[ind][9]+1)-oldLadder;
-    else if (oldLadder >= (lL[ind][9]+1) && oldLadder <= lL[ind][10]) 
+    else if (oldLadder >= (lL[ind][9]+1) && oldLadder <= lL[ind][10])
       ladder = lL[ind][9]-oldLadder;
-    else if (oldLadder >= (lL[ind][10]+1))                       
+    else if (oldLadder >= (lL[ind][10]+1))
       ladder = lL[ind][11]-oldLadder;
 
-  } 
-  
+  }
+
   return ladder;
 }
 
 // constructor from name string
-PixelBarrelName::PixelBarrelName(std::string name, bool phase) 
+PixelBarrelName::PixelBarrelName(std::string name, bool phase)
   : PixelModuleName(true), thePart(mO), theLayer(0),
     theModule(0), theLadder(0), phase1(phase) {
 
@@ -184,11 +184,11 @@ PixelBarrelName::PixelBarrelName(std::string name, bool phase)
   // first, check to make sure this is an BPix name, should start with "BPix_"
   // also check to make sure the needed parts are present
   if ( (name.substr(0, 5) != "BPix_") ||
-       (name.find("_B") == string::npos) || 
+       (name.find("_B") == string::npos) ||
        (name.find("_LYR") == string::npos) ||
-       (name.find("_LDR") == string::npos) || 
+       (name.find("_LDR") == string::npos) ||
        (name.find("_MOD") == string::npos) ) {
-    edm::LogError ("BadNameString|SiPixel") 
+    edm::LogError ("BadNameString|SiPixel")
       << "Bad name string in PixelBarrelName::PixelBarrelName(std::string): "
       << name;
     return;
@@ -363,7 +363,7 @@ int PixelBarrelName::sectorName() const
       case  8: case  9: {sector = 5; break;}
       case 10:          {sector = 6; break;}
       case 11: case 12: {sector = 7; break;}
-      case 13: case 14: {sector = 8; break;}    
+      case 13: case 14: {sector = 8; break;}
       default: ;
       };
 
@@ -432,7 +432,7 @@ int PixelBarrelName::sectorName() const
 
 }
 
-bool PixelBarrelName::isHalfModule() const 
+bool PixelBarrelName::isHalfModule() const
 {
   bool halfModule = false;
 
@@ -445,27 +445,27 @@ bool PixelBarrelName::isHalfModule() const
   return halfModule;
 }
 
-PixelModuleName::ModuleType  PixelBarrelName::moduleType() const 
+PixelModuleName::ModuleType  PixelBarrelName::moduleType() const
 {
   return isHalfModule() ? PixelBarrelName::v1x8 : PixelBarrelName::v2x8;
 }
 
 bool PixelBarrelName::operator==(const PixelModuleName &o) const
 {
-  if ( o.isBarrel() ) { 
+  if ( o.isBarrel() ) {
     const PixelBarrelName *other = dynamic_cast<const PixelBarrelName*>(&o);
     return (    other
-             && thePart   == other->thePart 
-             && theLayer  == other->theLayer 
-             && theModule == other->theModule 
+             && thePart   == other->thePart
+             && theLayer  == other->theLayer
+             && theModule == other->theModule
              && theLadder == other->theLadder);
-  } else return false; 
+  } else return false;
 }
 
-string PixelBarrelName::name() const 
+string PixelBarrelName::name() const
 {
    std::ostringstream stm;
-   
+
    stm<<"BPix_B"<<thePart<<"_SEC"<<sectorName()<<"_LYR"<<theLayer<<"_LDR"<<theLadder;
    if ( isHalfModule() ) stm <<"H"; else stm <<"F";
    stm << "_MOD" << theModule;
@@ -512,7 +512,7 @@ DetId PixelBarrelName::getDetId(const TrackerTopology* tt) {
     } else if (layer == 4) {
       if (tmpLadder <= lL[ind][9]) ladder = (lL[ind][9]+1) - tmpLadder;
       else                         ladder =  lL[ind][11]   - tmpLadder;
-    } // layer 
+    } // layer
   } // inner
 
   // translate the module number from naming convention to cmssw convention
@@ -524,11 +524,11 @@ DetId PixelBarrelName::getDetId(const TrackerTopology* tt) {
 
   DetId id = tt->pxbDetId(layer, ladder, module);
   return id;
-}  
+}
 
 // return the pixel DetId, obsolete, uses the old index class
 PXBDetId PixelBarrelName::getDetId() {
-  
+
   uint32_t layer = 0;
   uint32_t ladder = 0;
   uint32_t module = 0;
@@ -566,11 +566,11 @@ PXBDetId PixelBarrelName::getDetId() {
       } else if (layer == 4) {
 	if (tmpLadder <= 16) ladder = 17 - tmpLadder;
 	else if (tmpLadder <= 32) ladder = 81 - tmpLadder;
-      } // layer 
+      } // layer
     } // inner
 
   } else { // phase 0
-    if (outer) { // outer 
+    if (outer) { // outer
       if (layer == 1)
 	ladder = tmpLadder + 5;
       else if (layer == 2)
@@ -587,7 +587,7 @@ PXBDetId PixelBarrelName::getDetId() {
       } else if (layer == 3) { // layer 3
 	if (tmpLadder <= 11) ladder = 12 - tmpLadder;
 	else if (tmpLadder <= 22) ladder = 56 - tmpLadder;
-      } // end layer 
+      } // end layer
     } // inner
 
   } // phase
@@ -601,7 +601,7 @@ PXBDetId PixelBarrelName::getDetId() {
     module = 5 - tmpModule;
 
   return PXBDetId(layer, ladder, module);
-} 
+}
 
 std::ostream & operator<<( std::ostream& out, const PixelBarrelName::Shell& t)
 {

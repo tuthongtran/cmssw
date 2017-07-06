@@ -21,13 +21,13 @@ public:
   /// ctor from DetId
   PixelBarrelName(const DetId &, const TrackerTopology* tt, bool phase=false);
 
-  // do not use, works only for phase0 and old pixel classes 
+  // do not use, works only for phase0 and old pixel classes
   PixelBarrelName(const DetId &, bool phase=false);
 
   /// ctor for defined name with dummy parameters
  PixelBarrelName(Shell shell=mO, int layer=0, int module=0, int ladder=0, bool phase=false)
-   : PixelModuleName(true), 
-    thePart(shell), theLayer(layer), theModule(module), theLadder(ladder), phase1(phase) 
+   : PixelModuleName(true),
+    thePart(shell), theLayer(layer), theModule(module), theLadder(ladder), phase1(phase)
   { }
 
   /// ctor from name string
@@ -42,21 +42,21 @@ public:
 
   Shell shell() const { return thePart; }
 
-  /// layer id 
-  int layerName() const { return theLayer; }   
+  /// layer id
+  int layerName() const { return theLayer; }
 
-  /// module id (index in z) 
-  int moduleName() const { return theModule; }  
+  /// module id (index in z)
+  int moduleName() const { return theModule; }
 
-  /// ladder id (index in phi) 
-  int ladderName() const { return theLadder; } 
+  /// ladder id (index in phi)
+  int ladderName() const { return theLadder; }
 
   /// sector id
   int sectorName() const;
 
   /// full or half module
   bool isHalfModule() const;
-  
+
   /// module Type
   virtual PixelModuleName::ModuleType  moduleType() const;
 
