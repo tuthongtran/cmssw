@@ -16,7 +16,7 @@ public:
   virtual ~PixelModuleName();
 
   /// return the DetId
-  DetId getDetId() { return m_detId; }
+  DetId getDetId() const { return m_detId; }
 
   /// true for barrel modules
   bool isBarrel() const { return isBarrel(m_detId); }
