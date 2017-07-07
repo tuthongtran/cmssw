@@ -1,14 +1,7 @@
 #ifndef SiPixelDetId_PixelEndcapName_H
 #define SiPixelDetId_PixelEndcapName_H
 
-namespace std {
-  class string;
-  class ostream;
-};
-
 #include "DataFormats/SiPixelDetId/interface/PixelModuleName.h"
-
-class PXFDetId;
 
 class TrackerTopology;
 
@@ -20,62 +13,36 @@ public:
 
   enum HalfCylinder { mO = 1, mI = 2 , pO =3 , pI =4 };
 
-  /// ctor from DetId
-  // NOTE (DetId, bool)
-  PixelEndcapName(const DetId &, bool phase=false);
-  // NOTE (DetId, const TrackerTopology*, bool)
-  PixelEndcapName(const DetId &, const TrackerTopology* tt, bool phase=false);
+  PixelEndcapName(DetId, const TrackerTopology*, bool phase);
+  virtual ~PixelEndcapName();
 
   /// ctor for defined name
-  // NOTE ??? (in any case explicit)
-  PixelEndcapName( HalfCylinder part = mO, int disk =0, int blade =0, int pannel=0,
-		   int plaq=0, bool phase=false)
-    : PixelModuleName(false),
-      thePart(part), theDisk(disk), theBlade(blade), thePannel(pannel),
-    thePlaquette(plaq), phase1(phase)
-  { }
+  static PixelEndcapName fromName(std::string, const TrackerTopology*, bool phase);
 
-  /// ctor from name string
-  // NOTE explicit
-  PixelEndcapName(std::string name, bool phase=false);
-
-  virtual ~PixelEndcapName() { }
-
-  /// from base class
-  virtual std::string name() const;
+  // accessors
 
   HalfCylinder halfCylinder() const { return thePart; }
-
   /// disk id
   int diskName() const { return theDisk; }
-
   /// blade id
   int bladeName() const { return theBlade; }
-
   /// pannel id
   int pannelName() const { return thePannel; }
-
   /// plaquetteId (in pannel)
   int plaquetteName() const { return thePlaquette; }
-
   /// ring Id
   int ringName() const { return thePlaquette; }
 
+  // interface methods
+
+  virtual std::string name() const override;
   /// module Type
-   virtual PixelModuleName::ModuleType  moduleType() const;
-
-  /// return DetId
-  PXFDetId getDetId();
-  DetId getDetId(const TrackerTopology* tt);
-
-  /// check equality of modules from datamemebers
-  virtual bool operator== (const PixelModuleName &) const;
-
+  virtual PixelModuleName::ModuleType moduleType() const override;
 
 private:
+  bool phase1; // TODO make this an enum?
   HalfCylinder thePart;
   int theDisk, theBlade, thePannel, thePlaquette;
-  bool phase1;
 };
 
 std::ostream & operator<<( std::ostream& out, const PixelEndcapName::HalfCylinder & t);

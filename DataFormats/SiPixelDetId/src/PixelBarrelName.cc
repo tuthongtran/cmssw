@@ -279,7 +279,7 @@ PixelBarrelName PixelBarrelName::fromName(std::string name, const TrackerTopolog
     name = name.substr(0, name.find("_ROC"));
 
   // find shell
-  std::string shellString = name.substr(name.find("_B")+2, name.find("_SEC")-name.find("_B")-2);
+  const std::string shellString = name.substr(name.find("_B")+2, name.find("_SEC")-name.find("_B")-2);
   if (shellString == "mO") thePart = mO;
   else if (shellString == "mI") thePart = mI;
   else if (shellString == "pO") thePart = pO;

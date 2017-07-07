@@ -1,14 +1,13 @@
 #ifndef SiPixelDetId_PixelBarrelName_H
 #define SiPixelDetId_PixelBarrelName_H
 
-/** \class PixelBarrelName
- * Module name (as in PixelDatabase) in barrel
- */
-
 #include "DataFormats/SiPixelDetId/interface/PixelModuleName.h"
 
 class TrackerTopology;
 
+/** \class PixelBarrelName
+ * Module name (as in PixelDatabase) in barrel
+ */
 class PixelBarrelName final : public PixelModuleName {
 public:
 
