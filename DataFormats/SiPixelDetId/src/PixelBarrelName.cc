@@ -244,7 +244,7 @@ PixelModuleName::ModuleType PixelBarrelName::moduleType() const
   return isHalfModule() ? PixelBarrelName::v1x8 : PixelBarrelName::v2x8;
 }
 
-string PixelBarrelName::name() const
+std::string PixelBarrelName::name() const
 {
    std::ostringstream stm;
 
@@ -263,10 +263,10 @@ PixelBarrelName PixelBarrelName::fromName(std::string name, const TrackerTopolog
   // first, check to make sure this is an BPix name, should start with "BPix_"
   // also check to make sure the needed parts are present
   if ( (name.substr(0, 5) != "BPix_") ||
-       (name.find("_B") == string::npos) ||
-       (name.find("_LYR") == string::npos) ||
-       (name.find("_LDR") == string::npos) ||
-       (name.find("_MOD") == string::npos) ) {
+       (name.find("_B") == std::string::npos) ||
+       (name.find("_LYR") == std::string::npos) ||
+       (name.find("_LDR") == std::string::npos) ||
+       (name.find("_MOD") == std::string::npos) ) {
     throw std::invalid_argument("Bad name string in PixelBarrelName::fromName : "+name);
   }
 
@@ -275,7 +275,7 @@ PixelBarrelName PixelBarrelName::fromName(std::string name, const TrackerTopolog
   int theLayer, theModule, theLadder;
 
   // strip off ROC part if it's there
-  if (name.find("_ROC") != string::npos)
+  if (name.find("_ROC") != std::string::npos)
     name = name.substr(0, name.find("_ROC"));
 
   // find shell
@@ -348,8 +348,9 @@ PixelBarrelName PixelBarrelName::fromName(std::string name, const TrackerTopolog
     throw std::invalid_argument("Unable to determine module in PixelBarrelName::fromName(std::string): "+name);
   }
 
+  uint32_t ladder, module;
   // translate the ladder number from the naming convention to the cmssw convention
-  const int id = ( phase1 ? 1 : 0 );
+  const int ind = ( phase1 ? 1 : 0 );
   if ( (thePart == mO) || (thePart == pO) ) { // outer
     switch (theLayer) {
       case 1: ladder = theLadder + lL[ind][0]; break;

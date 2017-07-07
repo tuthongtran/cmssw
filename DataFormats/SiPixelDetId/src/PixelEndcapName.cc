@@ -129,7 +129,7 @@ std::string PixelEndcapName::name() const
 }
 
 // constructor from name string
-PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phase1)
+PixelEndcapName PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phase1)
 {
   // parse the name string
   // first, check to make sure this is an FPix name, should start with "FPix_"
@@ -142,7 +142,6 @@ PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phas
        ( (phase1  && name.find("_RNG") == std::string::npos) ) ||
        ( (!phase1 && name.find("_PLQ") == std::string::npos) ) ) {
     throw std::invalid_argument("Bad name string in PixelEndcapName::PixelEndcapName(std::string): "+name);
-    return;
   }
 
   // results of parsing
@@ -160,7 +159,7 @@ PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phas
   else if (hcString == "pO") thePart = pO;
   else if (hcString == "pI") thePart = pI;
   else {
-    throw std::invalid_arguemnt("Unable to determine half cylinder in PixelEndcapName::PixelEndcapName(std::string): "+name);
+    throw std::invalid_argument("Unable to determine half cylinder in PixelEndcapName::PixelEndcapName(std::string): "+name);
   }
 
   // get the disk
@@ -219,7 +218,7 @@ PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phas
   } else { // phase 0
 
     // find the plaquette
-    string plaquetteString = name.substr(name.find("_PLQ")+4, name.size()-name.find("_PLQ")-4);
+    const std::string plaquetteString = name.substr(name.find("_PLQ")+4, name.size()-name.find("_PLQ")-4);
     if (plaquetteString == "1") tmpPlaquette = 1;
     else if (plaquetteString == "2") tmpPlaquette = 2;
     else if (plaquetteString == "3") tmpPlaquette = 3;
@@ -234,12 +233,11 @@ PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phas
   uint32_t side{0}, blade{0}, module{0};
 
   // figure out the side
-  HalfCylinder hc = halfCylinder();
-  if (hc == mO || hc == mI) side = 1;
-  else if (hc == pO || hc == pI) side = 2;
+  if (thePart == mO || thePart == mI) side = 1;
+  else if (thePart == pO || thePart == pI) side = 2;
 
   // convert blade numbering to cmssw convention
-  const bool outer = (hc == mO) || (hc == pO);
+  const bool outer = (thePart == mO) || (thePart == pO);
 
   if(phase1) { // phase1
     module=1;
@@ -280,7 +278,7 @@ PixelEndcapName::fromName(std::string name, const TrackerTopology* tt, bool phas
     module = tmpPlaquette;
   } // end phase1
 
-  return tt->pxfDetId(side, disk, blade, pannel, module);
+  return PixelEndcapName(tt->pxfDetId(side, disk, blade, pannel, module), tt, phase1);
 }
 
 

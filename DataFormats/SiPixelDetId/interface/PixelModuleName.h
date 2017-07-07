@@ -4,11 +4,6 @@
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 
-namespace std {
-  class string;
-  class ostream;
-};
-
 /** \class PixelModuleName
  * Base class to Pixel modules naming, provides a name as in PixelDatabase
  */
