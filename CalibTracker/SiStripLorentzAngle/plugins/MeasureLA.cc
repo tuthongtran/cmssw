@@ -30,7 +30,7 @@ MeasureLA::MeasureLA(const edm::ParameterSet& conf) :
   localybin(conf.getUntrackedParameter<double>("LocalYBin",0.0)),
   stripsperbin(conf.getUntrackedParameter<unsigned>("StripsPerBin",0)),
   maxEvents( conf.getUntrackedParameter<unsigned>("MaxEvents",0)),
-  tTopo_(LegacyTrackerTopology::getTrackerTopology())
+  tTopo_(LegacyTrackerTopology::getTrackerTopology(conf.getParameter<edm::FileInPath>("TrackerParameters").fullPath()))
 {
   store_methods_and_granularity( reports );
   store_methods_and_granularity( measurementPreferences );

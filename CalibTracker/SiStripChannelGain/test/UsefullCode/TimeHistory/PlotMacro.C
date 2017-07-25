@@ -24,7 +24,7 @@
 // gSystem->Load("libDataFormatsTrackerCommon.so")
 
 
-std::unique_ptr<TrackerTopology> tTopo = LegacyTrackerTopology::getTrackerTopology();
+std::unique_ptr<TrackerTopology> tTopo = LegacyTrackerTopology::getTrackerTopology(std::string(gSystem->Getenv("CMSSW_RELEASE_BASE"))+"src/Geometry/TrackerCommonData/data/trackerParameters.xml");
 
 #include<vector>
 #include"tdrstyle.C"
