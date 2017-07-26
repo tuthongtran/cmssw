@@ -6,9 +6,10 @@
 namespace StandaloneTrackerTopology {
   /**
    * Construct a TrackerTopology from a trackerParameters.xml file
-   * WARNING: this header has been introduced to call a TrackerTopology
-   * object whenever it is not possible to access it through an EventSetup.
-   * Do not use it if that is the case.
+   *
+   * WARNING: this method has been introduced to construct a TrackerTopology
+   * object only for the rare cases where it cannot be retrieved from an
+   * edm::EventSetup (e.g. ROOT macros).
    */
   TrackerTopology fromTrackerParametersXML(const std::string& xmlFileName);
 };
