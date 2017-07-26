@@ -33,7 +33,7 @@ namespace {
     auto_XMLString(XMLCh* xch) : m_xch(xch) {}
     XMLCh* get() const { return m_xch; }
     ~auto_XMLString() { if ( m_xch ) { XMLString::release(&m_xch); } }
-    // avoid double release: make this class move-only (rule of 5)
+    // avoid double release: make this class move-only
     auto_XMLString(const auto_XMLString&) = delete;
     auto_XMLString& operator=(const auto_XMLString&) = delete;
     auto_XMLString(auto_XMLString&& other) { m_xch = other.m_xch; other.m_xch = nullptr; }
