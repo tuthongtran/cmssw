@@ -1,5 +1,6 @@
-#include "DataFormats/TrackerCommon/interface/LegacyTrackerTopology.h"
+#include "DataFormats/TrackerCommon/interface/StandaloneTrackerTopology.h"
 
+#include <memory>
 #include "FWCore/Concurrency/interface/Xerces.h"
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
@@ -64,8 +65,8 @@ namespace {
   }
 }
 
-namespace LegacyTrackerTopology {
-std::unique_ptr<TrackerTopology> getTrackerTopology( const std::string& xmlFileName )
+namespace StandaloneTrackerTopology {
+TrackerTopology fromTrackerParametersXML( const std::string& xmlFileName )
 {
   TrackerTopology::PixelBarrelValues pxbVals;
   TrackerTopology::PixelEndcapValues pxfVals;
@@ -77,7 +78,7 @@ std::unique_ptr<TrackerTopology> getTrackerTopology( const std::string& xmlFileN
   try {
     cms::concurrency::xercesInitialize();
   } catch ( const XMLException& xmlEx ) {
-    throw cms::Exception("LegacyTrackerTopology",
+    throw cms::Exception("StandaloneTrackerTopology",
         "XML exception at initialization : " + xmlc_to_stdstring(xmlEx.getMessage()));
   }
 
@@ -91,13 +92,13 @@ std::unique_ptr<TrackerTopology> getTrackerTopology( const std::string& xmlFileN
   try {
     parser->parse(xmlFileName.c_str());
   } catch ( const XMLException& xmlEx ) {
-    throw cms::Exception("LegacyTrackerTopology",
+    throw cms::Exception("StandaloneTrackerTopology",
         "XML exception when parsing " + xmlFileName + " : " + xmlc_to_stdstring(xmlEx.getMessage()));
   } catch ( const DOMException& domEx ) {
-    throw cms::Exception("LegacyTrackerTopology",
+    throw cms::Exception("StandaloneTrackerTopology",
         "DOM exception when parsing " + xmlFileName + " : " + xmlc_to_stdstring(domEx.getMessage()));
   } catch (...) {
-    throw cms::Exception("LegacyTrackerTopology",
+    throw cms::Exception("StandaloneTrackerTopology",
         "Unexpected exception when parsing " + xmlFileName);
   }
 
@@ -122,7 +123,7 @@ std::unique_ptr<TrackerTopology> getTrackerTopology( const std::string& xmlFileN
             const std::size_t nEntries = att_nEntries.empty() ? 0 : std::stoul(att_nEntries);
             const auto vals = split_string_to_uints(xmlc_to_stdstring(currentNode->getTextContent()));
             if ( nEntries != vals.size() ) {
-              throw cms::Exception("LegacyTrackerTopology",
+              throw cms::Exception("StandaloneTrackerTopology",
                   ("Problem parsing element with name '"+att_name+"' from '"+xmlFileName+"': "+
                    "'nEntries' attribute claims "+std::to_string(nEntries)+" elements, but parsed "+std::to_string(vals.size())));
             }
@@ -221,13 +222,13 @@ std::unique_ptr<TrackerTopology> getTrackerTopology( const std::string& xmlFileN
       }
     }
   } catch (...) {
-    throw cms::Exception("LegacyTrackerTopology",
+    throw cms::Exception("StandaloneTrackerTopology",
         "Unexpected exception in parsing "+xmlFileName);
   }
 
   } // parser and DOM scope
   cms::concurrency::xercesTerminate();
 
-  return std::unique_ptr<TrackerTopology>{new TrackerTopology(pxbVals, pxfVals, tecVals, tibVals, tidVals, tobVals)};
+  return TrackerTopology(pxbVals, pxfVals, tecVals, tibVals, tidVals, tobVals);
 }
 }
