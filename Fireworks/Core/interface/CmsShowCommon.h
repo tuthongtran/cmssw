@@ -44,15 +44,15 @@ class CmsShowCommon : public FWConfigurableParameterizable
 
 public:
    CmsShowCommon(fireworks::Context*);
-   virtual ~CmsShowCommon();
+   ~CmsShowCommon() override;
 
    // ---------- const member functions ---------------------
-   virtual void addTo(FWConfiguration&) const;
+   void addTo(FWConfiguration&) const override;
 
    // ---------- static member functions --------------------
 
    // ---------- member functions ---------------------------
-   virtual void setFrom(const FWConfiguration&);
+   void setFrom(const FWConfiguration&) override;
 
    void setTrackBreakMode();
    void setDrawBreakMarkers();
@@ -107,8 +107,8 @@ protected:
 
 
 private:
-   CmsShowCommon(const CmsShowCommon&); // stop default
-   const CmsShowCommon& operator=(const CmsShowCommon&); // stop default
+   CmsShowCommon(const CmsShowCommon&) = delete; // stop default
+   const CmsShowCommon& operator=(const CmsShowCommon&) = delete; // stop default
 
 };
 
