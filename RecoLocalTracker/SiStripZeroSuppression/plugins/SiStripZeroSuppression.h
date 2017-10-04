@@ -37,7 +37,18 @@ class SiStripZeroSuppression : public edm::stream::EDProducer<>
   void storeBaseline(uint32_t, const medians_t&);
   void storeBaselinePoints(uint32_t);
 
+  typedef std::vector<edm::InputTag>::const_iterator tag_iterator_t;
+  std::vector<edm::DetSet<SiStripDigi> > output_base; 
+  std::vector<edm::DetSet<SiStripRawDigi> > output_base_raw; 
+  std::vector< edm::DetSet<SiStripProcessedRawDigi> > output_apvcm; 
+  std::vector< edm::DetSet<SiStripProcessedRawDigi> > output_baseline;
+  std::vector< edm::DetSet<SiStripRawDigi> > output_pedsubadc;
+  std::vector< edm::DetSet<SiStripDigi> > output_baseline_points;
   std::unique_ptr<SiStripRawProcessingAlgorithms> algorithms;
+  typedef edm::EDGetTokenT< edm::DetSetVector<SiStripRawDigi> > token_t;
+  typedef std::vector<token_t> token_v;
+  typedef token_v::const_iterator token_iterator_t;
+  token_v inputTokens;
 
   bool produceRawDigis;
   bool storeCM;

@@ -21,6 +21,7 @@ public:
 
   void initialize(const edm::EventSetup&);
   void initialize(const edm::EventSetup&, const edm::Event&);
+<<<<<<< HEAD
 
   uint16_t suppressHybridData(const edm::DetSet<SiStripDigi>& inDigis, edm::DetSet<SiStripDigi>& suppressedDigis, digivector_t& rawDigis);
   uint16_t suppressHybridData(uint32_t detId, uint16_t firstAPV, digivector_t& processedRawDigis, edm::DetSet<SiStripDigi>& suppressedDigis);
@@ -31,6 +32,8 @@ public:
   uint16_t suppressProcessedRawData(uint32_t detId, uint16_t firstAPV, digivector_t& procRawDigis, edm::DetSet<SiStripDigi>& output);
   uint16_t suppressProcessedRawData(const edm::DetSet<SiStripRawDigi>& rawDigis, edm::DetSet<SiStripDigi>& output);
 
+  int16_t SubtractPedestalVirginRawData(const uint32_t&, const uint16_t&, std::vector<int16_t>&, edm::DetSet<SiStripRawDigi>&);
+  int16_t SubtractPedestalVirginRawData(const edm::DetSet<SiStripRawDigi>&, edm::DetSet<SiStripRawDigi>& );
 
   uint16_t convertVirginRawToHybrid(uint32_t detId, uint16_t firstAPV, digivector_t& inDigis, edm::DetSet<SiStripDigi>& rawDigis);
   uint16_t convertVirginRawToHybrid(const edm::DetSet<SiStripRawDigi>& rawDigis, edm::DetSet<SiStripDigi>& suppressedDigis);
@@ -46,7 +49,6 @@ public:
   const std::unique_ptr<SiStripCommonModeNoiseSubtractor> subtractorCMN;
   const std::unique_ptr<SiStripFedZeroSuppression> suppressor;
   const std::unique_ptr<SiStripAPVRestorer> restorer;
-
  private:
   const bool doAPVRestore;
   const bool useCMMeanMap;
