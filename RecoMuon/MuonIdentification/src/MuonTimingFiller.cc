@@ -154,7 +154,9 @@ void
 MuonTimingFiller::fillTimeFromMeasurements( const TimeMeasurementSequence& tmSeq, reco::MuonTimeExtra &muTime ) {
   std::vector <double> x,y;
   double invbeta(0), invbetaerr(0);
-  double vertexTime(0), vertexTimeErr(0), vertexTimeR(0), vertexTimeRErr(0);    
+  double vertexTime(0), vertexTimeErr(0), vertexTimeR(0), vertexTimeRErr(0);
+  std::vector<float> vertexTimeHIT;
+  std::vector<float> vertexTimeRHIT;
   double freeBeta(0), freeBetaErr(0), freeTime(0), freeTimeErr(0);
 
   if (tmSeq.dstnc.size()<=1) return;
@@ -165,6 +167,8 @@ MuonTimingFiller::fillTimeFromMeasurements( const TimeMeasurementSequence& tmSeq
     y.push_back(tmSeq.local_t0.at(i)+tmSeq.dstnc.at(i)/30.);
     vertexTime+=tmSeq.local_t0.at(i)*tmSeq.weightTimeVtx.at(i)/tmSeq.totalWeightTimeVtx;
     vertexTimeR+=(tmSeq.local_t0.at(i)+2*tmSeq.dstnc.at(i)/30.)*tmSeq.weightTimeVtx.at(i)/tmSeq.totalWeightTimeVtx;
+    vertexTimeHIT.push_back(vertexTime);
+    vertexTimeRHIT.push_back(vertexTimeR);
   }
 
   double diff;
@@ -188,6 +192,10 @@ MuonTimingFiller::fillTimeFromMeasurements( const TimeMeasurementSequence& tmSeq
   muTime.setTimeAtIpInOutErr(vertexTimeErr);
   muTime.setTimeAtIpOutIn(vertexTimeR);
   muTime.setTimeAtIpOutInErr(vertexTimeRErr);
+
+
+  muTime.setTimeAtIpInOutHIT(vertexTimeHIT);//TODO
+  muTime.setTimeAtIpOutInHIT(vertexTimeRHIT);
       
   rawFit(freeBeta, freeBetaErr, freeTime, freeTimeErr, x, y);
 
