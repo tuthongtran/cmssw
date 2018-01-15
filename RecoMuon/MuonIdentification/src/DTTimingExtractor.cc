@@ -184,7 +184,11 @@ void DTTimingExtractor::fillTiming(TimeMeasurementSequence &tmSequence,
 	thisHit.station = station;
 	if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr=segm->t0();
 	else thisHit.timeCorr=0.;
+
+        std::cout << "segment t0 " << thisHit.timeCorr << " useSegmentT0_  " << useSegmentT0_  << " segm->ist0Valid() " << segm->ist0Valid() << std::endl;
+        std::cout << " ***  real Segment t0: " << segm->t0() << std::endl;
 	thisHit.timeCorr += theTimeOffset_;
+        std::cout << "segment t0 with correction " << thisHit.timeCorr << std::endl;
 	  
 	// signal propagation along the wire correction for unmached theta or phi segment hits
 	if (doWireCorr_ && !bothProjections && tsos.first.isValid()) {
@@ -275,6 +279,7 @@ void DTTimingExtractor::fillTiming(TimeMeasurementSequence &tmSequence,
 	  continue;
 	}
 
+        //std::cout << "segment t0 with local hit info (maybe) fitted " << local_t0.at(i) << "vtx time " << timeVtx <<  std::endl;
 	// a segment must have at least one left and one right hit
 	if ((hitxl.empty()) || (hityl.empty())) continue;
 
@@ -291,6 +296,8 @@ void DTTimingExtractor::fillTiming(TimeMeasurementSequence &tmSequence,
 	  double hitLocalPos = tm.posInLayer;
 	  int hitSide = -tm.isLeft*2+1;
 	  double t0_segm = (-(hitSide*segmLocalPos)+(hitSide*hitLocalPos))/0.00543+tm.timeCorr;
+          std::cout << "segment t0 with local hit info " << t0_segm << std::endl;
+	  //double t0_atHit = (-(hitSide*segmLocalPos)+(hitSide*hitLocalPos))/0.00543+tm->timeCorr;
 	  
 	  if (debug) std::cout << "   Segm hit.  dstnc: " << tm.distIP << "   t0: " << t0_segm << std::endl;
             
@@ -318,6 +325,7 @@ void DTTimingExtractor::fillTiming(TimeMeasurementSequence &tmSequence,
     for (unsigned int i=0;i<dstnc.size();i++) {
       invbeta+=(1.+local_t0.at(i)/dstnc.at(i)*30.)*hitWeightInvbeta.at(i)/totalWeightInvbeta;
       timeVtx+=local_t0.at(i)*hitWeightTimeVtx.at(i)/totalWeightTimeVtx;
+      std::cout << "hit " << i <<  "segment t0 with local hit info " << local_t0.at(i) << "vtx time " << timeVtx <<  std::endl;
     }
     
     double chimax=0.;

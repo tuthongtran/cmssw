@@ -718,6 +718,8 @@ namespace  // Unnamed namespace for things only used in this file
     int newLayer = 0;
     DetId oldDetector;
     DetId newDetector;
+    std::vector<uint32_t> hitDetU;
+    std::vector<DetId> hitDetId;
 
     // Loop over the SimHits associated to this SimTrack
     // in the order defined by time of flight, which is
@@ -762,6 +764,9 @@ namespace  // Unnamed namespace for things only used in this file
 
           newLayer = tTopo->layer(newDetector);
 
+          hitDetU.push_back( pSimHit->detUnitId() );
+          hitDetId.push_back(DetId( pSimHit->detUnitId() ));
+
           // Count hits using layers for glued detectors
           if ((oldLayer != newLayer || (oldLayer == newLayer && oldDetector.subdetId() != newDetector.subdetId())))
             ++matchedHits;
@@ -772,7 +777,10 @@ namespace  // Unnamed namespace for things only used in this file
     returnValue.setNumberOfTrackerLayers(matchedHits);
     returnValue.setNumberOfHits(numberOfHits);
     returnValue.setNumberOfTrackerHits(numberOfTrackerHits);
+    returnValue.setTkHitDetU(hitDetU);
+    returnValue.setTkHitDetId(hitDetId);
 
+    //std::cout << " in here 0 hit det id set with  size " << hitDetU.size() << endl;
     return returnValue;
   }
 
@@ -1394,6 +1402,15 @@ namespace  // Unnamed namespace for things only used in this file
                                                               newTrackingParticle.numberOfTrackerHits());
           pBremParentTrackingParticle->setNumberOfTrackerLayers(pBremParentTrackingParticle->numberOfTrackerLayers() +
                                                                 newTrackingParticle.numberOfTrackerLayers());
+
+          //vector<uint32_t> bsTkU = pBremParentTrackingParticle->tkHitDetU).insert( (pBremParentTrackingParticle->tkHitDetU).end(), (newTrackingParticle->tkHitDetU).begin(), (newTrackingParticle->tkHitDetU).end() );
+          //std::cout << " in here 1 size of my vector " << pBremParentTrackingParticle->tkHitDetU().size() << endl;
+
+          //(pBremParentTrackingParticle->tkHitDetU()).insert( (pBremParentTrackingParticle->tkHitDetU()).end(), (newTrackingParticle.tkHitDetU()).begin(), (newTrackingParticle.tkHitDetU()).end() );
+          //pBremParentTrackingParticle->tkHitDetId().insert( pBremParentTrackingParticle->tkHitDetId().end(), newTrackingParticle.tkHitDetId().begin(), newTrackingParticle.tkHitDetId().end() );
+
+          //pBremParentTrackingParticle->setTkHitDetU( pBremParentTrackingParticle->tkHitDetU()); //here is a vector problem TODO
+          //pBremParentTrackingParticle->setTkHitDetId( pBremParentTrackingParticle->tkHitDetId());
 
           // Set a proxy in the output collection wrapper so that any attempt to
           // get objects for this DecayChainTrack again get redirected to the brem
