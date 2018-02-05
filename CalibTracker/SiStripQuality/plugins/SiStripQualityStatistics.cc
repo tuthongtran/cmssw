@@ -51,7 +51,6 @@ void SiStripQualityStatistics::endJob(){
     tkMapFullIOVs->print(false,0,0,filename);
   
     if(saveTkHistoMap_){
-      tkhisto->save(filename+".root");
       tkhisto->saveAsCanvas(filename+"_Canvas.root","E");
     }
   }

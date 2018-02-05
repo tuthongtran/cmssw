@@ -42,7 +42,6 @@ class TkHistoMap{
   void add(DetId detid,float value);
 
   void dumpInTkMap(TrackerMap* tkmap, bool dumpEntries=false); //dumpEntries==true? (dump entries) : (dump mean values)
-  void save(const std::string& filename);
   void saveAsCanvas(const std::string& filename, const std::string& options="", const std::string& mode="RECREATE");
 
  private:

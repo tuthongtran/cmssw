@@ -471,10 +471,6 @@ APVShotsAnalyzer::endJob() {
   tkmap.save(true,0,0,tkshotmultmapname);
   std::string tkstripmultmapname = "StripMultiplicity_" + _suffix + ".png";
   tkmap2.save(true,0,0,tkstripmultmapname);
-
-  std::string rootmapname = "TKMap_"+_suffix+".root";
-  tkhisto->save(rootmapname);
-  tkhisto2->save(rootmapname);
 }
 
 

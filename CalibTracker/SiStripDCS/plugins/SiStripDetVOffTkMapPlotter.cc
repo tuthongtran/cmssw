@@ -40,8 +40,6 @@ private:
   std::string m_Time;
   // Set the plot format. Default: png.
   std::string m_plotFormat;
-  // Specify output root file name. Leave empty if do not want to save plots in a root file.
-  std::string m_outputFile;
 
   edm::Service<SiStripDetInfoFileReader> detidReader;
 };
@@ -52,8 +50,7 @@ SiStripDetVOffTkMapPlotter::SiStripDetVOffTkMapPlotter(const edm::ParameterSet& 
     m_plotTag( iConfig.getParameter< std::string >("Tag") ),
     m_IOV( iConfig.getUntrackedParameter< cond::Time_t >("IOV", 0) ),
     m_Time( iConfig.getUntrackedParameter< std::string >("Time", "") ),
-    m_plotFormat( iConfig.getUntrackedParameter< std::string >("plotFormat", "png") ),
-    m_outputFile( iConfig.getUntrackedParameter< std::string >("outputFile", "") ){
+    m_plotFormat( iConfig.getUntrackedParameter< std::string >("plotFormat", "png") ){
   m_connectionPool.setParameters( iConfig.getParameter<edm::ParameterSet>("DBParameters")  );
   m_connectionPool.configure();
 }
@@ -114,12 +111,6 @@ void SiStripDetVOffTkMapPlotter::analyze(const edm::Event& evt, const edm::Event
   hvmap.setPalette(1);
   lvmap.save(true,0,0,"LV_tkMap_"+formatIOV(theIov)+"."+m_plotFormat);
   hvmap.save(true,0,0,"HV_tkMap_"+formatIOV(theIov)+"."+m_plotFormat);
-
-  if (!m_outputFile.empty()){
-    lvhisto.save(m_outputFile);
-    hvhisto.save(m_outputFile);
-  }
-
 }
 
 void SiStripDetVOffTkMapPlotter::endJob() {

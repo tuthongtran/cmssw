@@ -49,10 +49,6 @@ void TkHistoMap::loadServices(){
   dqmStore_=edm::Service<DQMStore>().operator->();
 }
 
-void TkHistoMap::save(const std::string& filename){
-  dqmStore_->save(filename);
-}
-
 void TkHistoMap::loadTkHistoMap(const std::string& path, const std::string& MapName, bool mechanicalView){
   MapName_=MapName;
   std::string fullName, folder;

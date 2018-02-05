@@ -138,11 +138,6 @@ TkVoltageMapCreator::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetu
 
   lvmap.save(true,0,0,_lvtkmapname);
   hvmap.save(true,0,0,_hvtkmapname);
-
-  //TODO could make the root file name a parameter to avoid overwriting everytime...
-  std::string rootmapname = "VoltageStatus.root";
-  lvhisto.save(rootmapname);
-  hvhisto.save(rootmapname);
 }
 
 void 
