@@ -16,11 +16,7 @@ class TkHistoMap{
 
  public:
   TkHistoMap(const TkDetMap* tkDetMap, DQMStore::IBooker & ibooker, const std::string& path, const std::string& MapName, float baseline=0, bool mechanicalView=false);
-  TkHistoMap(const TkDetMap* tkDetMap, const std::string& path, const std::string& MapName, float baseline=0, bool mechanicalView=false);
   TkHistoMap(const TkDetMap* tkDetMap);
-  ~TkHistoMap(){};
-
-  void loadServices();
 
   void loadTkHistoMap(DQMStore::IGetter& igetter, const std::string& path, const std::string& MapName, bool mechanicalView=false);
 
@@ -46,13 +42,10 @@ class TkHistoMap{
 
  private:
 
-  //fixme: keep single method
-  void createTkHistoMap(const std::string& path, const std::string& MapName, float baseline, bool mechanicalView);
   void createTkHistoMap(DQMStore::IBooker & ibooker , const std::string& path, const std::string& MapName, float baseline, bool mechanicalView);
 
   std::string folderDefinition(std::string path, const std::string& MapName, int layer , bool mechanicalView, std::string& fullName);
 
-  DQMStore* dqmStore_;
   const TkDetMap* tkdetmap_;
   DetId cached_detid;
   int16_t cached_layer;

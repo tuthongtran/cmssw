@@ -15,7 +15,8 @@ class SiStripThresholdDQM : public SiStripBaseCondObjDQM{
   SiStripThresholdDQM(const edm::EventSetup & eSetup,
                       edm::RunNumber_t iRun,
                       edm::ParameterSet const& hPSet,
-                      edm::ParameterSet const& fPSet);
+                      edm::ParameterSet const& fPSet,
+                      DQMStore::IBooker& booker);
   
   ~SiStripThresholdDQM() override;
   

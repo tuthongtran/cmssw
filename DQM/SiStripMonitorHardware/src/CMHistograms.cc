@@ -147,10 +147,10 @@ void CMHistograms::bookTopLevelHistograms(DQMStore::IBooker & ibooker, const TkD
     
   //book map after, as it creates a new folder...
   if (tkMapConfig_.enabled){
-    tkmapCM_[0] = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/TkHisto","TkHMap_MeanCMAPV",0.,true);
-    tkmapCM_[1] = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/TkHisto","TkHMap_RmsCMAPV",0.,true);
-    tkmapCM_[2] = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/TkHisto","TkHMap_MeanCMAPV0minusAPV1",-500.,true);
-    tkmapCM_[3] = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/TkHisto","TkHMap_RmsCMAPV0minusAPV1",-500.,true);
+    tkmapCM_[0] = std::make_unique<TkHistoMap>(tkDetMap, ibooker, "SiStrip/TkHisto","TkHMap_MeanCMAPV",0.,true);
+    tkmapCM_[1] = std::make_unique<TkHistoMap>(tkDetMap, ibooker, "SiStrip/TkHisto","TkHMap_RmsCMAPV",0.,true);
+    tkmapCM_[2] = std::make_unique<TkHistoMap>(tkDetMap, ibooker, "SiStrip/TkHisto","TkHMap_MeanCMAPV0minusAPV1",-500.,true);
+    tkmapCM_[3] = std::make_unique<TkHistoMap>(tkDetMap, ibooker, "SiStrip/TkHisto","TkHMap_RmsCMAPV0minusAPV1",-500.,true);
   }
   else {
     tkmapCM_[0] = nullptr;

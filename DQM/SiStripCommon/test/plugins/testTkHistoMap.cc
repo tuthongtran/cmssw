@@ -63,12 +63,14 @@ testTkHistoMap::testTkHistoMap ( const edm::ParameterSet& iConfig ):
 
 void testTkHistoMap::create(const TkDetMap* tkDetMap)
 {
-  tkhisto      = std::make_unique<TkHistoMap>(tkDetMap, "detId","detId",-1);
-  tkhistoBis   = std::make_unique<TkHistoMap>(tkDetMap, "detIdBis","detIdBis",0,1); //here the baseline (the value of the empty,not assigned bins) is put to -1 (default is zero)
-  tkhistoZ     = std::make_unique<TkHistoMap>(tkDetMap, "Zmap","Zmap");
-  tkhistoPhi   = std::make_unique<TkHistoMap>(tkDetMap, "Phi","Phi");
-  tkhistoR     = std::make_unique<TkHistoMap>(tkDetMap, "Rmap","Rmap",-99.); //here the baseline (the value of the empty,not assigned bins) is put to -99 (default is zero)
-  tkhistoCheck = std::make_unique<TkHistoMap>(tkDetMap, "check","check");
+  DQMStore::IBooker* booker_p = nullptr;
+  DQMStore::IBooker& booker = *booker_p; // FIXME use DQMEDAnalyzer
+  tkhisto      = std::make_unique<TkHistoMap>(tkDetMap, booker, "detId","detId",-1);
+  tkhistoBis   = std::make_unique<TkHistoMap>(tkDetMap, booker, "detIdBis","detIdBis",0,1); //here the baseline (the value of the empty,not assigned bins) is put to -1 (default is zero)
+  tkhistoZ     = std::make_unique<TkHistoMap>(tkDetMap, booker, "Zmap","Zmap");
+  tkhistoPhi   = std::make_unique<TkHistoMap>(tkDetMap, booker, "Phi","Phi");
+  tkhistoR     = std::make_unique<TkHistoMap>(tkDetMap, booker, "Rmap","Rmap",-99.); //here the baseline (the value of the empty,not assigned bins) is put to -99 (default is zero)
+  tkhistoCheck = std::make_unique<TkHistoMap>(tkDetMap, booker, "check","check");
 }
 
 /*Check that is possible to load in tkhistomaps histograms already stored in a DQM root file (if the folder and name are know)*/

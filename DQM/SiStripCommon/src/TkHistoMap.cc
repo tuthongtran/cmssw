@@ -9,22 +9,9 @@ TkHistoMap::TkHistoMap(const TkDetMap* tkDetMap):
   cached_layer=0;
   
   LogTrace("TkHistoMap") <<"TkHistoMap::constructor without parameters"; 
-  loadServices();
   tkdetmap_ = tkDetMap;
 }
 
-
-TkHistoMap::TkHistoMap(const TkDetMap* tkDetMap, const std::string& path, const std::string& MapName,float baseline, bool mechanicalView):
-  HistoNumber(35),
-  MapName_(MapName)
-{
-  cached_detid=0;
-  cached_layer=0;
-  LogTrace("TkHistoMap") <<"TkHistoMap::constructor with parameters"; 
-  loadServices();
-  tkdetmap_ = tkDetMap;
-  createTkHistoMap(path,MapName_, baseline, mechanicalView);
-}
 
 TkHistoMap::TkHistoMap(const TkDetMap* tkDetMap, DQMStore::IBooker & ibooker, const std::string& path, const std::string& MapName,float baseline, bool mechanicalView):
   HistoNumber(35),
@@ -33,20 +20,8 @@ TkHistoMap::TkHistoMap(const TkDetMap* tkDetMap, DQMStore::IBooker & ibooker, co
   cached_detid=0;
   cached_layer=0;
   LogTrace("TkHistoMap") <<"TkHistoMap::constructor with parameters"; 
-  loadServices();
   tkdetmap_ = tkDetMap;
   createTkHistoMap(ibooker , path,MapName_, baseline, mechanicalView);
-}
-
-void TkHistoMap::loadServices(){
-  if(!edm::Service<DQMStore>().isAvailable()){
-    edm::LogError("TkHistoMap") << 
-      "\n------------------------------------------"
-      "\nUnAvailable Service DQMStore: please insert in the configuration file an instance like"
-      "\n\tprocess.load(\"DQMServices.Core.DQMStore_cfg\")"
-      "\n------------------------------------------";
-  }
-  dqmStore_=edm::Service<DQMStore>().operator->();
 }
 
 void TkHistoMap::loadTkHistoMap(DQMStore::IGetter& igetter, const std::string& path, const std::string& MapName, bool mechanicalView){
@@ -64,38 +39,6 @@ void TkHistoMap::loadTkHistoMap(DQMStore::IGetter& igetter, const std::string& p
     tkHistoMap_[layer]=igetter.get(folder+fullName);
 #ifdef debug_TkHistoMap
     LogTrace("TkHistoMap")  << "[TkHistoMap::loadTkHistoMap] folder " << folder << " histoName " << fullName << " layer " << layer << " ptr " << tkHistoMap_[layer] << " find " << folder.find_last_of("/") << "  length " << folder.length();
-#endif
-  }
-}
-
-void TkHistoMap::createTkHistoMap(const std::string& path, const std::string& MapName, float baseline, bool mechanicalView){
-  
-  int nchX;
-  int nchY;
-  double lowX,highX;
-  double lowY, highY;
-  std::string fullName, folder;
-
-  tkHistoMap_.resize(HistoNumber);    
-  for(int layer=1;layer<HistoNumber;++layer){
-    folder=folderDefinition(path,MapName,layer,mechanicalView,fullName);
-    dqmStore_->setCurrentFolder(folder);
-    tkdetmap_->getComponents(layer,nchX,lowX,highX,nchY,lowY,highY);
-    MonitorElement* me  = dqmStore_->bookProfile2D(fullName.c_str(),fullName.c_str(),
-						   nchX,lowX,highX,
-						   nchY,lowY,highY,
-                                                   0.0, 0.0);
-    //initialize bin content for the not assigned bins
-    if(baseline!=0){
-      for(size_t ix = 1; ix <= (unsigned int) nchX; ++ix)
-	for(size_t iy = 1;iy <= (unsigned int) nchY; ++iy)
-	  if(!tkdetmap_->getDetFromBin(layer,ix,iy))
-	    me->Fill(1.*(lowX+ix-.5),1.*(lowY+iy-.5),baseline);	  
-    }
-
-    tkHistoMap_[layer]=me;
-#ifdef debug_TkHistoMap
-    LogTrace("TkHistoMap")  << "[TkHistoMap::createTkHistoMap] folder " << folder << " histoName " << fullName << " layer " << layer << " ptr " << tkHistoMap_[layer];
 #endif
   }
 }

@@ -101,10 +101,13 @@ TkVoltageMapCreator::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetu
   iSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
   const TkDetMap* tkDetMap = tkDetMapHandle.product();
 
+  DQMStore::IBooker* booker_p = nullptr;
+  DQMStore::IBooker& booker = *booker_p; // FIXME use DQMEDAnalyzer
+
   TrackerMap lvmap,hvmap;
 
-  TkHistoMap lvhisto(tkDetMap, "LV_Status","LV_Status",-1);
-  TkHistoMap hvhisto(tkDetMap, "HV_Status","HV_Status",-1);
+  TkHistoMap lvhisto(tkDetMap, booker, "LV_Status","LV_Status",-1);
+  TkHistoMap hvhisto(tkDetMap, booker, "HV_Status","HV_Status",-1);
   
   std::ifstream lvdata(_lvfile.c_str());
   std::ifstream hvdata(_hvfile.c_str());

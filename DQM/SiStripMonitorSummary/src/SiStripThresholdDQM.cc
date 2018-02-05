@@ -8,7 +8,8 @@
 SiStripThresholdDQM::SiStripThresholdDQM(const edm::EventSetup & eSetup,
                                          edm::RunNumber_t iRun,
                                          edm::ParameterSet const& hPSet,
-                                         edm::ParameterSet const& fPSet):SiStripBaseCondObjDQM(eSetup, iRun, hPSet, fPSet){
+                                         edm::ParameterSet const& fPSet,
+                                         DQMStore::IBooker& booker):SiStripBaseCondObjDQM(eSetup, iRun, hPSet, fPSet){
   WhichThreshold=hPSet.getParameter<std::string>("WhichThreshold");
 
   // Build the Histo_TkMap:
@@ -16,8 +17,8 @@ SiStripThresholdDQM::SiStripThresholdDQM(const edm::EventSetup & eSetup,
     edm::ESHandle<TkDetMap> tkDetMapHandle;
     eSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
     const TkDetMap* tkDetMap = tkDetMapHandle.product();
-    if(WhichThreshold=="Low") Tk_HM_L = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/Histo_Map","LowThresh_TkMap",0.);
-    if(WhichThreshold=="High") Tk_HM_H = std::make_unique<TkHistoMap>(tkDetMap, "SiStrip/Histo_Map","HighThresh_TkMap",0.);
+    if(WhichThreshold=="Low") Tk_HM_L = std::make_unique<TkHistoMap>(tkDetMap, booker, "SiStrip/Histo_Map","LowThresh_TkMap",0.);
+    if(WhichThreshold=="High") Tk_HM_H = std::make_unique<TkHistoMap>(tkDetMap, booker, "SiStrip/Histo_Map","HighThresh_TkMap",0.);
   }
 }
 

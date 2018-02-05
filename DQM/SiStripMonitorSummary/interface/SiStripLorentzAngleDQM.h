@@ -15,7 +15,8 @@ class SiStripLorentzAngleDQM : public SiStripBaseCondObjDQM{
   SiStripLorentzAngleDQM(const edm::EventSetup & eSetup,
                          edm::RunNumber_t iRun,
                          edm::ParameterSet const& hPSet,
-                         edm::ParameterSet const& fPSet);
+                         edm::ParameterSet const& fPSet,
+                         DQMStore::IBooker& booker);
   
   ~SiStripLorentzAngleDQM() override;
   

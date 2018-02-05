@@ -7,14 +7,15 @@
 SiStripQualityDQM::SiStripQualityDQM(const edm::EventSetup & eSetup,
                                      edm::RunNumber_t iRun,
                                      edm::ParameterSet const& hPSet,
-                                     edm::ParameterSet const& fPSet):SiStripBaseCondObjDQM(eSetup, iRun, hPSet, fPSet){
+                                     edm::ParameterSet const& fPSet,
+                                     DQMStore::IBooker& booker):SiStripBaseCondObjDQM(eSetup, iRun, hPSet, fPSet){
   qualityLabel_ = fPSet.getParameter<std::string>("StripQualityLabel");
 
   // Build the Histo_TkMap:
   if ( HistoMaps_On_ ) {
     edm::ESHandle<TkDetMap> tkDetMapHandle;
     eSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
-    Tk_HM_ = std::make_unique<TkHistoMap>(tkDetMapHandle.product(), "SiStrip/Histo_Map","Quality_TkMap",0.);
+    Tk_HM_ = std::make_unique<TkHistoMap>(tkDetMapHandle.product(), booker, "SiStrip/Histo_Map","Quality_TkMap",0.);
   }
 }
 // -----

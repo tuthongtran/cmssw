@@ -127,7 +127,9 @@ DetIdSelectorTest::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
    if ( ! tkhisto_ ) {
      edm::ESHandle<TkDetMap> tkDetMapHandle;
      iSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
-     tkhisto_ = std::make_unique<TkHistoMap>(tkDetMapHandle.product(), "SelectorTest","SelectorTest",-1);
+     DQMStore::IBooker* booker_p = nullptr;
+     DQMStore::IBooker& booker = *booker_p; // FIXME use DQMEDAnalyzer
+     tkhisto_ = std::make_unique<TkHistoMap>(tkDetMapHandle.product(), booker, "SelectorTest","SelectorTest",-1);
    }
    
    {

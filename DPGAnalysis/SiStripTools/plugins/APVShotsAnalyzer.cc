@@ -252,8 +252,11 @@ APVShotsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      iSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
      const TkDetMap* tkDetMap = tkDetMapHandle.product();
 
-     tkhisto = std::make_unique<TkHistoMap>(tkDetMap, "ShotMultiplicity","ShotMultiplicity",-1);
-     tkhisto2 = std::make_unique<TkHistoMap>(tkDetMap, "StripMultiplicity","StripMultiplicity",-1);
+     DQMStore::IBooker* booker_p = nullptr;
+     DQMStore::IBooker& booker = *booker_p; // FIXME use DQMEDAnalyzer
+
+     tkhisto = std::make_unique<TkHistoMap>(tkDetMap, booker, "ShotMultiplicity","ShotMultiplicity",-1);
+     tkhisto2 = std::make_unique<TkHistoMap>(tkDetMap, booker, "StripMultiplicity","StripMultiplicity",-1);
    }
 
    _nevents++;

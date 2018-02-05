@@ -88,9 +88,11 @@ void SiStripDetVOffTkMapPlotter::analyze(const edm::Event& evt, const edm::Event
   edm::ESHandle<TkDetMap> tkDetMapHandle;
   evtSetup.get<TrackerTopologyRcd>().get(tkDetMapHandle);
   const TkDetMap* tkDetMap = tkDetMapHandle.product();
+  DQMStore::IBooker* booker_p = nullptr;
+  DQMStore::IBooker& booker = *booker_p; // FIXME use DQMEDAnalyzer
   TrackerMap lvmap,hvmap;
-  TkHistoMap lvhisto(tkDetMap, "LV_Status","LV_Status",-1);
-  TkHistoMap hvhisto(tkDetMap, "HV_Status","HV_Status",-1);
+  TkHistoMap lvhisto(tkDetMap, booker, "LV_Status","LV_Status",-1);
+  TkHistoMap hvhisto(tkDetMap, booker, "HV_Status","HV_Status",-1);
 
   auto detids = detidReader->getAllDetIds();
   for (auto id : detids){
