@@ -49,7 +49,7 @@ void TkHistoMap::loadServices(){
   dqmStore_=edm::Service<DQMStore>().operator->();
 }
 
-void TkHistoMap::loadTkHistoMap(const std::string& path, const std::string& MapName, bool mechanicalView){
+void TkHistoMap::loadTkHistoMap(DQMStore::IGetter& igetter, const std::string& path, const std::string& MapName, bool mechanicalView){
   MapName_=MapName;
   std::string fullName, folder;
   tkHistoMap_.resize(HistoNumber);    
@@ -61,7 +61,7 @@ void TkHistoMap::loadTkHistoMap(const std::string& path, const std::string& MapN
 #endif
     if(folder.find_last_of("/")!=folder.length()-1)
       folder+="/";
-    tkHistoMap_[layer]=dqmStore_->get(folder+fullName);
+    tkHistoMap_[layer]=igetter.get(folder+fullName);
 #ifdef debug_TkHistoMap
     LogTrace("TkHistoMap")  << "[TkHistoMap::loadTkHistoMap] folder " << folder << " histoName " << fullName << " layer " << layer << " ptr " << tkHistoMap_[layer] << " find " << folder.find_last_of("/") << "  length " << folder.length();
 #endif
@@ -79,6 +79,7 @@ void TkHistoMap::createTkHistoMap(const std::string& path, const std::string& Ma
   tkHistoMap_.resize(HistoNumber);    
   for(int layer=1;layer<HistoNumber;++layer){
     folder=folderDefinition(path,MapName,layer,mechanicalView,fullName);
+    dqmStore_->setCurrentFolder(folder);
     tkdetmap_->getComponents(layer,nchX,lowX,highX,nchY,lowY,highY);
     MonitorElement* me  = dqmStore_->bookProfile2D(fullName.c_str(),fullName.c_str(),
 						   nchX,lowX,highX,
@@ -110,6 +111,7 @@ void TkHistoMap::createTkHistoMap(DQMStore::IBooker & ibooker , const std::strin
   tkHistoMap_.resize(HistoNumber);    
   for(int layer=1;layer<HistoNumber;++layer){
     folder=folderDefinition(path,MapName,layer,mechanicalView,fullName);
+    ibooker.setCurrentFolder(folder);
     tkdetmap_->getComponents(layer,nchX,lowX,highX,nchY,lowY,highY);
     MonitorElement* me  = ibooker.bookProfile2D(fullName.c_str(),fullName.c_str(),
 						nchX,lowX,highX,
@@ -150,7 +152,6 @@ std::string TkHistoMap::folderDefinition(std::string folder, const std::string& 
     folder = ss.str();
     //    std::cout << "[TkHistoMap::folderDefinition] folder: " << folder << std::endl;
   }
-  dqmStore_->setCurrentFolder(folder);
   return folder;
 }
 

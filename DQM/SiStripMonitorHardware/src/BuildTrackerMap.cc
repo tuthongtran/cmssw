@@ -165,13 +165,15 @@ void BuildTrackerMapPlugin::read(bool aMechView,
   //lDqmStore->setCurrentFolder(dirName);
   //lDqmStore->showDirStructure();
   
+  DQMStore::IGetter* getter_p = nullptr;
+  DQMStore::IGetter& getter{*getter_p}; // FIXME use DQMEDHarvester
   unsigned int nFailTot=0;
   unsigned int nTotTot = 0;
   for (unsigned int i(0); i<nHists; i++){
 
     std::unique_ptr<TkHistoMap> tkHistoMap{new TkHistoMap(tkDetMap)};
 
-    tkHistoMap->loadTkHistoMap(dirName,tkHistoMapNameVec_.at(i),aMechView);
+    tkHistoMap->loadTkHistoMap(getter, dirName,tkHistoMapNameVec_.at(i),aMechView);
     
     std::vector<MonitorElement*>& lMaps = tkHistoMap->getAllMaps();
 

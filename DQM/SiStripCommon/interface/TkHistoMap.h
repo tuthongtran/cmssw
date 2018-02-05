@@ -22,7 +22,7 @@ class TkHistoMap{
 
   void loadServices();
 
-  void loadTkHistoMap(const std::string& path, const std::string& MapName, bool mechanicalView=false);
+  void loadTkHistoMap(DQMStore::IGetter& igetter, const std::string& path, const std::string& MapName, bool mechanicalView=false);
 
   MonitorElement* getMap(short layerNumber){return tkHistoMap_[layerNumber];};
   const std::vector<MonitorElement*>& getAllMaps() const {return tkHistoMap_;};

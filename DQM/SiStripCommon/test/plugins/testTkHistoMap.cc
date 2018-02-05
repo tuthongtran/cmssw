@@ -74,7 +74,7 @@ void testTkHistoMap::create(const TkDetMap* tkDetMap)
 /*Check that is possible to load in tkhistomaps histograms already stored in a DQM root file (if the folder and name are know)*/
 void testTkHistoMap::read(const TkDetMap* tkDetMap)
 {
-  edm::Service<DQMStore>().operator->()->open("test.root");  
+  edm::Service<DQMStore>().operator->()->open("test.root");
 
   tkhisto      = std::make_unique<TkHistoMap>(tkDetMap);
   tkhistoBis   = std::make_unique<TkHistoMap>(tkDetMap);
@@ -83,12 +83,14 @@ void testTkHistoMap::read(const TkDetMap* tkDetMap)
   tkhistoR     = std::make_unique<TkHistoMap>(tkDetMap);
   tkhistoCheck = std::make_unique<TkHistoMap>(tkDetMap);
 
-  tkhisto     ->loadTkHistoMap("detId","detId"); 	    
-  tkhistoBis  ->loadTkHistoMap("detIdBis","detIdBis",1);  
-  tkhistoZ    ->loadTkHistoMap("Zmap","Zmap");		    
-  tkhistoPhi  ->loadTkHistoMap("Phi","Phi");		    
-  tkhistoR    ->loadTkHistoMap("Rmap","Rmap");
-  tkhistoCheck->loadTkHistoMap("check","check");            
+  DQMStore::IGetter* getter_p = nullptr; // FIXME use DQMEDHarvester
+  DQMStore::IGetter& getter = *getter_p;
+  tkhisto     ->loadTkHistoMap(getter, "detId","detId");
+  tkhistoBis  ->loadTkHistoMap(getter, "detIdBis","detIdBis",1);
+  tkhistoZ    ->loadTkHistoMap(getter, "Zmap","Zmap");
+  tkhistoPhi  ->loadTkHistoMap(getter, "Phi","Phi");
+  tkhistoR    ->loadTkHistoMap(getter, "Rmap","Rmap");
+  tkhistoCheck->loadTkHistoMap(getter, "check","check");
 }
 
 testTkHistoMap::~testTkHistoMap()

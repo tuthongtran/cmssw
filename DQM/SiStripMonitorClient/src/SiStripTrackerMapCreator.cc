@@ -678,13 +678,15 @@ void SiStripTrackerMapCreator::createInfoFile(std::vector<std::string> map_names
 
     std::vector<TkHistoMap> tkHMaps;
 
+    DQMStore::IGetter* getter_p = nullptr;
+    DQMStore::IGetter& getter{*getter_p}; // FIXME use DQMEDHarvester
     uint32_t nHists = map_names.size();
 
     for(uint32_t ih = 0; ih < nHists; ++ih) {
       tkHMaps.emplace_back(tkDetMap_);
       if(map_names.at(ih) != "QTestAlarm") {
         std::string tkhmap_name = "TkHMap_" + map_names.at(ih);
-        tkHMaps.at(ih).loadTkHistoMap(dirname, tkhmap_name, true);
+        tkHMaps.at(ih).loadTkHistoMap(getter, dirname, tkhmap_name, true);
       }
     } 
 
