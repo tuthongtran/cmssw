@@ -59,6 +59,14 @@ namespace sistrip {
       os << std::endl;
     }
   }
+
+  void printHexFragment(const uint8_t* pointer, const size_t offsetBegin, const size_t lengthInBytes, std::ostream& os)
+  {
+    const size_t beginWordNum = offsetBegin/8;
+    const size_t offsetEnd = offsetBegin+lengthInBytes;
+    const size_t endWordNum = (offsetEnd%8) ? (offsetEnd/8+1) : offsetEnd/8;
+    printHex(pointer+8*(beginWordNum-1), 8*(std::max(endWordNum-beginWordNum, 1ul)+1), os);
+  }
   
   
   uint16_t calculateFEDBufferCRC(const uint8_t* buffer, const size_t lengthInBytes)

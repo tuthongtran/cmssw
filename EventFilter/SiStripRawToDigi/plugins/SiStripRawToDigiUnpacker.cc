@@ -239,6 +239,9 @@ namespace sistrip {
 	if ( fedEventDumpFreq_ && !(event_%fedEventDumpFreq_) ) {
 	  std::stringstream ss;
 	  buffer->dump( ss );
+          ss << "\n";
+          buffer->print(ss);
+          ss << "\n" << buffer->checkSummary();
 	  edm::LogVerbatim(sistrip::mlRawToDigi_) << ss.str();
 	}
       }
@@ -282,6 +285,12 @@ namespace sistrip {
 	    /// create unpacker
             /// unpack -> add check to make sure strip < nstrips && strip > last strip......
             const uint8_t packet_code = buffer->packetCode(legacy_, iconn->fedCh());
+            if ( edm::isDebugEnabled() ) {
+              edm::LogWarning(sistrip::mlRawToDigi_)
+                << "[sistrip::RawToDigiUnpacker::" << __func__ << "]"
+                << " Unpacking clusters with packet code " << std::hex << uint16_t(packet_code) << std::dec
+                << " for FED " << *ifed << " channel " << iconn->fedCh();
+            }
             switch (packet_code) {
               case PACKET_CODE_ZERO_SUPPRESSED: {
                 sistrip::FEDZSChannelUnpacker unpacker = sistrip::FEDZSChannelUnpacker::zeroSuppressedModeUnpacker(buffer->channel(iconn->fedCh()));

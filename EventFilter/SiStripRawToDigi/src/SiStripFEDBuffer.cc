@@ -446,6 +446,7 @@ namespace sistrip {
        << "Last strip of previous cluster is " << uint16_t(currentStrip) << ". "
        << "First strip of new cluster is " << uint16_t(firstStripOfNewCluster) << "."
        << std::endl;
+    printHexFragment(data_, channelPayloadOffset_, channelPayloadLength_, ss);
     throw cms::Exception("FEDBuffer") << ss.str();
   }
 

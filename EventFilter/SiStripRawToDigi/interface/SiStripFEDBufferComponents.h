@@ -135,6 +135,7 @@ namespace sistrip {
   //used by these classes
   uint8_t internalFEDChannelNum(const uint8_t internalFEUnitNum, const uint8_t internalFEUnitChannelNum);
   void printHex(const void* pointer, const size_t length, std::ostream& os);
+  void printHexFragment(const uint8_t* pointer, const size_t offsetBegin, const size_t lengthInBytes, std::ostream& os);
   //calculate the CRC for a FED buffer
   uint16_t calculateFEDBufferCRC(const uint8_t* buffer, const size_t lengthInBytes);
   //to make enums printable

@@ -11,6 +11,8 @@
 #include "EventFilter/SiStripRawToDigi/interface/SiStripFEDBufferComponents.h"
 
 #include "FWCore/Utilities/interface/GCC11Compatibility.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include <sstream>
 
 namespace sistrip {
 
@@ -154,7 +156,7 @@ namespace sistrip {
       void readNewClusterInfo();
       static void throwBadChannelLength(const uint16_t length);
       static void throwBadWordLength(const uint16_t word_length);
-      static void throwUnorderedData(const uint8_t currentStrip, const uint8_t firstStripOfNewCluster);
+      void throwUnorderedData(const uint8_t currentStrip, const uint8_t firstStripOfNewCluster);
       const uint8_t* data_;
       uint16_t oldWordOffset_;
       uint16_t currentWordOffset_;
@@ -226,7 +228,11 @@ namespace sistrip {
       useZS_(useZS), valuesLeftInCluster_(0)
     {
       if (bitOffsetIncrement_>16) throwBadWordLength(bitOffsetIncrement_); // more than 2 words... still to be implemented
+      std::ostringstream ss;
+      printHexFragment(data_, channelPayloadOffset_, channelPayloadLength_, ss);
+      LogTrace("SiStripRawToDigi") << "Unpacking channel...\n" << ss.str() << std::endl;
       if (channelPayloadLength_) readNewClusterInfo();
+      LogTrace("SiStripRawToDigi") << "end: " << channelPayloadOffset_+channelPayloadLength_ << std::endl;
     }
 
   inline FEDBSChannelUnpacker FEDBSChannelUnpacker::virginRawModeUnpacker(const FEDChannel& channel, uint16_t num_bits)
@@ -266,7 +272,9 @@ namespace sistrip {
       if (currentWordOffset_>oldWordOffset_) {
         adc += ( (data_[(currentWordOffset_+1)^7]>>(8-bits_missing)) );
       }
-      return (adc&((1<<bitOffsetIncrement_)-1));
+      uint16_t ret = (adc&((1<<bitOffsetIncrement_)-1));
+      LogTrace("SiStripRawToDigi") << "ADC: " << ret << std::endl;
+      return ret;
     }
 
   inline bool FEDBSChannelUnpacker::hasData() const
@@ -283,6 +291,9 @@ namespace sistrip {
         currentLocalBitOffset_ -= 8;
       }
       if (useZS_) {
+        LogTrace("SiStripRawToDigi") << "Incremented, oldWordOffset_=" << uint16_t(oldWordOffset_) << " currentWordOffset_=" << uint16_t(currentWordOffset_) << " currentLocalBitOffset_=" << currentLocalBitOffset_ << std::endl;
+        LogTrace("SiStripRawToDigi") << "Values left: " << uint16_t(valuesLeftInCluster_) << ", "
+          << ( hasData() ? "has more" : "has no more" ) << " word: " << currentWordOffset_ << std::endl;
 	if (valuesLeftInCluster_) { currentStrip_++; valuesLeftInCluster_--; }
 	else {
 	  if (hasData()) {
@@ -303,11 +314,13 @@ namespace sistrip {
   inline void FEDBSChannelUnpacker::readNewClusterInfo()
     {
       if ( currentLocalBitOffset_ ) {
+        LogTrace("SiStripRawToDigi") << "Has local offset " << currentLocalBitOffset_ << " -> reset" << std::endl;
         ++currentWordOffset_;
         currentLocalBitOffset_ = 0;
       }
       currentStrip_ = data_[(currentWordOffset_++)^7];
       valuesLeftInCluster_ = data_[(currentWordOffset_++)^7]-1;
+      LogTrace("SiStripRawToDigi") << "Read new cluster with first strip " << uint16_t(currentStrip_) << " and " << valuesLeftInCluster_+1 << " strips, current word: " << currentWordOffset_ << " (" << uint16_t(data_[(currentWordOffset_)^7]) << ")" << std::endl;
     }
 
   
