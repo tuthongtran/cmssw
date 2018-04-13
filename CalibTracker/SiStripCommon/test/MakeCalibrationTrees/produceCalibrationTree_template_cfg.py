@@ -50,6 +50,12 @@ options.register('maxEvents',
                  VarParsing.VarParsing.varType.int,
                  "number of events to process (\"-1\" for all)")
 
+options.register('runNumber',
+                 -1,
+                 VarParsing.VarParsing.multiplicity.singleton,
+                 VarParsing.VarParsing.varType.int,
+                 "run number to process (\"-1\" for all)")
+
 
 
 
@@ -66,6 +72,7 @@ print "inputCollection   : ", options.inputCollection
 print "maxEvents         : ", options.maxEvents
 print "outputFile        : ", options.outputFile
 print "inputFiles        : ", options.inputFiles
+print "runNumber         : ", options.runNumber
 
 
 process = cms.Process('CALIB')
@@ -93,10 +100,19 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxE
 #    )
 
 #import runs
-process.source = cms.Source (
-  "PoolSource",
-  fileNames = cms.untracked.vstring( options.inputFiles )
-    )
+if options.runNumber == -1:
+   process.source = cms.Source (
+     "PoolSource",
+     fileNames = cms.untracked.vstring( options.inputFiles )
+   )
+else:
+   print "Restricting to the following events :"
+   print '%s:1-%s:MAX'%(options.runNumber,options.runNumber)
+   process.source = cms.Source (
+        "PoolSource",
+         fileNames = cms.untracked.vstring( options.inputFiles ),
+         eventsToProcess = cms.untracked.VEventRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
+         )
 
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
@@ -107,6 +123,9 @@ process.CalibrationTracks.src = cms.InputTag( options.inputCollection )
 process.shallowTracks.Tracks  = cms.InputTag( options.inputCollection )
 #process.shallowGainCalibrationAllBunch   = 'ALCARECOSiStripCalMinBias' #cms.InputTag( options.inputCollection )
 #process.shallowGainCalibrationAllBunch0T = 'ALCARECOSiStripCalMinBias' #cms.InputTag( options.inputCollection )
+
+#Setup prescale
+process.prescaleEvent.prescale = 1
 
 
 # BSCNoBeamHalo selection (Not to use for Cosmic Runs) --- OUTDATED!!!
@@ -134,10 +153,10 @@ process.TkCalPath_StdBunch0T = cms.Path(process.TkCalSeq_StdBunch0T *process.sha
 process.TkCalPath_IsoMuon    = cms.Path(process.TkCalSeq_IsoMuon    *process.shallowEventRun*process.testTree)
 process.TkCalPath_IsoMuon0T  = cms.Path(process.TkCalSeq_IsoMuon0T  *process.shallowEventRun*process.testTree)
 process.TkCalPath_AagBunch   = cms.Path(process.TkCalSeq_AagBunch   *process.shallowEventRun*process.testTree)
-process.TkCalPath_AagBunch0T = cms.Path(process.TkCalSeq_AagBunch0T *process.shallowEventRun*process.testTree) 
+process.TkCalPath_AagBunch0T = cms.Path(process.TkCalSeq_AagBunch0T *process.shallowEventRun*process.testTree)
 
 
-process.schedule = cms.Schedule( process.TkCalPath_StdBunch, 
+process.schedule = cms.Schedule( process.TkCalPath_StdBunch,
                                  process.TkCalPath_StdBunch0T,
                                  process.TkCalPath_IsoMuon,
                                  process.TkCalPath_IsoMuon0T,
@@ -147,30 +166,30 @@ process.schedule = cms.Schedule( process.TkCalPath_StdBunch,
 
 
 process.options = cms.untracked.PSet(
-    Rethrow = cms.untracked.vstring('OtherCMS', 
-        'StdException', 
-        'Unknown', 
-        'BadAlloc', 
-        'BadExceptionType', 
-        'ProductNotFound', 
-        'DictionaryNotFound', 
-        'InsertFailure', 
-        'Configuration', 
-        'LogicError', 
-        'UnimplementedFeature', 
-        'InvalidReference', 
-        'NullPointerError', 
-        'NoProductSpecified', 
-        'EventTimeout', 
-        'EventCorruption', 
-        'ScheduleExecutionFailure', 
-        'EventProcessorFailure', 
-        'FileInPathError', 
-        'FileOpenError', 
-        'FileReadError', 
-        'FatalRootError', 
-        'MismatchedInputFiles', 
-        'ProductDoesNotSupportViews', 
-        'ProductDoesNotSupportPtr', 
+    Rethrow = cms.untracked.vstring('OtherCMS',
+        'StdException',
+        'Unknown',
+        'BadAlloc',
+        'BadExceptionType',
+        'ProductNotFound',
+        'DictionaryNotFound',
+        'InsertFailure',
+        'Configuration',
+        'LogicError',
+        'UnimplementedFeature',
+        'InvalidReference',
+        'NullPointerError',
+        'NoProductSpecified',
+        'EventTimeout',
+        'EventCorruption',
+        'ScheduleExecutionFailure',
+        'EventProcessorFailure',
+        'FileInPathError',
+        'FileOpenError',
+        'FileReadError',
+        'FatalRootError',
+        'MismatchedInputFiles',
+        'ProductDoesNotSupportViews',
+        'ProductDoesNotSupportPtr',
         'NotFound')
 )
