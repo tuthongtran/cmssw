@@ -272,7 +272,7 @@ namespace sistrip {
 
   inline bool FEDBSChannelUnpacker::hasData() const
     {
-      return (currentWordOffset_+(currentLocalBitOffset_?1:2)<channelPayloadOffset_+channelPayloadLength_);
+      return (currentWordOffset_+(currentLocalBitOffset_?1:2)+((stripsInCluster_>4)&&(stripsInCluster_%4==1)?1:0)<channelPayloadOffset_+channelPayloadLength_);
     }
 
   inline FEDBSChannelUnpacker& FEDBSChannelUnpacker::operator ++ ()
