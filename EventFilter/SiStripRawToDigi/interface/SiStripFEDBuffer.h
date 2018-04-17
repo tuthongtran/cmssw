@@ -164,6 +164,7 @@ namespace sistrip {
       uint16_t channelPayloadOffset_;
       uint16_t channelPayloadLength_;
       bool useZS_;
+      uint8_t stripsInCluster_;
       uint8_t valuesLeftInCluster_;
     };
 
@@ -212,7 +213,7 @@ namespace sistrip {
       bitOffsetIncrement_(10),
       currentStrip_(0),
       channelPayloadOffset_(0), channelPayloadLength_(0),
-      useZS_(false), valuesLeftInCluster_(0)
+      useZS_(false), stripsInCluster_(0), valuesLeftInCluster_(0)
     { }
 
   inline FEDBSChannelUnpacker::FEDBSChannelUnpacker(const uint8_t* payload, const uint16_t channelPayloadOffset, const int16_t channelPayloadLength, const uint16_t offsetIncrement, bool useZS)
@@ -223,7 +224,7 @@ namespace sistrip {
       currentStrip_(0),
       channelPayloadOffset_(channelPayloadOffset),
       channelPayloadLength_(channelPayloadLength),
-      useZS_(useZS), valuesLeftInCluster_(0)
+      useZS_(useZS), stripsInCluster_(0), valuesLeftInCluster_(0)
     {
       if (bitOffsetIncrement_>16) throwBadWordLength(bitOffsetIncrement_); // more than 2 words... still to be implemented
       if (channelPayloadLength_) readNewClusterInfo();
@@ -306,8 +307,10 @@ namespace sistrip {
         ++currentWordOffset_;
         currentLocalBitOffset_ = 0;
       }
+      if ( ( stripsInCluster_ > 1 ) && ( (stripsInCluster_%4) == 1 ) ) { ++currentWordOffset_; } // 5, 9, 13 etc. have a spurious byte here
       currentStrip_ = data_[(currentWordOffset_++)^7];
-      valuesLeftInCluster_ = data_[(currentWordOffset_++)^7]-1;
+      stripsInCluster_ = data_[(currentWordOffset_++)^7];
+      valuesLeftInCluster_ = stripsInCluster_-1;
     }
 
   
