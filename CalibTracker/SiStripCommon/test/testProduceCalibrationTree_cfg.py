@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.PatAlgos.patInputFiles_cff import filesRelValTTbarPileUpGENSIMRECO
 import FWCore.ParameterSet.VarParsing as VarParsing
+from CalibTracker.SiStripCommon.shallowTree_test_template import *
 
 ###################################################################
 # Setup 'standard' options
@@ -60,6 +61,7 @@ process.load('CalibTracker.SiStripCommon.ShallowEventDataProducer_cfi') #event I
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.Geometry.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('CalibTracker.SiStripCommon.ShallowEventDataProducer_cfi') #event Info
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, options.conditionGT, options.conditionOverwrite)
@@ -99,8 +101,8 @@ process.shallowTracks.Tracks  = cms.InputTag( options.inputCollection )
 process.EventInfo = cms.EDAnalyzer("ShallowTree", 
 					CompressionSettings = process.gainCalibrationTreeStdBunch.CompressionSettings,
                             		outputCommands = cms.untracked.vstring('drop *',
-                                                                          'keep *_shallowEventRun_*_*',
-                                                                          )
+                                                                       'keep *_shallowEventRun_*_*',
+                                                                        )
                                    )
 #process.gainCalibrationTreeStdBunch.CompressionSettings = cms.untracked.int32(compressionSettings)
 #process.gainCalibrationTreeStdBunch0T.CompressionSettings = cms.untracked.int32(compressionSettings)
