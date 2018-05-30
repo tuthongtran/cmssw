@@ -106,13 +106,16 @@ namespace {
     ClusterFiller(const FEDRawDataCollection& irawColl,
 		  StripClusterizerAlgorithm & iclusterizer,
 		  SiStripRawProcessingAlgorithms & irawAlgos,
-		  bool idoAPVEmulatorCheck):
+		  bool idoAPVEmulatorCheck,
+                  bool hybridZeroSuppressed):
       rawColl(irawColl),
       clusterizer(iclusterizer),
       rawAlgos(irawAlgos),
-      doAPVEmulatorCheck(idoAPVEmulatorCheck){
-	incTot(clusterizer.allDetIds().size());
-      }
+      doAPVEmulatorCheck(idoAPVEmulatorCheck),
+      hybridZeroSuppressed_(hybridZeroSuppressed)
+    {
+      incTot(clusterizer.allDetIds().size());
+    }
     
     
     ~ClusterFiller() { printStat();}
@@ -134,6 +137,8 @@ namespace {
     
     // March 2012: add flag for disabling APVe check in configuration
     bool doAPVEmulatorCheck; 
+
+    bool hybridZeroSuppressed_;
     
     
 #ifdef VIDEBUG
@@ -182,7 +187,8 @@ class SiStripClusterizerFromRaw final : public edm::stream::EDProducer<>  {
     cabling_(nullptr),
     clusterizer_(StripClusterizerAlgorithmFactory::create(conf.getParameter<edm::ParameterSet>("Clusterizer"))),
     rawAlgos_(SiStripRawProcessingFactory::create(conf.getParameter<edm::ParameterSet>("Algorithms"))),
-    doAPVEmulatorCheck_(conf.existsAs<bool>("DoAPVEmulatorCheck") ? conf.getParameter<bool>("DoAPVEmulatorCheck") : true)
+    doAPVEmulatorCheck_(conf.existsAs<bool>("DoAPVEmulatorCheck") ? conf.getParameter<bool>("DoAPVEmulatorCheck") : true),
+    hybridZeroSuppressed_(conf.getParameter<bool>("HybridZeroSuppressed"))
       {
 	productToken_ = consumes<FEDRawDataCollection>(conf.getParameter<edm::InputTag>("ProductLabel"));
 	produces< edmNew::DetSetVector<SiStripCluster> > ();
@@ -208,7 +214,7 @@ class SiStripClusterizerFromRaw final : public edm::stream::EDProducer<>  {
     std::auto_ptr< edmNew::DetSetVector<SiStripCluster> > 
       output( onDemand ?
 	      new edmNew::DetSetVector<SiStripCluster>(std::shared_ptr<edmNew::DetSetVector<SiStripCluster>::Getter>(std::make_shared<ClusterFiller>(*rawData, *clusterizer_, 
-																	 *rawAlgos_, doAPVEmulatorCheck_)
+																	 *rawAlgos_, doAPVEmulatorCheck_, hybridZeroSuppressed_)
 														       ), 
 						       clusterizer_->allDetIds())
 	      : new edmNew::DetSetVector<SiStripCluster>());
@@ -246,12 +252,13 @@ private:
   SiStripDetCabling const * cabling_;
   
   std::auto_ptr<StripClusterizerAlgorithm> clusterizer_;
-  std::auto_ptr<SiStripRawProcessingAlgorithms> rawAlgos_;
+  std::unique_ptr<SiStripRawProcessingAlgorithms> rawAlgos_;
   
   
   // March 2012: add flag for disabling APVe check in configuration
   bool doAPVEmulatorCheck_; 
 
+  bool hybridZeroSuppressed_;
 };
 
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -262,16 +269,16 @@ DEFINE_FWK_MODULE(SiStripClusterizerFromRaw);
 
 void SiStripClusterizerFromRaw::initialize(const edm::EventSetup& es) {
 
-  (*clusterizer_).initialize(es);
-  cabling_ = (*clusterizer_).cabling();
-  (*rawAlgos_).initialize(es);
+  clusterizer_->initialize(es);
+  cabling_ = clusterizer_->cabling();
+  rawAlgos_->initialize(es);
 
 }
 
 void SiStripClusterizerFromRaw::run(const FEDRawDataCollection& rawColl,
 				     edmNew::DetSetVector<SiStripCluster> & output) {
   
-  ClusterFiller filler(rawColl, *clusterizer_, *rawAlgos_, doAPVEmulatorCheck_);
+  ClusterFiller filler(rawColl, *clusterizer_, *rawAlgos_, doAPVEmulatorCheck_, hybridZeroSuppressed_);
   
   // loop over good det in cabling
   for ( auto idet : clusterizer_->allDetIds()) {
@@ -283,6 +290,89 @@ void SiStripClusterizerFromRaw::run(const FEDRawDataCollection& rawColl,
     if(record.empty()) record.abort();
 
   } // end loop over dets
+}
+
+namespace {
+  template<typename OUT>
+  OUT unpackZS(const sistrip::FEDChannel& chan, sistrip::FEDReadoutMode mode, uint16_t stripOffset, OUT out)
+  {
+    using namespace sistrip;
+    switch ( mode ) {
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8:
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8_CMOVERRIDE:
+      { auto unpacker = FEDZSChannelUnpacker::zeroSuppressedLiteModeUnpacker(chan);
+        while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()); unpacker++; }
+      } break;
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE10:
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE10_CMOVERRIDE:
+      { auto unpacker = FEDBSChannelUnpacker::zeroSuppressedLiteModeUnpacker(chan, 10);
+        while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()); unpacker++; }
+      } break;
+      case READOUT_MODE_ZERO_SUPPRESSED:
+      case READOUT_MODE_ZERO_SUPPRESSED_FAKE:
+      {
+        switch ( chan.packetCode() ) {
+          case PACKET_CODE_ZERO_SUPPRESSED:
+          { auto unpacker = FEDZSChannelUnpacker::zeroSuppressedModeUnpacker(chan);
+            while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()); unpacker++; }
+          } break;
+          case PACKET_CODE_ZERO_SUPPRESSED10:
+          { auto unpacker = FEDBSChannelUnpacker::zeroSuppressedModeUnpacker(chan, 10);
+            while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()); unpacker++; }
+          } break;
+          case PACKET_CODE_ZERO_SUPPRESSED8_BOTBOT:
+          { auto unpacker = FEDBSChannelUnpacker::zeroSuppressedModeUnpacker(chan, 8);
+            while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()<<2); unpacker++; }
+          } break;
+          case PACKET_CODE_ZERO_SUPPRESSED8_TOPBOT:
+          { auto unpacker = FEDBSChannelUnpacker::zeroSuppressedModeUnpacker(chan, 8);
+            while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()<<1); unpacker++; }
+          } break;
+          default:
+            edm::LogWarning(mlRawToCluster_) << "[ClustersFromRawProducer::" << __func__ << "]"
+              << " invalid packet code " << chan.packetCode() << " for zero-suppressed.";
+        }
+      } break;
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8_TOPBOT:
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8_TOPBOT_CMOVERRIDE:
+      { auto unpacker = FEDZSChannelUnpacker::zeroSuppressedLiteModeUnpacker(chan);
+        while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()<<1); unpacker++; }
+      } break;
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8_BOTBOT:
+      case READOUT_MODE_ZERO_SUPPRESSED_LITE8_BOTBOT_CMOVERRIDE:
+      { auto unpacker = FEDZSChannelUnpacker::zeroSuppressedLiteModeUnpacker(chan);
+        while (unpacker.hasData()) { *out++ = SiStripDigi(stripOffset+unpacker.sampleNumber(), unpacker.adc()<<2); unpacker++; }
+      } break;
+      default:;
+    }
+    return out;
+  }
+
+  class StripByStripAdder {
+  public:
+    typedef std::output_iterator_tag iterator_category;
+    typedef void value_type;
+    typedef void difference_type;
+    typedef void pointer;
+    typedef void reference;
+
+    StripByStripAdder(StripClusterizerAlgorithm& clusterizer,
+                      StripClusterizerAlgorithm::output_t::FastFiller& record)
+      : clusterizer_(clusterizer), record_(record) {}
+
+    StripByStripAdder& operator= ( SiStripDigi digi )
+    {
+      clusterizer_.stripByStripAdd(digi.strip(), digi.adc(), record_);
+      return *this;
+    }
+
+    StripByStripAdder& operator*  ()    { return *this; }
+    StripByStripAdder& operator++ ()    { return *this; }
+    StripByStripAdder& operator++ (int) { return *this; }
+  private:
+    StripClusterizerAlgorithm & clusterizer_;
+    StripClusterizerAlgorithm::output_t::FastFiller& record_;
+  };
 }
 
 void ClusterFiller::fill(StripClusterizerAlgorithm::output_t::FastFiller & record) {
@@ -329,138 +419,98 @@ try {
     
     
     const sistrip::FEDReadoutMode mode = buffer->readoutMode();
-    
-    
-    if likely(mode == sistrip::READOUT_MODE_ZERO_SUPPRESSED_LITE10 ) { 
-	
-	try {
-	  // create unpacker
-	  sistrip::FEDZSChannelUnpacker unpacker = sistrip::FEDZSChannelUnpacker::zeroSuppressedLiteModeUnpacker(buffer->channel(fedCh));
-	  
-	  // unpack
-	  clusterizer.addFed(unpacker,ipair,record);
-	  /*
-            while (unpacker.hasData()) {
-	    clusterizer.stripByStripAdd(unpacker.sampleNumber()+ipair*256,unpacker.adc(),record);
-	    unpacker++;
-            }
-	  */
-	} catch (edmNew::CapacityExaustedException) {
-          throw;
-        } catch (const cms::Exception& e) {
-	  if (edm::isDebugEnabled()) {
-	    std::ostringstream ss;
-	    ss << "Unordered clusters for channel " << fedCh << " on FED " << fedId << ": " << e.what();
-	    edm::LogWarning(sistrip::mlRawToCluster_) << ss.str();
-	  }                                               
-	  continue;
-	}
-    } else if likely(mode == sistrip::READOUT_MODE_ZERO_SUPPRESSED_LITE8 ) {
 
+    if likely( ( mode > sistrip::READOUT_MODE_VIRGIN_RAW ) && ( mode < sistrip::READOUT_MODE_SPY ) && ( mode != sistrip::READOUT_MODE_PROC_RAW ) ) {
+      // ZS modes
       try {
-        // create unpacker
-        sistrip::FEDZSChannelUnpacker unpacker = sistrip::FEDZSChannelUnpacker::zeroSuppressedLiteModeUnpacker(buffer->channel(fedCh));
-
-        // unpack
-        clusterizer.addFed(unpacker,ipair,record);
+        auto perStripAdder = StripByStripAdder(clusterizer, record);
+        if likely( ! hybridZeroSuppressed_ ) {
+          unpackZS(buffer->channel(fedCh), mode, ipair*256, perStripAdder);
+        } else {
+          const uint32_t id = conn->detId();
+          edm::DetSet<SiStripDigi> unpDigis{id}; unpDigis.reserve(256);
+          unpackZS(buffer->channel(fedCh), mode, ipair*256, std::back_inserter(unpDigis));
+          SiStripRawProcessingAlgorithms::digivector_t workRawDigis;
+          rawAlgos.ConvertHybridDigiToRawDigiVector(unpDigis, workRawDigis);
+          edm::DetSet<SiStripDigi> suppDigis{id};
+          rawAlgos.SuppressHybridData(id, ipair*2, workRawDigis, suppDigis);
+          std::copy(std::begin(suppDigis), std::end(suppDigis), perStripAdder);
+        }
       } catch (edmNew::CapacityExaustedException) {
         throw;
       } catch (const cms::Exception& e) {
-          if (edm::isDebugEnabled()) {
-            std::ostringstream ss;
-            ss << "Unordered clusters for channel " << fedCh << " on FED " << fedId << ": " << e.what();
-            edm::LogWarning(sistrip::mlRawToCluster_) << ss.str();
-          }
-          continue;
+        if (edm::isDebugEnabled()) {
+          edm::LogWarning(sistrip::mlRawToCluster_) << "Unordered clusters for channel " << fedCh << " on FED " << fedId << ": " << e.what();
         }
+        continue;
+      }
 
+    } else if ( mode == sistrip::READOUT_MODE_VIRGIN_RAW ) {
+
+      std::vector<int16_t> digis;
+      switch ( buffer->channel(fedCh).packetCode() ) {
+        case sistrip::PACKET_CODE_VIRGIN_RAW:
+        { auto unpacker = sistrip::FEDRawChannelUnpacker::virginRawModeUnpacker(buffer->channel(fedCh));
+          while (unpacker.hasData()) { digis.push_back(unpacker.adc()); unpacker++; }
+        } break;
+        case sistrip::PACKET_CODE_VIRGIN_RAW10:
+        { auto unpacker = sistrip::FEDBSChannelUnpacker::virginRawModeUnpacker(buffer->channel(fedCh), 10);
+          while (unpacker.hasData()) { digis.push_back(unpacker.adc()); unpacker++; }
+        } break;
+        case sistrip::PACKET_CODE_VIRGIN_RAW8_BOTBOT:
+        { auto unpacker = sistrip::FEDBSChannelUnpacker::virginRawModeUnpacker(buffer->channel(fedCh), 8);
+          while (unpacker.hasData()) { digis.push_back(unpacker.adc()<<2); unpacker++; }
+        } break;
+        case sistrip::PACKET_CODE_VIRGIN_RAW8_TOPBOT:
+        { auto unpacker = sistrip::FEDBSChannelUnpacker::virginRawModeUnpacker(buffer->channel(fedCh), 8);
+          while (unpacker.hasData()) { digis.push_back(unpacker.adc()<<1); unpacker++; }
+        } break;
+        default:
+          edm::LogWarning(sistrip::mlRawToCluster_) << "[ClustersFromRawProducer::" << __func__ << "]"
+            << " invalid packet code " << buffer->channel(fedCh).packetCode() << " for virgin raw.";
+      }
+      //process raw
+      uint32_t id = conn->detId();
+      edm::DetSet<SiStripDigi> zsdigis(id);
+      //rawAlgos_->subtractorPed->subtract( id, ipair*256, digis);
+      //rawAlgos_->subtractorCMN->subtract( id, digis);
+      //rawAlgos_->suppressor->suppress( digis, zsdigis);
+      uint16_t firstAPV = ipair*2;
+      rawAlgos.SuppressVirginRawData(id, firstAPV,digis, zsdigis);
+      for ( const auto digi : zsdigis ) {
+        clusterizer.stripByStripAdd(digi.strip(), digi.adc(), record);
+      }
+
+    } else if ( mode == sistrip::READOUT_MODE_PROC_RAW ) {
+
+      // create unpacker
+      sistrip::FEDRawChannelUnpacker unpacker = sistrip::FEDRawChannelUnpacker::procRawModeUnpacker(buffer->channel(fedCh));
+
+      // unpack
+      std::vector<int16_t> digis;
+      while (unpacker.hasData()) {
+        digis.push_back(unpacker.adc());
+        unpacker++;
+      }
+
+      //process raw
+      uint32_t id = conn->detId();
+      edm::DetSet<SiStripDigi> zsdigis(id);
+      //rawAlgos_->subtractorCMN->subtract( id, digis);
+      //rawAlgos_->suppressor->suppress( digis, zsdigis);
+      uint16_t firstAPV = ipair*2;
+      rawAlgos.SuppressProcessedRawData(id, firstAPV,digis, zsdigis);
+      for( edm::DetSet<SiStripDigi>::const_iterator it = zsdigis.begin(); it!=zsdigis.end(); it++) {
+        clusterizer.stripByStripAdd( it->strip(), it->adc(), record);
+      }
     } else {
-      
-      if (mode == sistrip::READOUT_MODE_ZERO_SUPPRESSED or mode == sistrip::READOUT_MODE_ZERO_SUPPRESSED_FAKE ) { 
-	try {
-	  // create unpacker
-	  sistrip::FEDZSChannelUnpacker unpacker = sistrip::FEDZSChannelUnpacker::zeroSuppressedModeUnpacker(buffer->channel(fedCh));
-	  
-	  // unpack
-	  clusterizer.addFed(unpacker,ipair,record);
-	  /*
-	    while (unpacker.hasData()) {
-	    clusterizer.stripByStripAdd(unpacker.sampleNumber()+ipair*256,unpacker.adc(),record);
-	    unpacker++;
-	    }
-	  */
-	} catch (edmNew::CapacityExaustedException) {
-           throw;
-        }catch (const cms::Exception& e) {
-	  if (edm::isDebugEnabled()) {
-	    std::ostringstream ss;
-	    ss << "Unordered clusters for channel " << fedCh << " on FED " << fedId << ": " << e.what();
-	    edm::LogWarning(sistrip::mlRawToCluster_) << ss.str();
-	  }
-	  continue;
-	}
-      } else if (mode == sistrip::READOUT_MODE_VIRGIN_RAW ) {
-	
-	// create unpacker
-	sistrip::FEDRawChannelUnpacker unpacker = sistrip::FEDRawChannelUnpacker::virginRawModeUnpacker(buffer->channel(fedCh));
-	
-	// unpack
-	std::vector<int16_t> digis;
-	while (unpacker.hasData()) {
-	  digis.push_back(unpacker.adc());
-	  unpacker++;
-	}
-	
-	//process raw
-	uint32_t id = conn->detId();
-	edm::DetSet<SiStripDigi> zsdigis(id);
-	//rawAlgos_->subtractorPed->subtract( id, ipair*256, digis);
-	//rawAlgos_->subtractorCMN->subtract( id, digis);
-	//rawAlgos_->suppressor->suppress( digis, zsdigis);
-	uint16_t firstAPV = ipair*2;
-	rawAlgos.SuppressVirginRawData(id, firstAPV,digis, zsdigis);  
-	for( edm::DetSet<SiStripDigi>::const_iterator it = zsdigis.begin(); it!=zsdigis.end(); it++) {
-	  clusterizer.stripByStripAdd( it->strip(), it->adc(), record);
-	}
-      }
-      
-      else if (mode == sistrip::READOUT_MODE_PROC_RAW ) {
-	
-	// create unpacker
-	sistrip::FEDRawChannelUnpacker unpacker = sistrip::FEDRawChannelUnpacker::procRawModeUnpacker(buffer->channel(fedCh));
-	
-	// unpack
-	std::vector<int16_t> digis;
-	while (unpacker.hasData()) {
-	  digis.push_back(unpacker.adc());
-	  unpacker++;
-	}
-	
-	//process raw
-	uint32_t id = conn->detId();
-	edm::DetSet<SiStripDigi> zsdigis(id);
-	//rawAlgos_->subtractorCMN->subtract( id, digis);
-	//rawAlgos_->suppressor->suppress( digis, zsdigis);
-	uint16_t firstAPV = ipair*2;
-	rawAlgos.SuppressProcessedRawData(id, firstAPV,digis, zsdigis); 
-	for( edm::DetSet<SiStripDigi>::const_iterator it = zsdigis.begin(); it!=zsdigis.end(); it++) {
-	  clusterizer.stripByStripAdd( it->strip(), it->adc(), record);
-	}
-      } else {
-	edm::LogWarning(sistrip::mlRawToCluster_)
-	  << "[ClustersFromRawProducer::" 
-	  << __func__ << "]"
-	  << " FEDRawData readout mode "
-	  << mode
-	  << " from FED id "
-	  << fedId 
-	  << " not supported."; 
-	continue;
-      }
+      edm::LogWarning(sistrip::mlRawToCluster_)
+        << "[ClustersFromRawProducer::" << __func__ << "]"
+        << " FEDRawData readout mode " << mode << " from FED id " << fedId << " not supported.";
+      continue;
     }
-    
   } // end loop over conn
-  
+
   clusterizer.stripByStripEnd(record);
   incAct();
   if(!record.empty()) incNoZ();
@@ -469,8 +519,6 @@ try {
 } catch (edmNew::CapacityExaustedException) {
   edm::LogError(sistrip::mlRawToCluster_) << "too many Sistrip Clusters to fit space allocated for OnDemand";
   clusterizer.cleanState();
-}  
-
 }
 
-
+}
