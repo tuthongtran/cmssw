@@ -116,7 +116,28 @@ SiStripSimBlock = cms.PSet(
     #
     TOFCutForDeconvolution     = cms.double(50.0),
     TOFCutForPeak              = cms.double(100.0),
-    Inefficiency               = cms.double(0.0)
+    Inefficiency               = cms.double(0.0),
+    # APV Dynamic Gain Simulation
+    includeAPVSimulation       = cms.bool( False ),
+    apv_maxResponse            = cms.double( 729 ),
+    apv_rate                   = cms.double( 66.2 ),
+    apv_mVPerQ                 = cms.double( 5.5 ),
+    apvfCPerElectron           = cms.double( 1.602e-4 ),
+    apvBaselines_minBaseline   =  cms.double( 0 ),
+    apvBaselines_maxBaseline   =  cms.double( 738 ),
+    apvBaselines_zBinEdges     =  cms.vdouble(),
+    apvBaselines_puBinEdges    =  cms.vdouble(),
+    apvBaselines_nBinsPerBaseline  =  cms.uint32( 82 ),
+    apvBaselinesFile_tib1      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TIB1_12us.txt'),
+    apvBaselinesFile_tib2      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TIB2_15us.txt'),
+    apvBaselinesFile_tib3      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TIB3_16us.txt'),
+    apvBaselinesFile_tib4      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TIB4_17us.txt'),
+    apvBaselinesFile_tob1      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB1_10us.txt'),
+    apvBaselinesFile_tob2      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB2_13us.txt'),
+    apvBaselinesFile_tob3      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB3_16us.txt'),
+    apvBaselinesFile_tob4      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB4_17us.txt'),
+    apvBaselinesFile_tob5      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB5_17us.txt'),
+    apvBaselinesFile_tob6      = cms.FileInPath('SimTracker/SiStripDigitizer/data/APVBaselines_TOB6_18us.txt')
 )
 
 from Configuration.ProcessModifiers.premix_stage1_cff import premix_stage1
