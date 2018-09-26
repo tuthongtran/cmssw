@@ -41,6 +41,8 @@ from Validation.SiPixelPhase1ConfigV.SiPixelPhase1OfflineDQM_sourceV_cff import 
 from DQMOffline.RecoB.dqmAnalyzer_cff import *
 from Validation.RecoB.BDHadronTrackValidation_cff import *
 from Validation.Configuration.hgcalSimValid_cff import *
+from Validation.SiOuterTrackerV.OuterTrackerSourceConfigV_cff import *
+
 
 # filter/producer "pre-" sequence for globalValidation
 globalPrevalidationTracking = cms.Sequence(
@@ -60,28 +62,28 @@ preprodPrevalidation = cms.Sequence(
     tracksPreValidation
 )
 
-globalValidation = cms.Sequence(   trackerHitsValidation 
-                                 + trackerDigisValidation 
-                                 + trackerRecHitsValidation 
-                                 + trackingTruthValid 
-                                 + trackingRecHitsValid 
-                                 + ecalSimHitsValidationSequence 
-                                 + ecalDigisValidationSequence 
-                                 + ecalRecHitsValidationSequence 
+globalValidation = cms.Sequence(   trackerHitsValidation
+                                 + trackerDigisValidation
+                                 + trackerRecHitsValidation
+                                 + trackingTruthValid
+                                 + trackingRecHitsValid
+                                 + ecalSimHitsValidationSequence
+                                 + ecalDigisValidationSequence
+                                 + ecalRecHitsValidationSequence
                                  + ecalClustersValidationSequence
                                  + hcalSimHitsValidationSequence
                                  + hcaldigisValidationSequence
                                  + hcalSimHitStudy
                                  + hcalRecHitsValidationSequence
                                  + calotowersValidationSequence
-                                 + validSimHit+muondtdigianalyzer 
+                                 + validSimHit+muondtdigianalyzer
                                  + cscDigiValidation
-                                 + validationMuonRPCDigis 
-                                 + recoMuonValidation 
-                                 + muIsoVal_seq 
-                                 + muonIdValDQMSeq 
-                                 + mixCollectionValidation 
-                                 + JetValidation 
+                                 + validationMuonRPCDigis
+                                 + recoMuonValidation
+                                 + muIsoVal_seq
+                                 + muonIdValDQMSeq
+                                 + mixCollectionValidation
+                                 + JetValidation
                                  + METValidation
                                  + egammaValidation
                                  + pfJetValidationSequence
@@ -137,7 +139,7 @@ globalPrevalidationPixelTrackingOnly = cms.Sequence(
 globalValidationPixelTrackingOnly = cms.Sequence()
 
 globalValidationJetMETonly = cms.Sequence(
-                                   JetValidation 
+                                   JetValidation
                                  + METValidation
 )
 
@@ -158,6 +160,8 @@ globalValidationHCAL = cms.Sequence(
 
 globalValidationHGCal = cms.Sequence(hgcalValidation)
 
+globalValidationOuterTracker = cms.Sequence(OuterTrackerSourceV)
+
 globalPrevalidationMuons = cms.Sequence(
       gemSimValid
     + me0SimValid
@@ -176,7 +180,7 @@ globalValidationMuons = cms.Sequence()
 _phase_1_globalValidation = globalValidation.copy()
 _phase_1_globalValidation += siPixelPhase1OfflineDQM_sourceV
 from Configuration.Eras.Modifier_phase1Pixel_cff import phase1Pixel
-phase1Pixel.toReplaceWith( globalValidation, _phase_1_globalValidation )
+(phase1Pixel & ~fastSim).toReplaceWith( globalValidation, _phase_1_globalValidation ) #module siPixelPhase1OfflineDQM_sourceV can't run in FastSim since siPixelClusters of type edmNew::DetSetVector are not produced
 
 _run3_globalValidation = globalValidation.copy()
 _run3_globalValidation += gemSimValid

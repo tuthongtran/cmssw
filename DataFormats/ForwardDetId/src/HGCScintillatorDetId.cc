@@ -12,18 +12,20 @@ HGCScintillatorDetId::HGCScintillatorDetId(uint32_t rawid) : DetId(rawid) {
 }
 
 HGCScintillatorDetId::HGCScintillatorDetId(int type, int layer, int eta,
-					   int phi) : DetId(HGCalHSc,HGCHEB) {
+					   int phi) : DetId(HGCalHSc,ForwardEmpty) {
 
-  id_ |= ((type&kHGCalTypeMask)<<kHGCalTypeOffset) | 
-    ((layer&kHGCalLayerMask)<<kHGCalLayerOffset) |
-    ((eta<0)?(kHGCalZsideMask2|(-eta<<kHGCalEtaOffset)):(eta<<kHGCalEtaOffset)) |
-    ((phi&kHGCalPhiMask)<<kHGCalPhiOffset);
+  int zside      = (eta < 0) ? 1 : 0;
+  int etaAbs     = std::abs(eta);
+  id_ |= (((type&kHGCalTypeMask)<<kHGCalTypeOffset) | 
+	  ((zside&kHGCalZsideMask)<<kHGCalZsideOffset) |
+	  ((layer&kHGCalLayerMask)<<kHGCalLayerOffset) |
+	  ((etaAbs&kHGCalEtaMask)<<kHGCalEtaOffset) |
+	  ((phi&kHGCalPhiMask)<<kHGCalPhiOffset));
 }
 
 HGCScintillatorDetId::HGCScintillatorDetId(const DetId& gen) {
   if (!gen.null()) {
-    if ((gen.det()!=HGCalHSc) || 
-	(ForwardSubdetector)(gen.subdetId()!=HGCHEB)) {
+    if (gen.det()!=HGCalHSc) {
       throw cms::Exception("Invalid DetId") << "Cannot initialize HGCScintillatorDetId from " << std::hex << gen.rawId() << std::dec; 
     }  
   }
@@ -32,8 +34,7 @@ HGCScintillatorDetId::HGCScintillatorDetId(const DetId& gen) {
 
 HGCScintillatorDetId& HGCScintillatorDetId::operator=(const DetId& gen) {
   if (!gen.null()) {
-    if ((gen.det()!=HGCalHSc) || 
-	(ForwardSubdetector)(gen.subdetId()!=HGCHEB)) {
+    if (gen.det()!=HGCalHSc) {
       throw cms::Exception("Invalid DetId") << "Cannot assign HGCScintillatorDetId from " << std::hex << gen.rawId() << std::dec; 
     }  
   }

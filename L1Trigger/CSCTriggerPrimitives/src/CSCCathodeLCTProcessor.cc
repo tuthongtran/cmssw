@@ -271,6 +271,15 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
   // Flag for SLHC studies
   isSLHC       = comm.getParameter<bool>("isSLHC");
 
+  // shift the BX from 7 to 8
+  // the unpacked real data CLCTs have central BX at bin 7
+  // however in simulation the central BX  is bin 8
+  // to make a proper comparison with ALCTs we need
+  // CLCT and ALCT to have the central BX in the same bin
+  // this shift does not affect the readout of the CLCTs
+  // emulated CLCTs put in the event should be centered at bin 7 (as in data)			     
+  alctClctOffset = comm.getParameter<unsigned int>("alctClctOffset");
+
   // special configuration parameters for ME11 treatment
   smartME1aME1b = comm.getParameter<bool>("smartME1aME1b");
   disableME1a = comm.getParameter<bool>("disableME1a");
@@ -679,6 +688,18 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
 
   // Return vector of CLCTs.
   std::vector<CSCCLCTDigi> tmpV = getCLCTs();
+
+  // shift the BX from 7 to 8
+  // the unpacked real data CLCTs have central BX at bin 7
+  // however in simulation the central BX  is bin 8
+  // to make a proper comparison with ALCTs we need
+  // CLCT and ALCT to have the central BX in the same bin
+  // this shift does not affect the readout of the CLCTs
+  // emulated CLCTs put in the event should be centered at bin 7 (as in data)
+  for (auto& p : tmpV){
+    p.setBX(p.getBX() + alctClctOffset);
+  }
+
   return tmpV;
 }
 
@@ -2474,15 +2495,17 @@ bool CSCCathodeLCTProcessor::ptnFinding(
           else if ((sz % 2) == 1) first_bx_corrected[key_hstrip] = *(++im);
           else first_bx_corrected[key_hstrip] = ((*im) + (*(++im)))/2;
 
+#if defined(EDM_ML_DEBUG)
+          //LogTrace only ever prints if EDM_ML_DEBUG is defined
           if (infoV > 1) {
-            char bxs[300]="";
-            for (im = mset_for_median.begin(); im != mset_for_median.end(); im++)
-              sprintf(bxs,"%s %d", bxs, *im);
-            LogTrace("CSCCathodeLCTProcessor")
-              <<"bx="<<bx_time<<" bx_cor="<< first_bx_corrected[key_hstrip]<<"  bxset="<<bxs;
+            auto lt = LogTrace("CSCCathodeLCTProcessor")
+              <<"bx="<<bx_time<<" bx_cor="<< first_bx_corrected[key_hstrip]<<"  bxset=";
+            for (im = mset_for_median.begin(); im != mset_for_median.end(); im++) {
+              lt<<" "<<*im;
+            }
           }
+#endif
         }
-
 	// Do not loop over the other (worse) patterns if max. numbers of
 	// hits is found.
 	if (nhits[key_hstrip] == CSCConstants::NUM_LAYERS) break;

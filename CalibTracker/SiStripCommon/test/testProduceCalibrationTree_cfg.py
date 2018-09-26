@@ -120,7 +120,6 @@ process.TkCalPath_IsoMuon0T  = cms.Path(process.TkCalSeq_IsoMuon0T*process.shall
 process.TkCalPath_AagBunch   = cms.Path(process.TkCalSeq_AagBunch*process.shallowEventRun*process.EventInfo)
 process.TkCalPath_AagBunch0T = cms.Path(process.TkCalSeq_AagBunch0T*process.shallowEventRun*process.EventInfo)
 
-
 process.schedule = cms.Schedule( process.TkCalPath_StdBunch, 
                                  process.TkCalPath_StdBunch0T,
                                  process.TkCalPath_IsoMuon,         # no After Abort Gap in MC

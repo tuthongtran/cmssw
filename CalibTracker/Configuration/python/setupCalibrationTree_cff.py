@@ -22,5 +22,3 @@ TkCalSeq_IsoMuon   = cms.Sequence(prescaleEvent + MeasurementTrackerEvent + trac
 TkCalSeq_IsoMuon0T = cms.Sequence(prescaleEvent + MeasurementTrackerEvent + trackFilterRefit + OfflineGainNtuple_IsoMuon0T + hiteff + LorentzAngleRunInfo)
 TkCalSeq_AagBunch   = cms.Sequence(prescaleEvent + MeasurementTrackerEvent + trackFilterRefit + OfflineGainNtuple_AagBunch + hiteff + LorentzAngleRunInfo)
 TkCalSeq_AagBunch0T = cms.Sequence(prescaleEvent + MeasurementTrackerEvent + trackFilterRefit + OfflineGainNtuple_AagBunch0T + hiteff + LorentzAngleRunInfo)
-
-

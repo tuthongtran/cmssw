@@ -61,7 +61,7 @@ with open(jsonFile2016) as data_file:
 # LS for a full run by default; otherwise a subset of which you determined the size
 def selectedLS(list_runs=[],maxNum=-1,l_json=data_json2015):
     # print "maxNum is %s"%(maxNum)
-    if type(list_runs[0]) !=int:
+    if not isinstance(list_runs[0], int):
         print "ERROR: list_runs must be a list of intergers"
         return None
     local_dict = {}
@@ -88,7 +88,7 @@ def selectedLS(list_runs=[],maxNum=-1,l_json=data_json2015):
             print "run %s is NOT present in json %s\n\n"%(run, l_json)
         # print "++    %s"%(local_dict)
 
-    if ( len(local_dict.keys()) > 0 ) :
+    if ( len(local_dict) > 0 ) :
         return local_dict
     else :
         print "No luminosity section interval passed the json and your selection; returning None"

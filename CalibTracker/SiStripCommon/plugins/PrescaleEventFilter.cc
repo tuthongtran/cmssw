@@ -5,10 +5,10 @@
 // 
 /**\class PrescaleEventFilter PrescaleEventFilter.cc CalibTracker/SiStripCommon/plugins/PrescaleEventFilter.cc
 
- Description: [one line class summary]
+ Description: Simple class to prescale events entering the Strip Tracker Calibration Tree
 
  Implementation:
-     [Notes on implementation]
+     Largely copied from HLTrigger/HLTcore/plugins/HLTPrescaler.cc, without the need to specify a specific trigger path
 */
 //
 // Original Author:  Marco Musich
@@ -45,7 +45,7 @@ namespace prescale {
 class PrescaleEventFilter : public edm::stream::EDFilter<edm::GlobalCache<prescale::Efficiency> > {
    public:
       explicit PrescaleEventFilter(edm::ParameterSet const& iConfig, const prescale::Efficiency* efficiency);
-      ~PrescaleEventFilter();
+      ~PrescaleEventFilter() override;
 
       static std::unique_ptr<prescale::Efficiency> initializeGlobalCache(edm::ParameterSet const&) {
  return std::unique_ptr<prescale::Efficiency>(new prescale::Efficiency());
@@ -59,7 +59,7 @@ class PrescaleEventFilter : public edm::stream::EDFilter<edm::GlobalCache<presca
       virtual void beginStream(edm::StreamID) override;
       virtual bool filter(edm::Event&, const edm::EventSetup&) override;
       virtual void endStream() override;
-
+  
       // ----------member data ---------------------------
 
       /// accept one in prescaleFactor_; 0 means never to accept an event
@@ -84,14 +84,6 @@ class PrescaleEventFilter : public edm::stream::EDFilter<edm::GlobalCache<presca
 };
 
 //
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
 // constructors and destructor
 //
 PrescaleEventFilter::PrescaleEventFilter(const edm::ParameterSet& iConfig,const prescale::Efficiency* efficiency):
@@ -113,7 +105,6 @@ PrescaleEventFilter::~PrescaleEventFilter()
    // (e.g. close files, deallocate resources etc.)
 
 }
-
 
 //
 // member functions
