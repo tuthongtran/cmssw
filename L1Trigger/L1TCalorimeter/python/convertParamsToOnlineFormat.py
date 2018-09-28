@@ -7,6 +7,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
+import six
 
 # Pairwise generator: returns pairs of adjacent elements in a list / other iterable
 def pairwiseGen(aList):
@@ -128,7 +129,7 @@ def getFullListOfParameters(aModule):
       (('demux', 'algoRev'), None, 0xcafe)
     ]
 
-    result = [(a, b, parseOfflineLUTfile(c.value()) if type(c) is cms.FileInPath else c) for a, b, c in result]
+    result = [(a, b, parseOfflineLUTfile(c.value()) if isinstance(c, cms.FileInPath) else c) for a, b, c in result]
 
     return result
 
@@ -171,12 +172,12 @@ def indent(elem, level=0):
 def createMIF(aFilePath, aValue):
     print "Writing MIF file:", aFilePath
     with open(aFilePath, 'w') as f:
-        if type(aValue) is bool:
+        if isinstance(aValue, bool):
             aValue = (1 if aValue else 0)
 
-        if type(aValue) is int:
+        if isinstance(aValue, int):
             f.write( hex(aValue) )
-        elif type(aValue) is list:
+        elif isinstance(aValue, list):
             f.write("\n".join([hex(x) for x in aValue]))
         else:
             raise RuntimeError("Do not know how to deal with parameter of type " + str(type(aValue)))
@@ -186,13 +187,13 @@ def createXML(parameters, contextId, outputFilePath):
     topNode = ET.Element('algo', id='calol2')
     contextNode = ET.SubElement(topNode, 'context', id=contextId)
     for paramId, value in parameters:
-        if type(value) is bool:
+        if isinstance(value, bool):
             ET.SubElement(contextNode, 'param', id=paramId, type='bool').text = str(value).lower()
-        elif type(value) is int:
+        elif isinstance(value, int):
             ET.SubElement(contextNode, 'param', id=paramId, type='uint').text = "0x{0:05X}".format(value)
-        elif type(value) is str:
+        elif isinstance(value, str):
             ET.SubElement(contextNode, 'param', id=paramId, type='string').text = value
-        elif type(value) is list:
+        elif isinstance(value, list):
             ET.SubElement(contextNode, 'param', id=paramId, type='vector:uint').text  = "\n      " + ",\n      ".join(["0x{0:05X}".format(x) for x in value]) + "\n    "
         else:
             raise RuntimeError("Do not know how to deal with parameter '" + paramId + "' of type " + str(type(value)))
@@ -227,8 +228,8 @@ if __name__ == '__main__':
     os.mkdir(args.output_dir)
 
     if args.mif:
-        for fileName, value in getMifParameterMap(caloParams).iteritems():
+        for fileName, value in getMifParameterMap(six.iteritems(caloParams)):
             createMIF(args.output_dir + '/' + fileName, value) 
     else:
-        for fileTag, paramList in getXmlParameterMap(caloParams).iteritems():
+        for fileTag, paramList in getXmlParameterMap(six.iteritems(caloParams)):
             createXML(paramList, 'MainProcessor' if fileTag.startswith('mp') else 'Demux', args.output_dir + '/algo_' + fileTag + '.xml')

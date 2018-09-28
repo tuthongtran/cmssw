@@ -6,6 +6,7 @@ from PhysicsTools.NanoAOD.taus_cff import *
 from PhysicsTools.NanoAOD.electrons_cff import *
 from PhysicsTools.NanoAOD.photons_cff import *
 from PhysicsTools.NanoAOD.globals_cff import *
+from PhysicsTools.NanoAOD.extraflags_cff import *
 from PhysicsTools.NanoAOD.ttbarCategorization_cff import *
 from PhysicsTools.NanoAOD.genparticles_cff import *
 from PhysicsTools.NanoAOD.particlelevel_cff import *
@@ -15,6 +16,8 @@ from PhysicsTools.NanoAOD.triggerObjects_cff import *
 from PhysicsTools.NanoAOD.isotracks_cff import *
 from PhysicsTools.NanoAOD.NanoAODEDMEventContent_cff import *
 
+from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
+from Configuration.Eras.Modifier_run2_nanoAOD_92X_cff import run2_nanoAOD_92X
 
 nanoMetadata = cms.EDProducer("UniqueStringProducer",
     strings = cms.PSet(
@@ -47,6 +50,49 @@ simpleCleanerTable = cms.EDProducer("NanoAODSimpleCrossCleaner",
    tauName=cms.string("Tau"),photonName=cms.string("Photon")
 )
 
+btagSFdir="PhysicsTools/NanoAOD/data/btagSF/"
+
+btagWeightTable = cms.EDProducer("BTagSFProducer",
+    src = cms.InputTag("linkedObjects","jets"),
+    cut = cms.string("pt > 25. && abs(eta) < 2.5"),
+    discNames = cms.vstring(
+        "pfCombinedInclusiveSecondaryVertexV2BJetTags",
+        "pfDeepCSVJetTags:probb+pfDeepCSVJetTags:probbb",       #if multiple MiniAOD branches need to be summed up (e.g., DeepCSV b+bb), separate them using '+' delimiter
+        "pfCombinedMVAV2BJetTags"        
+    ),
+    discShortNames = cms.vstring(
+        "CSVV2",
+        "DeepCSVB",
+        "CMVA"
+    ),
+    weightFiles = cms.vstring(                                  #default settings are for 2017 94X. toModify function is called later for other eras.
+        btagSFdir+"CSVv2_94XSF_V2_B_F.csv",
+        btagSFdir+"DeepCSV_94XSF_V2_B_F.csv",                    
+        "unavailable"                                           #if SFs for an algorithm in an era is unavailable, the corresponding branch will not be stored
+    ),
+    operatingPoints = cms.vstring("3","3","3"),                 #loose = 0, medium = 1, tight = 2, reshaping = 3
+    measurementTypesB = cms.vstring("iterativefit","iterativefit","iterativefit"),     #e.g. "comb", "incl", "ttbar", "iterativefit"
+    measurementTypesC = cms.vstring("iterativefit","iterativefit","iterativefit"),
+    measurementTypesUDSG = cms.vstring("iterativefit","iterativefit","iterativefit"),
+    sysTypes = cms.vstring("central","central","central")
+)
+
+run2_miniAOD_80XLegacy.toModify(btagWeightTable,                
+    cut = cms.string("pt > 25. && abs(eta) < 2.4"),             #80X corresponds to 2016, |eta| < 2.4
+    weightFiles = cms.vstring(                                  #80X corresponds to 2016 SFs
+        btagSFdir+"CSVv2_Moriond17_B_H.csv",            
+        "unavailable",                    
+        btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
+    )
+)
+
+run2_nanoAOD_92X.toModify(btagWeightTable,                      #92X corresponds to MCv1, for which SFs are unavailable
+    weightFiles = cms.vstring(
+        "unavailable",
+        "unavailable",                    
+        "unavailable"                                            
+    )
+)                    
 
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
@@ -65,41 +111,73 @@ genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
 )
 lheInfoTable = cms.EDProducer("LHETablesProducer",
     lheInfo = cms.InputTag("externalLHEProducer"),
+    precision = cms.int32(14),
+    storeLHEParticles = cms.bool(True) 
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False))
 
 nanoSequence = cms.Sequence(
-        nanoMetadata + muonSequence + jetSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+
+        nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+
         isoTrackSequence + # must be after all the leptons 
         linkedObjects  +
         jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + triggerObjectTables + isoTrackTables +
 	l1bits)
 
-nanoSequenceMC = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
+nanoSequenceMC = cms.Sequence(genParticleSequence + particleLevelSequence + nanoSequence + jetMC + muonMC + electronMC + photonMC + tauMC + metMC + ttbarCatMCProducers +  globalTablesMC + btagWeightTable + genWeightsTable + genParticleTables + particleLevelTables + lheInfoTable  + ttbarCategoryTable )
 
+
+from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+from PhysicsTools.PatAlgos.tools.helpers import getPatAlgosToolsTask
+def nanoAOD_addDeepBTagFor80X(process):
+    print "Updating process to run DeepCSV btag on legacy 80X datasets"
+    updateJetCollection(
+               process,
+               jetSource = cms.InputTag('slimmedJets'),
+               jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute','L2L3Residual']), 'None'),
+               btagDiscriminators = ['pfDeepCSVJetTags:probb','pfDeepCSVJetTags:probbb','pfDeepCSVJetTags:probc'], ## to add discriminators
+               btagPrefix = ''
+           )
+    process.load("Configuration.StandardSequences.MagneticField_cff")
+    process.looseJetId.src="selectedUpdatedPatJets"
+    process.tightJetId.src="selectedUpdatedPatJets"
+    process.tightJetIdLepVeto.src="selectedUpdatedPatJets"
+    process.bJetVars.src="selectedUpdatedPatJets"
+    process.slimmedJetsWithUserData.src="selectedUpdatedPatJets"
+    process.qgtagger80x.srcJets="selectedUpdatedPatJets"
+    patAlgosToolsTask = getPatAlgosToolsTask(process)
+    patAlgosToolsTask .add(process.updatedPatJets)
+    patAlgosToolsTask .add(process.patJetCorrFactors)
+    process.additionalendpath = cms.EndPath(patAlgosToolsTask)
+    return process
 
 def nanoAOD_customizeCommon(process):
+    run2_miniAOD_80XLegacy.toModify(process, nanoAOD_addDeepBTagFor80X)
     return process
+
 
 def nanoAOD_customizeData(process):
     process = nanoAOD_customizeCommon(process)
-    process.calibratedPatElectrons.isMC = cms.bool(False)
-    process.calibratedPatPhotons.isMC = cms.bool(False)
+    if hasattr(process,'calibratedPatElectrons80X'):
+        process.calibratedPatElectrons80X.isMC = cms.bool(False)
+        process.calibratedPatPhotons80X.isMC = cms.bool(False)
     return process
 
 def nanoAOD_customizeMC(process):
     process = nanoAOD_customizeCommon(process)
-    process.calibratedPatElectrons.isMC = cms.bool(True)
-    process.calibratedPatPhotons.isMC = cms.bool(True)
+    if hasattr(process,'calibratedPatElectrons80X'):
+        process.calibratedPatElectrons80X.isMC = cms.bool(True)
+        process.calibratedPatPhotons80X.isMC = cms.bool(True)
     return process
 
 ### Era dependent customization
-from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
 _80x_sequence = nanoSequence.copy()
 #remove stuff 
 _80x_sequence.remove(isoTrackTable)
 _80x_sequence.remove(isoTrackSequence)
+#add stuff
+_80x_sequence.insert(_80x_sequence.index(jetSequence), extraFlagsProducers)
+_80x_sequence.insert(_80x_sequence.index(l1bits)+1, extraFlagsTable)
 
 run2_miniAOD_80XLegacy.toReplaceWith( nanoSequence, _80x_sequence)
 

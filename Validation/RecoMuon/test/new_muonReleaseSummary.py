@@ -75,7 +75,7 @@ def GetFastSimSuffix(params):
 
 def replace(map, filein, fileout):
     replace_items = map.items()
-    while 1:
+    while True:
         line = filein.readline()
         if not line: break
         for old, new in replace_items:
@@ -337,6 +337,9 @@ for sample in new_userparams.samples :
                     os.rename(newpath+'/RecoMuonV.pdf',newpath+'/RecoMuonV_FS.pdf')
                 else:
                     print('ERROR: Could not find "' + newpath + '/RecoMuonV.pdf')
+
+    os.system('mkdir '+newpath+'/PDF')
+    os.system('mv '+newpath+'/*.pdf '+newpath+'/PDF/.')
 
     if(new_userparams.Publish):
         newpath = GetSamplePath(new_userparams.NewParams,sample)

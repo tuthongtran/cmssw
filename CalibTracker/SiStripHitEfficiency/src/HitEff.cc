@@ -351,6 +351,10 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es){
 		   itraj->lastMeasurement().updatedState().globalMomentum().y()) );
       
       // track quality
+	  highPurity = itrack->quality(reco::TrackBase::TrackQuality::highPurity);
+
+      
+      // track quality
       highPurity = itrack->quality(reco::TrackBase::TrackQuality::highPurity);
       originalAlgo = itrack->originalAlgo();
       
@@ -363,8 +367,8 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es){
       double angleX = -999.;
       double angleY = -999.;
       double xglob,yglob,zglob;
-      	  
-	  // Check whether the trajectory has some missing hits
+
+    // Check whether the trajectory has some missing hits
 	  bool hasMissingHits=false;
 	  for (itm=TMeas.begin();itm!=TMeas.end();itm++){
 	    auto theHit = (*itm).recHit();

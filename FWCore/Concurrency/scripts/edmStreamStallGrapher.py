@@ -3,6 +3,7 @@ from itertools import groupby
 from operator import attrgetter,itemgetter
 import sys
 from collections import defaultdict
+import six
 
 #----------------------------------------------
 def printHelp():
@@ -137,6 +138,7 @@ def processingStepsFromStallMonitorOutput(f,moduleNames):
 class StallMonitorParser(object):
     def __init__(self,f):
         numStreams = 0
+        numStreamsFromSource = 0
         moduleNames = {}
         for rawl in f:
             l = rawl.strip()
@@ -146,15 +148,21 @@ class StallMonitorParser(object):
                     #found global begin run
                     numStreams = int(i[1])+1
                     break
+            if numStreams == 0 and l and l[0] == 'S':
+                s = int(l.split(' ')[1])
+                if s > numStreamsFromSource:
+                  numStreamsFromSource = s
             if len(l) > 5 and l[0:2] == "#M":
                 (id,name)=tuple(l[2:].split())
                 moduleNames[id] = name
                 continue
         self._f = f
+        if numStreams == 0:
+          numStreams = numStreamsFromSource +1
         self.numStreams =numStreams
         self._moduleNames = moduleNames
         self.maxNameSize =0
-        for n in moduleNames.iteritems():
+        for n in six.iteritems(moduleNames):
             self.maxNameSize = max(self.maxNameSize,len(n))
         self.maxNameSize = max(self.maxNameSize,len(kSourceDelayedRead))
 
@@ -384,7 +392,7 @@ def createAsciiImage(processingSteps, numStreams, maxNameSize):
 def printStalledModulesInOrder(stalledModules):
     priorities = []
     maxNameSize = 0
-    for name,t in stalledModules.iteritems():
+    for name,t in six.iteritems(stalledModules):
         maxNameSize = max(maxNameSize, len(name))
         t.sort(reverse=True)
         priorities.append((name,sum(t),t))
@@ -556,6 +564,7 @@ def createPDFImage(pdfFile, shownStacks, processingSteps, numStreams, stalledMod
     streamRunningTimes = [[] for x in xrange(numStreams)]
     streamExternalWorkRunningTimes = [[] for x in xrange(numStreams)]
     maxNumberOfConcurrentModulesOnAStream = 1
+    externalWorkModulesInJob = False
     previousTime = [0 for x in xrange(numStreams)]
 
     # The next five variables are only used to check for out of order transitions
@@ -643,6 +652,7 @@ def createPDFImage(pdfFile, shownStacks, processingSteps, numStreams, stalledMod
                 if checkOrder:
                     countExternalWork[s][n] += 1
                 if displayExternalWork:
+                    externalWorkModulesInJob = True
                     if (not checkOrder) or countExternalWork[s][n] > 0:
                         externalWorkModules.add(n)
                         streamExternalWorkRunningTimes[s].append(Point(time,+1))
@@ -712,7 +722,7 @@ def createPDFImage(pdfFile, shownStacks, processingSteps, numStreams, stalledMod
                 allStackTimes[info.color].append((info.begin, info.delta))
 
     # Now superimpose the number of concurrently running modules on to the graph.
-    if maxNumberOfConcurrentModulesOnAStream > 1:
+    if maxNumberOfConcurrentModulesOnAStream > 1 or externalWorkModulesInJob:
 
         for i,perStreamRunningTimes in enumerate(streamRunningTimes):
 
@@ -769,7 +779,7 @@ def createPDFImage(pdfFile, shownStacks, processingSteps, numStreams, stalledMod
                 axStack.broken_barh(finalxs, (0, height), facecolors=color, edgecolors=color, linewidth=0)
 
         axStack.set_xlabel("Time (sec)");
-        axStack.set_ylabel("# threads");
+        axStack.set_ylabel("# modules");
         axStack.set_xlim(ax.get_xlim())
         axStack.tick_params(top='off')
 
