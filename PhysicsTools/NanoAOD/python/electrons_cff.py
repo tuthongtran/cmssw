@@ -114,11 +114,20 @@ isoForEle = cms.EDProducer("EleIsoValueMapProducer",
 run2_miniAOD_80XLegacy.toModify(isoForEle, src = "slimmedElectronsUpdated",
                                 EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
                                 EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
-## For Ghent SYNC only
-##run2_nanoAOD_94X2016.toModify(isoForEle,
-##                                EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
-##                                EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
+run2_nanoAOD_94X2016.toModify(isoForEle,
+                                EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
+                                EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
 run2_nanoAOD_92X.toModify(isoForEle, src = "slimmedElectronsUpdated")
+
+## copy of isoForEle with Fall17 effective areas also for 94X2016, as input for Ghent tZqTTV LeptonMVA
+isoForEle2 = cms.EDProducer("EleIsoValueMapProducer",
+    src = cms.InputTag("slimmedElectrons"),
+    relative = cms.bool(False),
+    rho_MiniIso = cms.InputTag("fixedGridRhoFastjetAll"),
+    rho_PFIso = cms.InputTag("fixedGridRhoFastjetAll"),
+    EAFile_MiniIso = cms.FileInPath("RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt"),
+    EAFile_PFIso = cms.FileInPath("RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt"),
+)
 
 ptRatioRelForEle = cms.EDProducer("ElectronJetVarProducer",
     srcJet = cms.InputTag("updatedJets"),
@@ -256,6 +265,12 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
                       VIDNestedWPBitmapSpring15 = cms.InputTag("bitmapVIDForEleSpring15"),
                       VIDNestedWPBitmapSum16 = cms.InputTag("bitmapVIDForEleSum16"),
                       )
+    modifier.toModify(slimmedElectronsWithUserData.userFloats,
+            PFIsoChg2 = cms.InputTag("isoForEle2:PFIsoChg"),
+            PFIsoAll2 = cms.InputTag("isoForEle2:PFIsoAll"),
+            miniIsoChg2 = cms.InputTag("isoForEle2:miniIsoChg"),
+            miniIsoAll2 = cms.InputTag("isoForEle2:miniIsoAll"),
+    )
 
 finalElectrons = cms.EDFilter("PATElectronRefSelector",
     src = cms.InputTag("slimmedElectronsWithUserData"),
@@ -316,6 +331,9 @@ electronMVAGhent = cms.EDProducer("EleBaseMVAValueMapProducer",
 )
 for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
     modifier.toModify(electronMVAGhent.variables,
+        miniIsoCharged = cms.string("userFloat('miniIsoChg2')/pt"),
+        miniIsoNeutral = cms.string("(userFloat('miniIsoAll2')-userFloat('miniIsoChg2'))/pt"),
+        relIso = cms.string("userFloat('PFIsoAll2')/pt"),
         electronMvaSpring16GP = cms.string("userFloat('ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Values')"),
         electronMvaFall17NoIso = None
         )
@@ -447,6 +465,14 @@ run2_miniAOD_80XLegacy.toModify(electronTable.variables,
     vidNestedWPBitmapSum16 = Var("userInt('VIDNestedWPBitmapSum16')",int,doc=_bitmapVIDForEleSum16_docstring),
 
 )
+## store alternative
+for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+    modifier.toModify(electronTable.variables,
+        miniPFRelIso_chg2 = Var("userFloat('miniIsoChg2')/pt",float,doc="mini PF relative isolation, charged component"),
+        miniPFRelIso_all2 = Var("userFloat('miniIsoAll2')/pt",float,doc="mini PF relative isolation, total (with scaled rho*EA PU corrections)"),
+        pfRelIso03_chg2 = Var("userFloat('PFIsoChg2')/pt",float,doc="PF relative isolation dR=0.3, charged component"),
+        pfRelIso03_all2 = Var("userFloat('PFIsoAll2')/pt",float,doc="PF relative isolation dR=0.3, total (with rho*EA PU corrections)"),
+        )
 
 electronsMCMatchForTable = cms.EDProducer("MCMatcher",  # cut on deltaR, deltaPt/Pt; pick best by deltaR
     src         = electronTable.src,                 # final reco collection
@@ -489,3 +515,7 @@ _with_bitmapVIDForEleSpring15AndSum16_sequence = electronSequence.copy()
 _with_bitmapVIDForEleSpring15AndSum16_sequence.replace(slimmedElectronsWithUserData, bitmapVIDForEleSpring15 + bitmapVIDForEleSum16 + slimmedElectronsWithUserData)
 run2_nanoAOD_94X2016.toReplaceWith(electronSequence, _with_bitmapVIDForEleSpring15AndSum16_sequence)
 
+_with_altEAIso2016_sequence = electronSequence.copy()
+_with_altEAIso2016_sequence.replace(isoForEle, isoForEle+isoForEle2)
+for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+    modifier.toReplaceWith(electronSequence, _with_altEAIso2016_sequence)
