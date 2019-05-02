@@ -54,6 +54,12 @@ class IsoValueMapProducer : public edm::global::EDProducer<> {
       ea_miniiso_.reset(new EffectiveAreas((iConfig.getParameter<edm::FileInPath>("EAFile_MiniIso")).fullPath()));
       rho_miniiso_ = consumes<double>(iConfig.getParameter<edm::InputTag>("rho_MiniIso"));
     }
+    if ((typeid(T) == typeid(pat::Muon))) {
+      produces<edm::ValueMap<float>>("PFIsoChg");
+      produces<edm::ValueMap<float>>("PFIsoAll");
+      ea_pfiso_.reset(new EffectiveAreas((iConfig.getParameter<edm::FileInPath>("EAFile_PFIso")).fullPath()));
+      rho_pfiso_ = consumes<double>(iConfig.getParameter<edm::InputTag>("rho_PFIso"));
+    }
     if ((typeid(T) == typeid(pat::Electron))) {
       produces<edm::ValueMap<float>>("PFIsoChg");
       produces<edm::ValueMap<float>>("PFIsoAll");
@@ -127,6 +133,7 @@ IsoValueMapProducer<T>::produce(edm::StreamID streamID, edm::Event& iEvent, cons
 {
 
   if ((typeid(T) == typeid(pat::Muon)) || (typeid(T) == typeid(pat::Electron)) || typeid(T) == typeid(pat::IsolatedTrack)) { doMiniIso(iEvent); };
+  if ((typeid(T) == typeid(pat::Muon))) { doPFIsoEle(iEvent); }
   if ((typeid(T) == typeid(pat::Electron))) { doPFIsoEle(iEvent); }
   if ((typeid(T) == typeid(pat::Photon))) { doPFIsoPho(iEvent); }
 
@@ -228,6 +235,45 @@ IsoValueMapProducer<pat::Electron>::doPFIsoEle(edm::Event& iEvent) const{
   iEvent.put(std::move(PFIsoAll04V),"PFIsoAll04");
 
 }
+template<>
+void
+IsoValueMapProducer<pat::Muon>::doPFIsoEle(edm::Event& iEvent) const{
+
+  edm::Handle<edm::View<pat::Muon>> src;
+  iEvent.getByToken(src_, src);
+  edm::Handle<double> rho;
+  iEvent.getByToken(rho_pfiso_,rho);
+
+  unsigned int nInput = src->size();
+
+  std::vector<float> PFIsoChg, PFIsoAll;
+  PFIsoChg.reserve(nInput);
+  PFIsoAll.reserve(nInput);
+
+  for (const auto & obj : *src) {
+    auto iso = obj.pfIsolationR03();
+    auto chg = iso.sumChargedHadronPt;
+    auto neu = iso.sumNeutralHadronEt;
+    auto pho = iso.sumPhotonEt;
+    auto ea = ea_pfiso_->getEffectiveArea(fabs(getEtaForEA(&obj)));
+    float scale = relative_ ? 1.0/obj.pt() : 1;
+    PFIsoChg.push_back(scale*chg);
+    PFIsoAll.push_back(scale*(chg+std::max(0.0,neu+pho-(*rho)*ea)));
+  }
+
+  std::unique_ptr<edm::ValueMap<float>> PFIsoChgV(new edm::ValueMap<float>());
+  edm::ValueMap<float>::Filler fillerChg(*PFIsoChgV);
+  fillerChg.insert(src,PFIsoChg.begin(),PFIsoChg.end());
+  fillerChg.fill();
+  std::unique_ptr<edm::ValueMap<float>> PFIsoAllV(new edm::ValueMap<float>());
+  edm::ValueMap<float>::Filler fillerAll(*PFIsoAllV);
+  fillerAll.insert(src,PFIsoAll.begin(),PFIsoAll.end());
+  fillerAll.fill();
+
+  iEvent.put(std::move(PFIsoChgV),"PFIsoChg");
+  iEvent.put(std::move(PFIsoAllV),"PFIsoAll");
+
+}
 
 template<typename T>
 void
@@ -293,6 +339,10 @@ IsoValueMapProducer<T>::fillDescriptions(edm::ConfigurationDescriptions& descrip
   if ((typeid(T) == typeid(pat::Muon)) || (typeid(T) == typeid(pat::Electron)) || typeid(T) == typeid(pat::IsolatedTrack)) {
     desc.add<edm::FileInPath>("EAFile_MiniIso")->setComment("txt file containing effective areas to be used for mini-isolation pileup subtraction");
     desc.add<edm::InputTag>("rho_MiniIso")->setComment("rho to be used for effective-area based mini-isolation pileup subtraction");
+  }
+  if ((typeid(T) == typeid(pat::Muon))) {
+    desc.add<edm::FileInPath>("EAFile_PFIso")->setComment("txt file containing effective areas to be used for PF-isolation pileup subtraction for muons");
+    desc.add<edm::InputTag>("rho_PFIso")->setComment("rho to be used for effective-area based PF-isolation pileup subtraction for muons");
   }
   if ((typeid(T) == typeid(pat::Electron))) {
     desc.add<edm::FileInPath>("EAFile_PFIso")->setComment("txt file containing effective areas to be used for PF-isolation pileup subtraction for electrons");

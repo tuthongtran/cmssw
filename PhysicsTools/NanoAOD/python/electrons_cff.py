@@ -114,9 +114,10 @@ isoForEle = cms.EDProducer("EleIsoValueMapProducer",
 run2_miniAOD_80XLegacy.toModify(isoForEle, src = "slimmedElectronsUpdated",
                                 EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
                                 EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
-run2_nanoAOD_94X2016.toModify(isoForEle,
-                                EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
-                                EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
+## For Ghent SYNC only
+##run2_nanoAOD_94X2016.toModify(isoForEle,
+##                                EAFile_MiniIso = "RecoEgamma/ElectronIdentification/data/Spring15/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_25ns.txt",
+##                                EAFile_PFIso = "RecoEgamma/ElectronIdentification/data/Summer16/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_80X.txt")
 run2_nanoAOD_92X.toModify(isoForEle, src = "slimmedElectronsUpdated")
 
 ptRatioRelForEle = cms.EDProducer("ElectronJetVarProducer",
@@ -291,6 +292,38 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
     weightFile = "PhysicsTools/NanoAOD/data/el_BDTG.weights.xml",
     variablesOrder = ["LepGood_pt","LepGood_eta","LepGood_jetNDauChargedMVASel","LepGood_miniRelIsoCharged","LepGood_miniRelIsoNeutral","LepGood_jetPtRelv2","LepGood_jetPtRatio","LepGood_jetBTagCSV","LepGood_sip3d","LepGood_dxy","LepGood_dz","LepGood_mvaIdSpring16HZZ"])
 
+electronMVAGhent = cms.EDProducer("EleBaseMVAValueMapProducer",
+    src = cms.InputTag("linkedObjects","electrons"),
+    weightFile =  cms.FileInPath("PhysicsTools/NanoAOD/data/el_tZqTTV17_BDTG.weights.xml"),
+    name = cms.string("electronMVAGhent"),
+    isClassifier = cms.bool(True),
+    variablesOrder = cms.vstring(["pt", "eta", "trackMultClosestJet", "miniIsoCharged", "miniIsoNeutral", "pTRel", "ptRatio", "relIso", "deepCsvClosestJet", "sip3d", "dxy", "dz", "electronMvaFall17NoIso"]),
+    variables = cms.PSet(
+        pt = cms.string("pt*userFloat('ecalTrkEnergyPreCorr')/userFloat('ecalTrkEnergyPostCorr')"),
+        eta = cms.string("abs(eta)"),
+        trackMultClosestJet = cms.string("?userCand('jetForLepJetVar').isNonnull()?userFloat('jetNDauChargedMVASel'):0"),
+        miniIsoCharged = cms.string("userFloat('miniIsoChg')/pt"),
+        miniIsoNeutral = cms.string("(userFloat('miniIsoAll')-userFloat('miniIsoChg'))/pt"),
+        pTRel = cms.string("?userCand('jetForLepJetVar').isNonnull()?userFloat('ptRel'):0"),
+        ptRatio = cms.string("?userCand('jetForLepJetVar').isNonnull()?min(userFloat('ptRatio'),1.5):1"),
+        reliso = cms.string("userFloat('PFIsoAll')/pt"),
+        deepCsvClosestJet = cms.string("?userCand('jetForLepJetVar').isNonnull()?max(userCand('jetForLepJetVar').bDiscriminator('pfDeepCSVJetTags:probb')+userCand('jetForLepJetVar').bDiscriminator('pfDeepCSVJetTags:probbb'),0.0):0.0"),
+        sip3d = cms.string("abs(dB('PV3D')/edB('PV3D'))"),
+        dxy = cms.string("log(abs(dB('PV2D')))"),
+        dz = cms.string("log(abs(dB('PVDZ')))"),
+        electronMvaFall17NoIso = cms.string("userFloat('mvaFall17V1noIso')"),
+    )
+)
+for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+    modifier.toModify(electronMVAGhent.variables,
+        electronMvaSpring16GP = cms.string("userFloat('ElectronMVAEstimatorRun2Spring16GeneralPurposeV1Values')"),
+        electronMvaFall17NoIso = None
+        )
+    modifier.toModify(electronMVAGhent,
+        weightFile = "PhysicsTools/NanoAOD/data/el_tZqTTV16_BDTG.weights.xml",
+        variablesOrder = cms.vstring(["pt", "eta", "trackMultClosestJet", "miniIsoCharged", "miniIsoNeutral", "pTRel", "ptRatio", "relIso", "deepCsvClosestJet", "sip3d", "dxy", "dz", "electronMvaSpring16GP"]),
+        )
+
 electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src = cms.InputTag("linkedObjects","electrons"),
     cut = cms.string(""), #we should not filter on cross linked collections
@@ -352,6 +385,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("electronMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),
+        mvaGhent = ExtVar(cms.InputTag("electronMVAGhent"),float, doc="Ghent MVA lepton ID score",precision=14),
     ),
 )
 # scale and smearing only when available
@@ -436,7 +470,7 @@ electronMCTable = cms.EDProducer("CandMCMatchTableProducer",
 )
 
 electronSequence = cms.Sequence(bitmapVIDForEle + isoForEle + ptRatioRelForEle + slimmedElectronsWithUserData + finalElectrons)
-electronTables = cms.Sequence (electronMVATTH + electronTable)
+electronTables = cms.Sequence (electronMVATTH + electronMVAGhent + electronTable)
 electronMC = cms.Sequence(electronsMCMatchForTable + electronMCTable)
 
 _withUpdate_sequence = cms.Sequence(slimmedElectronsUpdated + electronSequence.copy())

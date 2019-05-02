@@ -22,9 +22,17 @@ isoForMu = cms.EDProducer("MuonIsoValueMapProducer",
     relative = cms.bool(False),
     rho_MiniIso = cms.InputTag("fixedGridRhoFastjetAll"),
     EAFile_MiniIso = cms.FileInPath("PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_94X.txt"),
+## Only for Ghent sync
+    rho_PFIso = cms.InputTag("fixedGridRhoFastjetAll"),
+    EAFile_PFIso = cms.FileInPath("PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_94X.txt"),
 )
 run2_miniAOD_80XLegacy.toModify(isoForMu, src = "slimmedMuonsUpdated", EAFile_MiniIso = "PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_80X.txt")
-run2_nanoAOD_94X2016.toModify(isoForMu, EAFile_MiniIso = "PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_80X.txt")
+#run2_nanoAOD_94X2016.toModify(isoForMu, EAFile_MiniIso = "PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_80X.txt")
+## Only for Ghent sync
+run2_nanoAOD_94X2016.toModify(isoForMu, EAFile_MiniIso = "PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_80X.txt",
+        EAFile_PFIso = "PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_80X.txt",
+        rho_PFIso = cms.InputTag("fixedGridRhoFastjetAll"),
+        )
 run2_nanoAOD_92X.toModify(isoForMu, src = "slimmedMuonsUpdated")
 
 ptRatioRelForMu = cms.EDProducer("MuonJetVarProducer",
@@ -43,6 +51,7 @@ slimmedMuonsWithUserData = cms.EDProducer("PATMuonUserDataEmbedder",
         ptRatio = cms.InputTag("ptRatioRelForMu:ptRatio"),
         ptRel = cms.InputTag("ptRatioRelForMu:ptRel"),
         jetNDauChargedMVASel = cms.InputTag("ptRatioRelForMu:jetNDauChargedMVASel"),
+        PFIsoAll = cms.InputTag("isoForMu:PFIsoAll"),
      ),
      userCands = cms.PSet(
         jetForLepJetVar = cms.InputTag("ptRatioRelForMu:jetForLepJetVar") # warning: Ptr is null if no match is found
@@ -86,6 +95,33 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
         weightFile = "PhysicsTools/NanoAOD/data/mu_BDTG.weights.xml",
         variablesOrder = ["LepGood_pt","LepGood_eta","LepGood_jetNDauChargedMVASel","LepGood_miniRelIsoCharged","LepGood_miniRelIsoNeutral","LepGood_jetPtRelv2","LepGood_jetPtRatio","LepGood_jetBTagCSV","LepGood_sip3d","LepGood_dxy","LepGood_dz","LepGood_segmentCompatibility"],
     )
+
+muonMVAGhent = cms.EDProducer("MuonBaseMVAValueMapProducer",
+    src = cms.InputTag("linkedObjects","muons"),
+    weightFile =  cms.FileInPath("PhysicsTools/NanoAOD/data/mu_tZqTTV17_BDTG.weights.xml"), ## FIXME adjust, for 2016 and 2017 differently
+    name = cms.string("muonMVAGhent"),
+    isClassifier = cms.bool(True),
+    variablesOrder = cms.vstring(["pt", "eta", "trackMultClosestJet", "miniIsoCharged", "miniIsoNeutral", "pTRel", "ptRatio", "relIso", "deepCsvClosestJet", "sip3d", "dxy", "dz", "segmentCompatibility"]),
+    variables = cms.PSet(
+        pt = cms.string("pt"),
+        eta = cms.string("abs(eta)"),
+        trackMultClosestJet = cms.string("?userCand('jetForLepJetVar').isNonnull()?userFloat('jetNDauChargedMVASel'):0"),
+        miniIsoCharged = cms.string("userFloat('miniIsoChg')/pt"),
+        miniIsoNeutral = cms.string("(userFloat('miniIsoAll')-userFloat('miniIsoChg'))/pt"),
+        pTRel = cms.string("?userCand('jetForLepJetVar').isNonnull()?userFloat('ptRel'):0"),
+        ptRatio = cms.string("?userCand('jetForLepJetVar').isNonnull()?min(userFloat('ptRatio'),1.5):1"),
+        reliso = cms.string("userFloat('PFIsoAll')/pt"),
+        deepCsvClosestJet = cms.string("?userCand('jetForLepJetVar').isNonnull()?max(userCand('jetForLepJetVar').bDiscriminator('pfDeepCSVJetTags:probb')+userCand('jetForLepJetVar').bDiscriminator('pfDeepCSVJetTags:probbb'),0.0):0.0"),
+        sip3d = cms.string("abs(dB('PV3D')/edB('PV3D'))"),
+        dxy = cms.string("log(abs(dB('PV2D')))"),
+        dz = cms.string("log(abs(dB('PVDZ')))"),
+        segmentCompatibility = cms.string("segmentCompatibility"),
+    )
+)
+for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
+    modifier.toModify(muonMVAGhent,
+        weightFile = "PhysicsTools/NanoAOD/data/mu_tZqTTV16_BDTG.weights.xml",
+        )
 
 muonTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     src = cms.InputTag("linkedObjects","muons"),
@@ -132,6 +168,7 @@ muonTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("muonMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),
+        mvaGhent = ExtVar(cms.InputTag("muonMVAGhent"),float, doc="Ghent MVA lepton ID score",precision=14),
     ),
 )
 
@@ -163,7 +200,7 @@ muonMCTable = cms.EDProducer("CandMCMatchTableProducer",
 
 muonSequence = cms.Sequence(isoForMu + ptRatioRelForMu + slimmedMuonsWithUserData + finalMuons)
 muonMC = cms.Sequence(muonsMCMatchForTable + muonMCTable)
-muonTables = cms.Sequence(muonMVATTH + muonTable)
+muonTables = cms.Sequence(muonMVATTH + muonMVAGhent + muonTable)
 
 _withUpdate_sequence = muonSequence.copy()
 _withUpdate_sequence.replace(isoForMu, slimmedMuonsUpdated+isoForMu)
