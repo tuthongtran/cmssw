@@ -465,14 +465,6 @@ run2_miniAOD_80XLegacy.toModify(electronTable.variables,
     vidNestedWPBitmapSum16 = Var("userInt('VIDNestedWPBitmapSum16')",int,doc=_bitmapVIDForEleSum16_docstring),
 
 )
-## store alternative
-for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
-    modifier.toModify(electronTable.variables,
-        miniPFRelIso_chg2 = Var("userFloat('miniIsoChg2')/pt",float,doc="mini PF relative isolation, charged component"),
-        miniPFRelIso_all2 = Var("userFloat('miniIsoAll2')/pt",float,doc="mini PF relative isolation, total (with scaled rho*EA PU corrections)"),
-        pfRelIso03_chg2 = Var("userFloat('PFIsoChg2')/pt",float,doc="PF relative isolation dR=0.3, charged component"),
-        pfRelIso03_all2 = Var("userFloat('PFIsoAll2')/pt",float,doc="PF relative isolation dR=0.3, total (with rho*EA PU corrections)"),
-        )
 
 electronsMCMatchForTable = cms.EDProducer("MCMatcher",  # cut on deltaR, deltaPt/Pt; pick best by deltaR
     src         = electronTable.src,                 # final reco collection
