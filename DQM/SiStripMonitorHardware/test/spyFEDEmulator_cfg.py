@@ -7,16 +7,15 @@ process = cms.Process('SPYFEDEMULATOR')
 process.source = cms.Source(
     'PoolSource',
     fileNames = cms.untracked.vstring(
-#        'file:/eos/cms/store/user/jblee/SpyRawToDigis234824.root',
-        'file:SpyMatchedEvents234824_TEST1.root'
-#'file:/eos/cms/store/user/jblee/SpyRawToDigis234824_TEST.root'
+        #'file:SpyRawToDigis321054_TEST.root'
+        'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/321054/run321054.root',
         )
     )
 
 ## ---- Services ----
 process.load("DQM.SiStripCommon.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20))
 
 ## Global tag - see http://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
@@ -51,24 +50,27 @@ process.SiStripSpyDigiConverter.DiscardDigisWithWrongAPVAddress = True
 
 ## ---- FED Emulation ----
 process.load('DQM.SiStripMonitorHardware.SiStripFEDEmulator_cfi')
-process.SiStripFEDEmulator.SpyReorderedDigisTag = cms.InputTag('SiStripSpyEventMatcher','SpyReordered')
-process.SiStripFEDEmulator.SpyVirginRawDigisTag = cms.InputTag('SiStripSpyEventMatcher','SpyVirginRaw')
+process.SiStripFEDEmulator.SpyReorderedDigisTag = cms.InputTag('SiStripSpyDigiConverter','SpyReordered')
+process.SiStripFEDEmulator.SpyVirginRawDigisTag = cms.InputTag('SiStripSpyDigiConverter','SpyVirginRaw')
 process.SiStripFEDEmulator.ByModule = cms.bool(True) #use the digis stored by module (i.e. detId)
 
 #process.load('PerfTools.Callgrind.callgrindSwitch_cff')
 
+del process.siStripQualityESProducer.ListOfRecordToMerge[0] # Because spy data is outside or a run
+
 process.p = cms.Path(
-#     process.SiStripSpyUnpacker
-#     *process.SiStripSpyDigiConverter
+    process.SiStripSpyUnpacker
+    *process.SiStripSpyDigiConverter
     #*process.profilerStart*
-    process.SiStripFEDEmulator
+    *process.SiStripFEDEmulator
     #*process.profilerStop 
     )
+
 
 ## --- What to output ---
 process.output = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("SpyMatched_FEDemulated234824_TEST.root"),
+    fileName = cms.untracked.string("SpyMatched_FEDemulated321054_TEST.root"),
     outputCommands = cms.untracked.vstring(
        'keep *',
        #drop whatever collections from the above here - to save disk space!

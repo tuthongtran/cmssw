@@ -12,8 +12,7 @@ process.source = cms.Source(
 #       'file:/afs/cern.ch/work/j/jblee/public/SpyChannel/CMSSW_9_4_0/src/DQM/SiStripMonitorHardware/test/SpyMatchedEvents298270.root',
 #       'file:SpyMatchedEvents298270_TEST.root'
 #	'file:SpyMatchedEvents234824_TEST.root'
-'file:SpyMatched_FEDemulated234824_TEST.root'
-#'file:/eos/cms/store/user/jblee/SpyFEDemulated234824_TEST.root'
+        'file:SpyMatched_FEDemulated321054_TEST.root'
        )
     )
 
@@ -70,6 +69,6 @@ process.p = cms.Path(
 ## ------ TFileService
 process.TFileService = cms.Service(
     "TFileService",
-    fileName = cms.string('SpyDisplay234824_Test.root')
+    fileName = cms.string('SpyDisplay321054_Test.root')
     )
 

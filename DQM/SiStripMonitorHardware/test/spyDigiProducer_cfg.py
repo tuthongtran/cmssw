@@ -11,27 +11,12 @@ process.source = cms.Source(
     'PoolSource',
     fileNames = cms.untracked.vstring(
         # Spy data (raw) in edm format, as converted from .dat
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0026.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0027.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0028.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0029.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0030.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0031.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0032.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0033.RUN00234874.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/234824/USC.00234824.0001.A.storageManager.00.0034.RUN00234874.root',
-'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0000.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0001.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0002.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0003.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0004.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0005.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0006.RUN00298269.root',
-#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/298270/USC.00298270.0001.A.storageManager.00.0007.RUN00298269.root',
-        )
+#'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/321779/run321779.root',
+'file:/eos/cms/store/group/dpg_tracker_strip/tracker/Online/store/streamer/SiStripSpy/Commissioning11/321054/run321054.root',
+       )
     )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 # --- Message Logging ---
 #process.Tracer = cms.Service('Tracer',indentation = cms.untracked.string('$$'))
@@ -85,7 +70,7 @@ process.p = cms.Path(
 # --- What to output ---
 process.output = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("SpyRawToDigis298270_TEST.root"),
+    fileName = cms.untracked.string("SpyRawToDigis321054_TEST.root"),
     outputCommands = cms.untracked.vstring(
        'keep *',
        #'drop *',
