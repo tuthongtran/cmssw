@@ -39,7 +39,7 @@ process.SiStripSpyDigiConverter.StorePayloadDigis = True
 process.SiStripSpyDigiConverter.StoreReorderedDigis = True
 process.SiStripSpyDigiConverter.StoreModuleDigis = True
 process.SiStripSpyDigiConverter.StoreAPVAddress = True
-process.SiStripSpyDigiConverter.MinDigiRange = 100
+process.SiStripSpyDigiConverter.MinDigiRange = 0
 process.SiStripSpyDigiConverter.MaxDigiRange = 1024
 process.SiStripSpyDigiConverter.MinZeroLight = 0
 process.SiStripSpyDigiConverter.MaxZeroLight = 1024
@@ -47,6 +47,19 @@ process.SiStripSpyDigiConverter.MinTickHeight = 0
 process.SiStripSpyDigiConverter.MaxTickHeight = 1024
 process.SiStripSpyDigiConverter.ExpectedPositionOfFirstHeaderBit = 6
 process.SiStripSpyDigiConverter.DiscardDigisWithWrongAPVAddress = True
+
+## ---- ZA in hybrid mode ----
+#process.siStripZeroSuppression.produceRawDigis = cms.bool(False) 
+#process.siStripZeroSuppression.produceCalculatedBaseline = cms.bool(False)
+#process.siStripZeroSuppression.produceBaselinePoints = cms.bool(False)
+#process.siStripZeroSuppression.storeCM = cms.bool(True)
+#process.siStripZeroSuppression.produceHybridFormat = cms.bool(True)
+#process.siStripZeroSuppression.Algorithms.APVInspectMode = cms.string('HybridEmulation')
+#process.siStripZeroSuppression.Algorithms.CommonModeNoiseSubtractionMode = cms.string('Median')
+#process.siStripZeroSuppression.Algorithms.MeanCM = cms.uint32(512)
+#process.siStripZeroSuppression.Algorithms.DeltaCMThreshold = cms.uint32(20)
+#process.siStripZeroSuppression.Algorithms.Use10bitsTruncation = cms.bool(True)
+
 
 ## ---- FED Emulation ----
 process.load('DQM.SiStripMonitorHardware.SiStripFEDEmulator_cfi')
@@ -70,16 +83,16 @@ process.p = cms.Path(
 ## --- What to output ---
 process.output = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("SpyMatched_FEDemulated321054_TEST.root"),
+    fileName = cms.untracked.string("/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyMatched_FEDemulated321054_lowerMin.root"),
     outputCommands = cms.untracked.vstring(
        'keep *',
        #drop whatever collections from the above here - to save disk space!
-       #'drop *_*_*_SPYEVENTMATCHING',
-       #'drop *_SiStripSpyUnpacker_*_*',
-       #'drop *_SiStripSpyDigiConverter_*_*',
-       #'keep *_*_VirginRaw_*',
-       #'drop *_TriggerResults_*_*',
-       #'drop *_*_*_HLT'
+       'drop *_*_*_SPYEVENTMATCHING',
+       'drop *_SiStripSpyUnpacker_*_*',
+       'drop *_SiStripSpyDigiConverter_*_*',
+       'keep *_*_VirginRaw_*',
+       'drop *_TriggerResults_*_*',
+       'drop *_*_*_HLT'
        )
     )
 

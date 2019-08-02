@@ -17,12 +17,13 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100) ## was 100
+    input = cms.untracked.int32(1) 
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('/store/hidata/HIRun2015/HITrackerVirginRaw/RAW/v1/000/263/400/00000/40322926-4AA3-E511-95F7-02163E0146A8.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779_TEST.root'),
+    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -32,7 +33,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('step1 nevts:100'),
+    annotation = cms.untracked.string('step1 nevts:1'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -66,7 +67,7 @@ from EventFilter.SiStripRawToDigi.SiStripDigiToRaw_cfi import SiStripDigiToRaw
 ##
 inputVR = cms.InputTag("siStripDigis", "VirginRaw")
 # step1
-process.zsHybridEmu = process.siStripZeroSuppression.clone(
+process.zsHybridEmu = process.siStripZeroSuppression.clone(  # Raw -> ZS in hybrid -> Digis
     produceRawDigis=False,
     produceHybridFormat=True,
     Algorithms=process.siStripZeroSuppression.Algorithms.clone(
@@ -80,14 +81,14 @@ process.zsHybridEmu = process.siStripZeroSuppression.clone(
         ),
     RawDigiProducersList=cms.VInputTag(inputVR)
     )
-process.SiStripDigiToHybridRaw = SiStripDigiToRaw.clone(
+process.SiStripDigiToHybridRaw = SiStripDigiToRaw.clone(     # Digis (10 bits) -> Raw
     InputDigis = cms.InputTag('zsHybridEmu', 'VirginRaw'),
     FedReadoutMode = cms.string('ZERO_SUPPRESSED'),
     PacketCode = cms.string('ZERO_SUPPRESSED10'),
     CopyBufferHeader = cms.bool(True),
     RawDataTag = cms.InputTag('rawDataCollector')
     )
-process.hybridRawDataRepacker = rawDataCollector.clone(
+process.hybridRawDataRepacker = rawDataCollector.clone(     # Repacking the Raw
     verbose = cms.untracked.int32(0),
     RawCollectionList = cms.VInputTag(
         cms.InputTag('SiStripDigiToHybridRaw'),
@@ -95,8 +96,8 @@ process.hybridRawDataRepacker = rawDataCollector.clone(
         cms.InputTag('rawDataCollector'))
     )
 # step2
-process.unpackHybridEmu = process.siStripDigis.clone(ProductLabel=cms.InputTag('hybridRawDataRepacker'))
-process.zsHybrid = process.siStripZeroSuppression.clone(
+process.unpackHybridEmu = process.siStripDigis.clone(ProductLabel=cms.InputTag('hybridRawDataRepacker')) # Unpacking the raw
+process.zsHybrid = process.siStripZeroSuppression.clone(      # Full software (with inspect and restore) ZS -> digis
     RawDigiProducersList = cms.VInputTag(
         cms.InputTag("unpackHybridEmu", "VirginRaw"),
         cms.InputTag("unpackHybridEmu", "ProcessedRaw"),
@@ -107,14 +108,14 @@ process.zsHybrid = process.siStripZeroSuppression.clone(
         APVInspectMode = "Hybrid",
         ),
     )
-process.hybridSiStripDigiToZSRaw = SiStripDigiToRaw.clone(
+process.hybridSiStripDigiToZSRaw = SiStripDigiToRaw.clone(   # Digis (usual) ->  Raw
     InputDigis = cms.InputTag('zsHybrid', 'ZeroSuppressed'),
     FedReadoutMode = cms.string('ZERO_SUPPRESSED'),
     PacketCode = cms.string('ZERO_SUPPRESSED'),
     CopyBufferHeader = cms.bool(True),
     RawDataTag = cms.InputTag('hybridRawDataRepacker')
     )
-process.hybridZSRawDataRepacker = rawDataCollector.clone(
+process.hybridZSRawDataRepacker = rawDataCollector.clone(    # Repacking the Raw
     verbose = cms.untracked.int32(0),
     RawCollectionList = cms.VInputTag(
         cms.InputTag('hybridSiStripDigiToZSRaw'),
@@ -124,21 +125,22 @@ process.hybridZSRawDataRepacker = rawDataCollector.clone(
 ##
 ## WF 2: zero-suppress, repack
 ##
-# ZS:       process.siStripZeroSuppression
-process.SiStripDigiToZSRaw = SiStripDigiToRaw.clone(
+# ZS:       process.siStripZeroSuppression 
+process.SiStripDigiToZSRaw = SiStripDigiToRaw.clone(         # Digis -> Raws
     InputDigis = cms.InputTag('siStripZeroSuppression', 'VirginRaw'),
     FedReadoutMode = cms.string('ZERO_SUPPRESSED'),
     PacketCode = cms.string('ZERO_SUPPRESSED'),
     CopyBufferHeader = cms.bool(True),
     RawDataTag = cms.InputTag('rawDataCollector')
     )
-process.rawDataRepacker = rawDataCollector.clone(
+process.rawDataRepacker = rawDataCollector.clone(             # Repacking the Raw
     verbose = cms.untracked.int32(0),
     RawCollectionList = cms.VInputTag(
         cms.InputTag('SiStripDigiToZSRaw'),
         cms.InputTag('source'),
         cms.InputTag('rawDataCollector'))
     )
+
 
 ##
 ## Modify some settings for consistenc between the two

@@ -18,17 +18,22 @@
 void plotModule(){//main
 
   //TFile *file = TFile::Open("./FEDMonitorHistos_evt1_spy121834.root");
-  TFile *file = TFile::Open("./SpyDisplay.root");
+  //TFile *file = TFile::Open("./SpyDisplay.root");
+  TFile *file = TFile::Open("./SpyDisplay321054_Test.root");
+  unsigned int runNumber = 321054;
 
-  unsigned int runNumber = 128646;
 
-  const unsigned int nEvts = 5;
-  unsigned int evtNumber[nEvts] = {1,2,3,4,5};
+  //const unsigned int nEvts = 5;
+  //unsigned int evtNumber[nEvts] = {1,2,3,4,5};
+  const unsigned int nEvts = 1;
+  unsigned int evtNumber[nEvts] = {10};
 
-  const unsigned int nDets = 11;
-  unsigned int detIdVec[nDets] = {436265548,436265552,436265556,436265560,436265576, 
-				  436265580,436265584,436265588,436265592,
-				  369121566,369124733};
+//  const unsigned int nDets = 11;
+//  unsigned int detIdVec[nDets] = {436265548,436265552,436265556,436265560,436265576, 
+//				  436265580,436265584,436265588,436265592,
+//				  369121566,369124733};
+  const unsigned int nDets = 1;
+  unsigned int detIdVec[nDets] = {470079220};
 
   int pair = -1; // -1 = all
 

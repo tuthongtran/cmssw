@@ -25,14 +25,9 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-    #'file:/data/abaty/VirginRaw_CentralitySkims/VirginRAW_2010_HICorePhysics_SKIM_Cent_0_5_1.root',
-    #'file:/data/abaty/HLT_Emulated_2010Data/outputHIPhysicsVirginRaw.root'
-    #'file:/data/abaty/VirginRaw_CentralitySkims/VirginRAW_2010_HICorePhysics_SKIM_Cent_0_5_10.root',
-    #'/store/hidata/HIRun2015/HITrackerVirginRaw/RAW/v1/000/263/400/00000/40322926-4AA3-E511-95F7-02163E0146A8.root'
-     'file:/data/TrackerStudies/2015_VR_forBaselineFollowerStudies_Aug2017.root'
-    # 'root://cms-xrd-global.cern.ch////store/hidata/HIRun2015/HITrackerVirginRaw/RAW/v1/000/262/495/00000/14634975-5493-E511-AC10-02163E0138B3.root'
-   )
+    #fileNames = cms.untracked.vstring('/store/data/Run2016B/VRZeroBias0/RAW/v2/000/273/162/00000/FC5C4807-0718-E611-BAB7-02163E01436A.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321054.root'),
+    #secondaryFileNames = cms.untracked.vstring(),
 )
 
 #process.source = cms.Source("NewEventStreamFileReader",
@@ -43,7 +38,7 @@ process.source = cms.Source("PoolSource",
 # Output definition
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
-    fileName = cms.untracked.string('RECO.root'),
+    fileName = cms.untracked.string('/afs/cern.ch/user/f/fbury/work/HybridStudy/RECO321054.root'),
     dataset = cms.untracked.PSet(
         filterName = cms.untracked.string(''),
         dataTier = cms.untracked.string('GEN-SIM-RECO')
@@ -65,14 +60,19 @@ process.siStripZeroSuppression.produceCalculatedBaseline = False
 process.siStripZeroSuppression.produceBaselinePoints = False
 process.siStripZeroSuppression.storeCM = True
 process.siStripZeroSuppression.produceHybridFormat = True
-process.siStripZeroSuppression.Algorithms.APVInspectMode = "HybridEmulation"
+#process.siStripZeroSuppression.Algorithms.APVInspectMode = "HybridEmulation"
+process.siStripZeroSuppression.Algorithms.APVInspectMode = "Hybrid"
+#process.siStripZeroSuppression.Algorithms.APVRestoreMode = "Flat"
 process.siStripZeroSuppression.Algorithms.CommonModeNoiseSubtractionMode = 'Median'
 process.siStripZeroSuppression.Algorithms.MeanCM = 512
 process.siStripZeroSuppression.Algorithms.DeltaCMThreshold = 20
 process.siStripZeroSuppression.Algorithms.Use10bitsTruncation = True
+#process.siStripZeroSuppression.Algorithms.doAPVRestore = False
+#process.siStripZeroSuppression.Algorithms.ForceNoRestore = True
+
 
 process.TFileService = cms.Service("TFileService",
-        fileName=cms.string("Baselines.root"))
+        fileName=cms.string("/afs/cern.ch/user/f/fbury/work/HybridStudy/Baselines321054.root"))
 
 process.hybridAna = cms.EDAnalyzer("SiStripHybridFormatAnalyzer",
 

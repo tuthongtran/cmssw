@@ -78,7 +78,7 @@ namespace sistrip {
     
     if (storePayloadDigis_)   produces< edm::DetSetVector<SiStripRawDigi> >("SpyPayload");
     if (storeReorderedDigis_) produces< edm::DetSetVector<SiStripRawDigi> >("SpyReordered");
-    if (storeModuleDigis_)    produces< edm::DetSetVector<SiStripRawDigi> >("SpyVirginRaw");
+    if (storeModuleDigis_)    produces< edm::DetSetVector<SiStripRawDigi> >("VirginRaw");
         
     if (storeAPVAddress_) {
       produces< std::vector<uint32_t> >("APVAddress");
@@ -166,7 +166,7 @@ namespace sistrip {
     //add to event
     if (storePayloadDigis_) event.put(std::move(payloadDigis),"SpyPayload");
     if (storeReorderedDigis_) event.put(std::move(reorderedDigis),"SpyReordered");
-    if (storeModuleDigis_) event.put(std::move(moduleDigis),"SpyVirginRaw");
+    if (storeModuleDigis_) event.put(std::move(moduleDigis),"VirginRaw");
     if (storeAPVAddress_) {
       event.put(std::move(pAPVAddresses), "APVAddress");
     }

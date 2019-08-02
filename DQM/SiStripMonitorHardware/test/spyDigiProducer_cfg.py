@@ -5,6 +5,8 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 
 process = cms.Process('SPYPROD')
 
+process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+
 # ---- Input data ----
 # See https://twiki.cern.ch/twiki/bin/viewauth/CMS/FEDSpyChannelData for more spy data.
 process.source = cms.Source(
@@ -16,7 +18,7 @@ process.source = cms.Source(
        )
     )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500))
 
 # --- Message Logging ---
 #process.Tracer = cms.Service('Tracer',indentation = cms.untracked.string('$$'))
@@ -40,7 +42,6 @@ process.load('DQM.SiStripMonitorHardware.SiStripSpyDigiConverter_cfi')
 
 ## * Scope digi settings
 process.SiStripSpyUnpacker.FEDIDs = cms.vuint32()                   #use a subset of FEDs or leave empty for all.
-#process.SiStripSpy.FEDIDs = cms.vuint32(50, 187, 260, 356) #one from each partition
 process.SiStripSpyUnpacker.InputProductLabel = cms.InputTag('rawDataCollector')
 process.SiStripSpyUnpacker.AllowIncompleteEvents = True
 process.SiStripSpyUnpacker.StoreCounters = True
@@ -51,7 +52,7 @@ process.SiStripSpyDigiConverter.StorePayloadDigis = True
 process.SiStripSpyDigiConverter.StoreReorderedDigis = True
 process.SiStripSpyDigiConverter.StoreModuleDigis = True
 process.SiStripSpyDigiConverter.StoreAPVAddress = True
-process.SiStripSpyDigiConverter.MinDigiRange = 100
+process.SiStripSpyDigiConverter.MinDigiRange = 0
 process.SiStripSpyDigiConverter.MaxDigiRange = 1024
 process.SiStripSpyDigiConverter.MinZeroLight = 0
 process.SiStripSpyDigiConverter.MaxZeroLight = 1024
@@ -70,7 +71,9 @@ process.p = cms.Path(
 # --- What to output ---
 process.output = cms.OutputModule(
     "PoolOutputModule",
-    fileName = cms.untracked.string("SpyRawToDigis321054_TEST.root"),
+    fileName = cms.untracked.string("/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321054.root"),
+    #fileName = cms.untracked.string("/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779.root"),
+    #fileName = cms.untracked.string("SpyRawToDigis321054_TEST.root"),
     outputCommands = cms.untracked.vstring(
        'keep *',
        #'drop *',
@@ -79,7 +82,7 @@ process.output = cms.OutputModule(
        #'drop *_*_ScopeRawDigis_*',
        #'drop *_*_Payload_*',
        #'drop *_*_Reordered_*',
-       #'drop *_*_VirginRaw_*'
+       #'drop *_*_VirginRaw_*',
        #'drop *_*_TotalEventCount_*',
        #'drop *_*_L1ACount_*',
        #'drop *_*_APVAddress_*',
@@ -87,3 +90,4 @@ process.output = cms.OutputModule(
     )
 
 process.e = cms.EndPath( process.output )
+

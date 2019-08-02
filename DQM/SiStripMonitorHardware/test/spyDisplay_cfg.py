@@ -9,8 +9,8 @@ process = cms.Process('SPYDISPLAY')
 process.source = cms.Source(
     "PoolSource",
     fileNames = cms.untracked.vstring(
-#       'file:/afs/cern.ch/work/j/jblee/public/SpyChannel/CMSSW_9_4_0/src/DQM/SiStripMonitorHardware/test/SpyMatchedEvents298270.root',
-       'file:SpyMatched_FEDemulated321054_TEST.root',
+       #'file:SpyMatched_FEDemulated321054_TEST.root',
+       'file:SpyMatched_FEDemulated321054_lowerMin.root',
        )
     )
 
