@@ -19,7 +19,8 @@ SiStripZeroSuppression::SiStripZeroSuppression(edm::ParameterSet const& conf)
     produceCalculatedBaseline(conf.getParameter<bool>("produceCalculatedBaseline")),
     produceBaselinePoints(conf.getParameter<bool>("produceBaselinePoints")),
     storeInZScollBadAPV(conf.getParameter<bool>("storeInZScollBadAPV")),
-    produceHybridFormat(conf.getParameter<bool>("produceHybridFormat"))
+    produceHybridFormat(conf.getParameter<bool>("produceHybridFormat")),
+    forceReadHybridFormat(conf.getUntrackedParameter<bool>("forceReadHybridFormat", false))
 {
   for ( const auto& inputTag : conf.getParameter<std::vector<edm::InputTag> >("RawDigiProducersList") )
   {
@@ -44,13 +45,17 @@ SiStripZeroSuppression::SiStripZeroSuppression(edm::ParameterSet const& conf)
       inputType = RawType::ScopeMode;
       if (produceHybridFormat) throw cms::Exception("Scope Mode cannot be converted in hybrid Format");
     }
-    if ( RawType::Unknown != inputType ) {
-      rawInputs.emplace_back(tagName, inputType, consumes<edm::DetSetVector<SiStripRawDigi>>(inputTag));
-    } else if ( tagName == "ZeroSuppressed" ) {
+    if ( forceReadHybridFormat ) {
       hybridInputs.emplace_back(tagName, consumes<edm::DetSetVector<SiStripDigi>>(inputTag));
     } else {
-      throw cms::Exception("Unknown input type") << tagName << " unknown.  "
-        << "SiStripZeroZuppression can only process types \"VirginRaw\", \"ProcessedRaw\" and \"ZeroSuppressed\"";
+      if ( RawType::Unknown != inputType ) {
+        rawInputs.emplace_back(tagName, inputType, consumes<edm::DetSetVector<SiStripRawDigi>>(inputTag));
+      } else if ( tagName == "ZeroSuppressed" ) {
+        hybridInputs.emplace_back(tagName, consumes<edm::DetSetVector<SiStripDigi>>(inputTag));
+      } else {
+        throw cms::Exception("Unknown input type") << tagName << " unknown.  "
+          << "SiStripZeroZuppression can only process types \"VirginRaw\", \"ProcessedRaw\" and \"ZeroSuppressed\"";
+      }
     }
   }
 

@@ -46,6 +46,7 @@ class SiStripZeroSuppression : public edm::stream::EDProducer<>
   bool produceBaselinePoints;
   bool storeInZScollBadAPV;
   bool produceHybridFormat;
+  bool forceReadHybridFormat;
 
   using rawtoken_t = edm::EDGetTokenT<edm::DetSetVector<SiStripRawDigi>>;
   using zstoken_t = edm::EDGetTokenT<edm::DetSetVector<SiStripDigi>>;
