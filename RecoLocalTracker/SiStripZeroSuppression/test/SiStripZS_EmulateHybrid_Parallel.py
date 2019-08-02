@@ -11,7 +11,7 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.EventContent.EventContentHeavyIons_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff')
-process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
+#process.load('Configuration.StandardSequences.RawToDigi_Data_cff')
 ###process.load('Configuration.StandardSequences.DigiToRaw_Repack_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -63,13 +63,13 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
 from EventFilter.RawDataCollector.rawDataCollectorByLabel_cfi import rawDataCollector
 process.load("RecoLocalTracker.SiStripZeroSuppression.SiStripZeroSuppression_cfi")
 from RecoLocalTracker.SiStripZeroSuppression.SiStripZeroSuppression_cfi import siStripZeroSuppression
-process.load("EventFilter.SiStripRawToDigi.SiStripDigiToRaw_cfi")
-from EventFilter.SiStripRawToDigi.SiStripDigiToRaw_cfi import SiStripDigiToRaw
+#process.load("EventFilter.SiStripRawToDigi.SiStripDigiToRaw_cfi")
+#from EventFilter.SiStripRawToDigi.SiStripDigiToRaw_cfi import SiStripDigiToRaw
 
 ##
 ## WF 1: emulate hybrid, repack, unpack, zero-suppress, repack
 ##
-inputVR = cms.InputTag("siStripDigis", "VirginRaw")
+inputVR = cms.InputTag("SiStripSpyDigiConverter", "VirginRaw")
 # step1
 process.zsHybridEmu = process.siStripZeroSuppression.clone(  # Raw -> ZS in hybrid -> Digis
     produceRawDigis=False,
@@ -78,9 +78,9 @@ process.zsHybridEmu = process.siStripZeroSuppression.clone(  # Raw -> ZS in hybr
         APVInspectMode = "HybridEmulation",
         APVRestoreMode = "",
         CommonModeNoiseSubtractionMode = 'Median',
-        ##CutToAvoidSignal    = 1., ## 2./2
-        #MeanCM = 0,
-        Use10bitsTruncation = True
+        MeanCM = 0,
+        DeltaCMThreshold = 20,
+        Use10bitsTruncation = True,
         ),
     RawDigiProducersList=cms.VInputTag(inputVR)
     )
@@ -102,19 +102,11 @@ process.zsHybrid = process.siStripZeroSuppression.clone(      # Full software (w
 process.zsClassic = process.siStripZeroSuppression.clone(      # Without hybrid
         RawDigiProducersList=cms.VInputTag(inputVR),
         Algorithms=process.siStripZeroSuppression.Algorithms.clone(
-        APVInspectMode = "Null",
-        APVRestoreMode = "",
-        CommonModeNoiseSubtractionMode = 'Median',
+            APVInspectMode = "Null",
+            APVRestoreMode = "",
+            CommonModeNoiseSubtractionMode = 'Median',
         ),
     )
-
-
-##
-## Modify some settings for consistenc between the two
-##
-process.siStripZeroSuppression.Algorithms = process.siStripZeroSuppression.Algorithms.clone(
-        CommonModeNoiseSubtractionMode = 'Median',
-        )
 
 ## unpack both
 
@@ -138,7 +130,7 @@ process.clusterStatDiff = cms.EDAnalyzer("SiStripClusterStatsDiff",
         B = cms.InputTag("clusterizeZS1"),
         )
 process.DigiToRawZS = cms.Sequence(
-        process.siStripZeroSuppression * process.zsHybridEmu *  process.zsHybrid * process.zsClassic *
+        process.zsHybridEmu *  process.zsHybrid * process.zsClassic *
         # Analyze #
         process.diffRawZS * process.digiStatDiff * process.clusterizeZS1 * process.clusterizeZS2 * process.clusterStatDiff
         )
@@ -150,7 +142,7 @@ process.TFileService = cms.Service("TFileService",
 del process.siStripQualityESProducer.ListOfRecordToMerge[0] # Because spy data is outside or a run
 
 # Path and EndPath definitions
-process.raw2digi_step = cms.Path(process.RawToDigi)
+#process.raw2digi_step = cms.Path(process.RawToDigi)
 process.DigiToRawZS = cms.Path(process.DigiToRawZS)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RAWoutput_step = cms.EndPath(process.RAWoutput)
