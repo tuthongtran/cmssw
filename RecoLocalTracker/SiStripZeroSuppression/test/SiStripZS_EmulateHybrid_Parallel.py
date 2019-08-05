@@ -23,11 +23,12 @@ process.options = cms.untracked.PSet(
 )
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1) 
+    input = cms.untracked.int32(2) 
 )
 
 # Input source
 process.source = cms.Source("PoolSource",
+    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321054.root'),
     fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779.root'),
 )
 
@@ -49,7 +50,7 @@ process.RAWoutput = cms.OutputModule("PoolOutputModule",
         dataTier = cms.untracked.string('RAW'),
         filterName = cms.untracked.string('')
     ),
-    fileName = cms.untracked.string('whatever.root'),
+    fileName = cms.untracked.string('~/work/HybridStudy/whatever.root'),
     outputCommands = process.RAWEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
@@ -87,13 +88,11 @@ process.zsHybridEmu = process.siStripZeroSuppression.clone(  # Raw -> ZS in hybr
 process.zsHybrid = process.siStripZeroSuppression.clone(      # Full software (with inspect and restore) ZS -> digis
     RawDigiProducersList = cms.VInputTag(
         cms.InputTag("zsHybridEmu", "VirginRaw"),
-        cms.InputTag("zsHybridEmu", "ProcessedRaw"),
-        cms.InputTag("zsHybridEmu", "ScopeMode"),
-        cms.InputTag("zsHybridEmu", "ZeroSuppressed")
         ),
     Algorithms=process.siStripZeroSuppression.Algorithms.clone(
         APVInspectMode = "Hybrid",
         ),
+    forceReadHybridFormat=cms.untracked.bool(True)
     )
 ##
 ## WF 2: zero-suppress, repack
@@ -111,16 +110,16 @@ process.zsClassic = process.siStripZeroSuppression.clone(      # Without hybrid
 ## unpack both
 
 process.diffRawZS = cms.EDAnalyzer("SiStripDigiDiff",
-        A = cms.InputTag("zsHybrid", "ZeroSuppressed"),
-        B = cms.InputTag("zsClassic", "ZeroSuppressed"),
+        A = cms.InputTag("zsHybrid", "VirginRaw"),
+        B = cms.InputTag("zsClassic", "VirginRaw"),
         nDiffToPrint=cms.untracked.uint64(100),
         IgnoreAllZeros=cms.bool(True), ## workaround for packer removing all zero strips for ZS
         TopBitsToIgnore = cms.uint32(0),
         BottomBitsToIgnore = cms.uint32(1),
         )
 process.digiStatDiff = cms.EDAnalyzer("SiStripDigiStatsDiff",
-        A = cms.InputTag("zsHybrid", "ZeroSuppressed"),
-        B = cms.InputTag("zsClassic", "ZeroSuppressed"),
+        A = cms.InputTag("zsHybrid", "VirginRaw"),
+        B = cms.InputTag("zsClassic", "VirginRaw"),
         )
 process.load("RecoLocalTracker.SiStripClusterizer.SiStripClusterizer_RealData_cfi")
 process.clusterizeZS1 = process.siStripClusters.clone(DigiProducersList=cms.VInputTag(cms.InputTag("zsHybrid", "ZeroSuppressed")))
@@ -135,7 +134,8 @@ process.DigiToRawZS = cms.Sequence(
         process.diffRawZS * process.digiStatDiff * process.clusterizeZS1 * process.clusterizeZS2 * process.clusterStatDiff
         )
 process.TFileService = cms.Service("TFileService",
-        fileName = cms.string("diffhistos.root"),
+        #fileName = cms.string("diffhistos321054.root"),
+        fileName = cms.string("diffhistos321779.root"),
         closeFileFast = cms.untracked.bool(True),
         )
 
@@ -160,12 +160,12 @@ from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEar
 process = customiseEarlyDelete(process)
 # End adding early deletion
 
-#process.MessageLogger = cms.Service(
-#    "MessageLogger",
-#    destinations = cms.untracked.vstring(
-#        "log_checkhybrid"
-#        ),
-#    debugModules = cms.untracked.vstring("diffRawZS", "zsHybridEmu", "zsHybrid", "zsClassic", "siStripZeroSuppression"),
-#    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
-#    )
-#
+process.MessageLogger = cms.Service(
+    "MessageLogger",
+    destinations = cms.untracked.vstring(
+        "log_checkhybrid"
+        ),
+    debugModules = cms.untracked.vstring("diffRawZS", "zsHybridEmu", "zsHybrid", "zsClassic", "siStripZeroSuppression"),
+    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
+    )
+
