@@ -20,6 +20,8 @@ def addOverflows(histo):
 
 if __name__ == "__main__":
     name = "combinedRuns.root"
+    #name = "diffhistos321779.root"
+    #name = "diffhistos321054.root"
     hFile = ROOT.TFile.Open(name, "READ")
     refSuffix = "B" # Classic ZS
     newSuffix = "A" # Hybrid ZS
@@ -28,7 +30,12 @@ if __name__ == "__main__":
             "clusterStatDiff/clusCharge", "clusterStatDiff/clusWidth", "clusterStatDiff/clusBary", "clusterStatDiff/clusVar"]
     titleList = ["Number of digis", "Number of clusters",
                 "Cluster charge", "Cluster Width", "Cluster barycenter", "Cluster variance"]
+
+    canvas = ROOT.TCanvas('c1','c1',800,700)
+    canvas.Print(name.replace('.root','.pdf['))
+
     for hName,hTitle in zip(histoList,titleList):
+        print (hName)
         # Get histos #
         hName_n = hName.replace("/", "_")
         hRef = hFile.Get(hName+refSuffix)
@@ -42,7 +49,6 @@ if __name__ == "__main__":
         hRatio.Divide(hRef)
 
         # Plot the Ratio #
-        canvas = ROOT.TCanvas('c1','c1',800,700)
         pad1 = ROOT.TPad("pad1", "pad1", 0, 0.0, 1, 1.0)
         pad1.SetBottomMargin(0.32)
         pad1.SetGridx()
@@ -103,23 +109,48 @@ if __name__ == "__main__":
         hRatio.GetXaxis().SetLabelFont(43)
         hRatio.GetXaxis().SetLabelSize(15)
     
-        canvas.Print(name.replace('.root',hName_n+'.pdf'))
+        #canvas.Print(name.replace('.root',hName_n+'.pdf'))
+        canvas.Print(name.replace('.root','.pdf'),'Title:'+hName_n)
         ##
         hDiff = hFile.Get(hName+"Diff")
         hRelDiff = hFile.Get(hName+"RelDiff")
+        h2D = hFile.Get(hName+"2D")
         ##
         canvas.Clear()
 
         if hDiff:
+            canvas.SetLogy()
+            canvas.SetRightMargin(0.1)
+            canvas.SetLeftMargin(0.1)
             addOverflows(hDiff)
             hDiff.SetTitle(hTitle+' difference')
+            hDiff.SetLineColor(ROOT.kBlue)
+            hDiff.SetLineWidth(2)
             hDiff.Draw()
-            canvas.Print(name.replace('.root',hName_n+'_diff.pdf'))
+            canvas.Print(name.replace('.root','.pdf'),'Title:'+hName_n+'_diff.pdf')
             canvas.Clear()
         if hRelDiff: 
+            canvas.SetLogy()
+            canvas.SetRightMargin(0.1)
+            canvas.SetLeftMargin(0.1)
             addOverflows(hRelDiff)
-            hDiff.SetTitle(hTitle+' relative difference')
-            hDiff.Draw()
-            canvas.Print(name.replace('.root',hName_n+'_reldiff.pdf'))
+            hRelDiff.SetTitle(hTitle+' relative difference')
+            hRelDiff.SetLineColor(ROOT.kBlue)
+            hRelDiff.SetLineWidth(2)
+            hRelDiff.Draw()
+            canvas.Print(name.replace('.root','.pdf'),'Title:'+hName_n+'_reldiff.pdf')
             canvas.Clear()
+        if h2D: 
+            #addOverflows(hRelDiff)
+            canvas.SetLogz()
+            canvas.SetLogy(False)
+            canvas.SetRightMargin(0.2)
+            h2D.SetTitle(hTitle+' 2D comparison')
+            h2D.GetZaxis().SetTitleOffset(1.6)
+            h2D.Draw("colz")
+            canvas.Print(name.replace('.root','.pdf'),'Title:'+hName_n+'_2D.pdf')
+            canvas.Clear()
+
+    canvas.Print(name.replace('.root','.pdf'))
+    canvas.Print(name.replace('.root','.pdf]'))
        
