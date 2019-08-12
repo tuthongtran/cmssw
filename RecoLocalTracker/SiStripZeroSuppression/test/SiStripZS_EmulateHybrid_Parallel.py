@@ -146,18 +146,18 @@ process.load("RecoLocalTracker.SiStripZeroSuppression.SiStripBaselineAnalyzer_cf
 #    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
 #)
 
-process.baselineAnalyzerZS1 = process.SiStripBaselineAnalyzer.clone(
-    plotPedestals = cms.bool(True), ## should work in any case
-    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
-    plotAPVCM = cms.bool(False), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
-    plotBaseline = cms.bool(False), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
-    plotBaselinePoints = cms.bool(False), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
-    plotDigis = cms.bool(False), ## does not do anything
-    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
-
-
-    srcProcessedRawDigi = cms.InputTag('zsHybrid','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
-)
+#process.baselineAnalyzerZS1 = process.SiStripBaselineAnalyzer.clone(
+#    plotPedestals = cms.bool(True), ## should work in any case
+#    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
+#    plotAPVCM = cms.bool(False), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
+#    plotBaseline = cms.bool(False), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
+#    plotBaselinePoints = cms.bool(False), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
+#    plotDigis = cms.bool(False), ## does not do anything
+#    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
+#
+#
+#    srcProcessedRawDigi = cms.InputTag('zsHybrid','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
+#)
 
 # RecHit
 process.load("RecoLocalTracker.SiStripRecHitConverter.SiStripRecHitConverter_cfi")
@@ -170,9 +170,17 @@ process.recHitZS2 = process.siStripMatchedRecHits.clone(
         ClusterProducer    = cms.InputTag('clusterizeZS2'),
 )
 
+process.readRecHitZS1 = cms.EDAnalyzer("ReadRecHit",
+       VerbosityLevel = cms.untracked.int32(1),
+         RecHitProducer = cms.string('recHitZS1')
+)
+
+process.readRecHitZS2 = cms.EDAnalyzer("ReadRecHit",
+       VerbosityLevel = cms.untracked.int32(1),
+         RecHitProducer = cms.string('recHitZS2')
+)
+
 # printcontent 
-#from FWCore.Modules.printContent_cfi import printContent
-#process.printContent = printContent()
 process.load("FWCore.Modules.printContent_cfi")
 
 # Sequence 
@@ -181,9 +189,11 @@ process.DigiToRawZS = cms.Sequence(
         # Analyze #
         * process.diffRawZS * process.digiStatDiff * process.clusterizeZS1 * process.clusterizeZS2 * process.clusterStatDiff
         # Baseline 
-        * process.baselineAnalyzerZS1 #* process.baselineAnalyzerZS2
+        #* process.baselineAnalyzerZS1 #* process.baselineAnalyzerZS2
         # RecHit 
         * process.recHitZS1 * process.recHitZS2
+        # read RecHit #
+        * process.readRecHitZS1 * process.readRecHitZS2
         # Printcontent
         * process.printContent
         )
@@ -210,16 +220,29 @@ associatePatAlgosToolsTask(process)
 # Customisation from command line
 
 # Add early deletion of temporary data products to reduce peak memory need
-from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
-process = customiseEarlyDelete(process)
+#from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
+#process = customiseEarlyDelete(process)
 # End adding early deletion
 
-#process.MessageLogger = cms.Service(
-#    "MessageLogger",
-#    destinations = cms.untracked.vstring(
-#        "log_checkhybrid"
-#        ),
-#    debugModules = cms.untracked.vstring("diffRawZS", "zsHybridEmu", "zsHybrid", "zsClassic", "siStripZeroSuppression"),
-#    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
-#    )
+process.MessageLogger = cms.Service(
+    "MessageLogger",
+    destinations = cms.untracked.vstring(
+        "log_checkhybrid"
+        ),
+    debugModules = cms.untracked.vstring("diffRawZS", 
+                                         "zsHybridEmu", 
+                                         "zsHybrid", 
+                                         "zsClassic", 
+                                         "siStripZeroSuppression", 
+                                         "StatDiff",
+                                         "clusterizeZS1",
+                                         "clusterizeZS2",
+                                         "clusterStatDiff",
+                                         "recHitZS1",
+                                         "recHitZS2",
+                                         "readRecHitZS1",
+                                         "readRecHitZS2",
+                                         ),
+    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
+    )
 
