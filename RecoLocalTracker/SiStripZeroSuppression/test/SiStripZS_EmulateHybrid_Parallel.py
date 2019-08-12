@@ -28,8 +28,8 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321054.root'),
-    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779.root'),
+    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321054.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/user/f/fbury/work/HybridStudy/SpyRawToDigis321779.root'),
 )
 
 process.options = cms.untracked.PSet(
@@ -85,7 +85,10 @@ process.zsHybridEmu = process.siStripZeroSuppression.clone(  # Raw -> ZS in hybr
         DeltaCMThreshold = 20,
         Use10bitsTruncation = True,
         ),
-    RawDigiProducersList=cms.VInputTag(inputVR)
+    RawDigiProducersList=cms.VInputTag(inputVR),
+    storeCM = cms.bool(True),
+    produceCalculatedBaseline = cms.bool(True),
+    produceBaselinePoints = cms.bool(False),
     )
 process.zsHybrid = process.siStripZeroSuppression.clone(      # Full software (with inspect and restore) ZS -> digis
     RawDigiProducersList = cms.VInputTag(
@@ -94,8 +97,12 @@ process.zsHybrid = process.siStripZeroSuppression.clone(      # Full software (w
     Algorithms=process.siStripZeroSuppression.Algorithms.clone(
         APVInspectMode = "Hybrid",
         ),
-    forceReadHybridFormat=cms.untracked.bool(True)
+    forceReadHybridFormat=cms.untracked.bool(True),
+    storeCM = cms.bool(True),
+    produceCalculatedBaseline = cms.bool(True),
+    produceBaselinePoints = cms.bool(True),
     )
+    
 ##
 ## WF 2: zero-suppress, repack
 ##
@@ -106,6 +113,9 @@ process.zsClassic = process.siStripZeroSuppression.clone(      # Without hybrid
             APVInspectMode = "Null",
             APVRestoreMode = "",
             CommonModeNoiseSubtractionMode = 'Median',
+            storeCM = cms.bool(True),
+            produceCalculatedBaseline = cms.bool(True),
+            produceBaselinePoints = cms.bool(True),
         ),
     )
 
@@ -146,18 +156,34 @@ process.load("RecoLocalTracker.SiStripZeroSuppression.SiStripBaselineAnalyzer_cf
 #    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
 #)
 
-#process.baselineAnalyzerZS1 = process.SiStripBaselineAnalyzer.clone(
-#    plotPedestals = cms.bool(True), ## should work in any case
-#    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
-#    plotAPVCM = cms.bool(False), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
-#    plotBaseline = cms.bool(False), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
-#    plotBaselinePoints = cms.bool(False), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
-#    plotDigis = cms.bool(False), ## does not do anything
-#    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
-#
-#
-#    srcProcessedRawDigi = cms.InputTag('zsHybrid','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
-#)
+process.baselineAnalyzerZS1 = process.SiStripBaselineAnalyzer.clone(
+    plotPedestals = cms.bool(True), ## should work in any case
+    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
+    plotAPVCM = cms.bool(True), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
+    plotBaseline = cms.bool(True), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
+    plotBaselinePoints = cms.bool(True), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
+    plotDigis = cms.bool(False), ## does not do anything
+    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
+
+    srcProcessedRawDigi = cms.InputTag('zsHybrid','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
+    srcAPVCM  =  cms.InputTag('zsHybrid','APVCMVirginRaw'),
+    srcBaseline =  cms.InputTag('zsHybrid','BADAPVBASELINEVirginRaw'),
+)
+process.baselineAnalyzerZS2 = process.SiStripBaselineAnalyzer.clone(
+    plotPedestals = cms.bool(True), ## should work in any case
+    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
+    plotAPVCM = cms.bool(True), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
+    plotBaseline = cms.bool(False), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
+    plotBaselinePoints = cms.bool(True), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
+    plotDigis = cms.bool(False), ## does not do anything
+    plotClusters = cms.bool(False), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
+
+    srcProcessedRawDigi = cms.InputTag('zsClassic','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
+    srcAPVCM  =  cms.InputTag('zsClassic','APVCMVirginRaw'),
+    srcBaseline =  cms.InputTag('zsClassic','BADAPVBASELINEVirginRaw'),
+)
+
+
 
 # RecHit
 process.load("RecoLocalTracker.SiStripRecHitConverter.SiStripRecHitConverter_cfi")
@@ -189,17 +215,17 @@ process.DigiToRawZS = cms.Sequence(
         # Analyze #
         * process.diffRawZS * process.digiStatDiff * process.clusterizeZS1 * process.clusterizeZS2 * process.clusterStatDiff
         # Baseline 
-        #* process.baselineAnalyzerZS1 #* process.baselineAnalyzerZS2
+        * process.baselineAnalyzerZS1 * process.baselineAnalyzerZS2
         # RecHit 
         * process.recHitZS1 * process.recHitZS2
         # read RecHit #
-        * process.readRecHitZS1 * process.readRecHitZS2
+        #* process.readRecHitZS1 * process.readRecHitZS2
         # Printcontent
         * process.printContent
         )
 process.TFileService = cms.Service("TFileService",
-        fileName = cms.string("diffhistos321054.root"),
-        #fileName = cms.string("diffhistos321779.root"),
+        #fileName = cms.string("diffhistos321054.root"),
+        fileName = cms.string("diffhistos321779.root"),
         closeFileFast = cms.untracked.bool(True),
         )
 
@@ -224,25 +250,25 @@ associatePatAlgosToolsTask(process)
 #process = customiseEarlyDelete(process)
 # End adding early deletion
 
-process.MessageLogger = cms.Service(
-    "MessageLogger",
-    destinations = cms.untracked.vstring(
-        "log_checkhybrid"
-        ),
-    debugModules = cms.untracked.vstring("diffRawZS", 
-                                         "zsHybridEmu", 
-                                         "zsHybrid", 
-                                         "zsClassic", 
-                                         "siStripZeroSuppression", 
-                                         "StatDiff",
-                                         "clusterizeZS1",
-                                         "clusterizeZS2",
-                                         "clusterStatDiff",
-                                         "recHitZS1",
-                                         "recHitZS2",
-                                         "readRecHitZS1",
-                                         "readRecHitZS2",
-                                         ),
-    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
-    )
-
+#process.MessageLogger = cms.Service(
+#    "MessageLogger",
+#    destinations = cms.untracked.vstring(
+#        "log_checkhybrid"
+#        ),
+#    debugModules = cms.untracked.vstring("diffRawZS", 
+#                                         "zsHybridEmu", 
+#                                         "zsHybrid", 
+#                                         "zsClassic", 
+#                                         "siStripZeroSuppression", 
+#                                         "StatDiff",
+#                                         "clusterizeZS1",
+#                                         "clusterizeZS2",
+#                                         "clusterStatDiff",
+#                                         "recHitZS1",
+#                                         "recHitZS2",
+#                                         "readRecHitZS1",
+#                                         "readRecHitZS2",
+#                                         ),
+#    categories=cms.untracked.vstring("SiStripZeroSuppression", "SiStripDigiDiff")
+#    )
+#
