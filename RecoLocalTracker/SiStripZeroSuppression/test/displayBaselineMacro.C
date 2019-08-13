@@ -24,15 +24,11 @@
 
 
 
-void  displayBaselineMacro(TString file, int limit){
+void  displayBaselineMacro(TString file){
     gStyle->SetOptStat(0);
     gROOT->SetBatch(true);
     /* Select particular detId and event numbers */
-    //std::map<int,int> Selection; // <event,detid>
-    std::vector<pair<int,int>> Selection;
-    //Selection.insert(std::make_pair(107,369124773));
-    //Selection.insert(std::make_pair(18,470426026));
-    //Selection.insert(std::make_pair(22,436228470));
+    std::vector<pair<int,int>> Selection;  // <event,detid>
     ////Selection.insert(std::make_pair(9,369121610)); // TEST, NOT A BAD BASELINE
     ////Selection.insert(std::make_pair(9,369120437)); // TEST, NOT A BAD BASELINE
     //Selection.insert(std::make_pair(23,470422441)); // TEST, NOT A BAD BASELINE
@@ -55,9 +51,9 @@ void  displayBaselineMacro(TString file, int limit){
     //Selection.push_back(std::make_pair(23,369120358)); // TEST, NOT A BAD BASELINE
     //Selection.push_back(std::make_pair(23,369121562)); // TEST, NOT A BAD BASELINE
     //Selection.push_back(std::make_pair(23,369120637)); // TEST, NOT A BAD BASELINE
-    Selection.push_back(std::make_pair(24,436228793)); // BAD BASELINE
-    Selection.push_back(std::make_pair(67,436245750)); // BAD BASELINE
-    Selection.push_back(std::make_pair(71,470050086)); // BAD BASELINE
+    Selection.push_back(std::make_pair(24,436228793)); // BAD BASELINE run 321779
+    Selection.push_back(std::make_pair(67,436245750)); // BAD BASELINE run 321779
+    Selection.push_back(std::make_pair(71,470050086)); // BAD BASELINE run 321779
 
     std::vector<bool> check(Selection.size(),false);
 
@@ -88,15 +84,12 @@ void  displayBaselineMacro(TString file, int limit){
     TIter nextkey(gDirectory->GetListOfKeys());
     TKey *key;
     int objcounter=1;
-    int histolimit =0;
     
     /* Start canvas printing */
     C->Print("Baseline.pdf[");
 
     /* Loop over histograms */
     while ((key = (TKey*)nextkey())) {
-        if(histolimit< limit || limit==-1){ // If limit = -1, loop over all histograms
-            histolimit++;
             TObject *obj = key->ReadObj();
 
             if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
@@ -225,7 +218,6 @@ void  displayBaselineMacro(TString file, int limit){
 
 
             }
-        }  
     }
     C->Print("Baseline.pdf");
     C->Print("Baseline.pdf]");
