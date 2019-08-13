@@ -147,7 +147,7 @@ SiStripBaselineAnalyzer::SiStripBaselineAnalyzer(const edm::ParameterSet& conf){
   if (plotDigis_)
     srcDigis_ = consumes<edm::DetSetVector<SiStripDigi>>(conf.getParameter<edm::InputTag>("srcDigis"));
   if (plotClusters_)
-    srcClusters_ = consumes<edmNew::DetSetVector<SiStripCluster>>(edm::InputTag("siStripClusters"));
+    srcClusters_ = consumes<edmNew::DetSetVector<SiStripCluster>>(conf.getParameter<edm::InputTag>("srcClusters"));
 
   subtractorPed_ = SiStripRawProcessingFactory::create_SubtractorPed(conf.getParameter<edm::ParameterSet>("Algorithms"));
   nModuletoDisplay_ = conf.getParameter<uint32_t>( "nModuletoDisplay" );

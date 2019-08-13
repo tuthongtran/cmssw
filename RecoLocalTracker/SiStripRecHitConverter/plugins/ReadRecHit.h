@@ -41,9 +41,9 @@ namespace cms
     virtual void analyze(const edm::Event& e, const edm::EventSetup& c);
 
   private:
-    edm::EDGetTokenT<edm::DetSetVector<SiStripMatchedRecHit2DCollection>> rechitsmatched_;
-    edm::EDGetTokenT<edm::DetSetVector<SiStripRecHit2DCollection>> rechitsrphi_;
-    edm::EDGetTokenT<edm::DetSetVector<SiStripRecHit2DCollection>> rechitsstereo_;
+    edm::EDGetTokenT<SiStripMatchedRecHit2DCollection> rechitsmatched_;
+    edm::EDGetTokenT<SiStripRecHit2DCollection> rechitsrphi_;
+    edm::EDGetTokenT<SiStripRecHit2DCollection> rechitsstereo_;
 
     ReadRecHitAlgorithm readRecHitAlgorithm_;
     edm::ParameterSet conf_;

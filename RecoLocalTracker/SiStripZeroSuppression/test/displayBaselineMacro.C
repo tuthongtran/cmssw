@@ -13,6 +13,7 @@
 #include "TPRegexp.h"
 #include <TROOT.h>
 #include <TStyle.h>
+#include <TColor.h>
 
 #include "iostream"
 #include "vector"
@@ -25,6 +26,7 @@
 
 void  displayBaselineMacro(TString file, int limit){
     gStyle->SetOptStat(0);
+    gROOT->SetBatch(true);
     /* Select particular detId and event numbers */
     //std::map<int,int> selection_run_321054; // <event,detid>
     std::vector<pair<int,int>> selection_run_321054;
@@ -41,6 +43,17 @@ void  displayBaselineMacro(TString file, int limit){
     selection_run_321054.push_back(std::make_pair(23,470422512)); // TEST, NOT A BAD BASELINE
     selection_run_321054.push_back(std::make_pair(23,470341157)); // TEST, NOT A BAD BASELINE
     selection_run_321054.push_back(std::make_pair(23,470442980)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,470442732)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,470425956)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,470389157)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,470128558)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,369174796)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,369141274)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,369138262)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,369154572)); // TEST, NOT A BAD BASELINE
+    selection_run_321054.push_back(std::make_pair(23,369175140)); // TEST, NOT A BAD BASELINE
+
+    std::vector<bool> check(selection_run_321054.size(),false);
 
     /* Open file and generate canvas */
     TFile *f;//, *fo;
@@ -79,7 +92,6 @@ void  displayBaselineMacro(TString file, int limit){
         if(histolimit< limit || limit==-1){ // If limit = -1, loop over all histograms
             histolimit++;
             TObject *obj = key->ReadObj();
-            std::cout<<obj->GetName()<<std::endl;
 
             if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
                 /* Loop over selection */
@@ -87,7 +99,7 @@ void  displayBaselineMacro(TString file, int limit){
                 int n_event = -1;
                 int n_run = -1;
                 int n_detid = -1;
-                
+                int idx = 0;
                 for (auto const& it : selection_run_321054)
                 {
                     /* Get the event number, detid and run info */
@@ -111,12 +123,14 @@ void  displayBaselineMacro(TString file, int limit){
                     if (it.first==n_event && it.second==n_detid) 
                     {
                         found = true;
+                        check[idx] = true;
                         break;
                     }
+                    idx++;
                 }
                 if (!found) continue;
                 TString title;
-                title.Form("Run %d, Event %d, DetId %d",n_run,n_event,n_run);
+                title.Form("Run %d, Event %d, DetId %d",n_run,n_event,n_detid);
                 std::cout<<title<<std::endl;
 
                 //std::cout << "Found object n: " << objcounter << " Name: " << obj->GetName() << " Title: " << obj->GetTitle()<< std::endl;
@@ -129,11 +143,13 @@ void  displayBaselineMacro(TString file, int limit){
                 /* ZS1 histograms */
                 TH1F* h = (TH1F*)key->ReadObj();
 
-                TLegend leg(0.5,0.7,0.9,0.9,"Legend");
-                //leg.AddEntry(h,"VR - Ped - apvCM_{mean}","lep");
-                leg.AddEntry(h,"Processed digis with hybrid ZS","lep");
+                TLegend leg(0.5,0.7,0.9,0.9);
+                leg.SetHeader("Legend","C");
+                //leg.AddEntry(h,"VR - Ped - apvCM_{mean}","l");
+                leg.AddEntry(h,"Processed digis with hybrid ZS","l");
 
                 h->SetLineWidth(2);
+                h->SetLineColor(602);
                 h->SetTitle(title);
                 h->SetXTitle("StripNumber");
                 h->SetYTitle("Charge (ADC counts)");
@@ -144,8 +160,8 @@ void  displayBaselineMacro(TString file, int limit){
                 if(hb!=0){
                     hb->SetLineWidth(2);
                     hb->SetLineStyle(2);
-                    hb->SetLineColor(2);
-                    leg.AddEntry(hb,"Baseline","lep");
+                    hb->SetLineColor(633);
+                    leg.AddEntry(hb,"Baseline","l");
                     hb->Draw("hist p l same");
                 }
 
@@ -154,9 +170,9 @@ void  displayBaselineMacro(TString file, int limit){
 
                 if(hc!=0){
                     hc->SetLineWidth(2);
-                    hc->SetLineStyle(2);
-                    hc->SetLineColor(3);
-                    leg.AddEntry(hb,"Clusters","lep");
+                    hc->SetLineStyle(7);
+                    hc->SetLineColor(418);
+                    leg.AddEntry(hc,"Clusters with hybrid ZS","l");
                     hc->Draw("hist p l same");
                 }
                 TH1F* hd = (TH1F*) f->Get(dir_ZS1[3]+"/"+obj->GetName());
@@ -165,7 +181,7 @@ void  displayBaselineMacro(TString file, int limit){
                     hd->SetLineWidth(2);
                     hd->SetLineStyle(2);
                     hd->SetLineColor(6);
-                    leg.AddEntry(hb,"Raw digis","lep");
+                    leg.AddEntry(hd,"Raw digis","l");
                     hd->Draw("hist p l same");
                 }
 
@@ -178,19 +194,26 @@ void  displayBaselineMacro(TString file, int limit){
                 TH1F* h2 = (TH1F*) f->Get(dir_ZS2[0]+"/"+obj->GetName());
                 if (h2!=0){
                     h2->SetLineWidth(2);
-                    h2->SetLineStyle(2);
-                    h2->SetLineColor(7);
-                    leg.AddEntry(h2,"Processed digis with classical ZS","lep");
+                    h2->SetLineStyle(1);
+                    h2->SetLineColor(433);
+                    leg.AddEntry(h2,"Processed digis with classic ZS","l");
                     h2->Draw("hist p l same");
                 }
 
+                f->cd();
+                TH1F* h2c = (TH1F*) f->Get(dir_ZS2[2]+"/"+obj->GetName());
+                if(h2c!=0){
+                    h2c->SetLineWidth(2);
+                    h2c->SetLineStyle(7);
+                    h2c->SetLineColor(412);
+                    leg.AddEntry(h2c,"Clusters with classic ZS","l");
+                    h2c->Draw("hist p l same");
+                }
+                /* Legend and save */
                 leg.Draw();
-
-
                 C->Update();
                 //	fo->cd();
                 //	C->Write();
-
                 C->Print("Baseline.pdf","Title:"+title);
                 //C->SaveAs(TString("img/")+obj->GetName()+TString(".png"));
 
@@ -200,4 +223,9 @@ void  displayBaselineMacro(TString file, int limit){
     }
     C->Print("Baseline.pdf");
     C->Print("Baseline.pdf]");
+    for (int i=0; i<selection_run_321054.size();i++)
+    {
+        if (!check[i])
+            std::cout<<"[WARNING] Event "<<selection_run_321054[i].first<<", detId "<<selection_run_321054[i].second<<" were not found"<<std::endl;
+    }
 }

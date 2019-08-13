@@ -23,9 +23,9 @@ namespace cms
     conf_(conf)
   {
     //    produces<SiStripRecHit2DCollection>();
-    rechitsmatched_ = consumes<edm::DetSetVector<SiStripMatchedRecHit2DCollection>>(conf_.getParameter<edm::InputTag>( "rechitsmatched" ));
-    rechitsrphi_ = consumes<edm::DetSetVector<SiStripRecHit2DCollection>>(conf_.getParameter<edm::InputTag>( "rechitsrphi" ));
-    rechitsstereo_ = consumes<edm::DetSetVector<SiStripRecHit2DCollection>>(conf_.getParameter<edm::InputTag>( "rechitsstereo" ));
+    rechitsmatched_ = consumes<SiStripMatchedRecHit2DCollection>(conf_.getParameter<edm::InputTag>( "rechitsmatched" ));
+    rechitsrphi_ = consumes<SiStripRecHit2DCollection>(conf_.getParameter<edm::InputTag>( "rechitsrphi" ));
+    rechitsstereo_ = consumes<SiStripRecHit2DCollection>(conf_.getParameter<edm::InputTag>( "rechitsstereo" ));
   }
 
 
@@ -36,7 +36,7 @@ namespace cms
   void ReadRecHit::analyze(const edm::Event& e, const edm::EventSetup& es)
   {
     using namespace edm;
-    //std::string rechitProducer = conf_.getParameter<std::string>("RecHitProducer");
+    std::string rechitProducer = conf_.getParameter<std::string>("RecHitProducer");
 
     // Step A: Get Inputs 
     edm::Handle<SiStripMatchedRecHit2DCollection> rechitsmatched;
