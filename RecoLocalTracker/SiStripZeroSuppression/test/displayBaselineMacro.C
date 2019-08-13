@@ -28,32 +28,38 @@ void  displayBaselineMacro(TString file, int limit){
     gStyle->SetOptStat(0);
     gROOT->SetBatch(true);
     /* Select particular detId and event numbers */
-    //std::map<int,int> selection_run_321054; // <event,detid>
-    std::vector<pair<int,int>> selection_run_321054;
-    //selection_run_321054.insert(std::make_pair(107,369124773));
-    //selection_run_321054.insert(std::make_pair(18,470426026));
-    //selection_run_321054.insert(std::make_pair(22,436228470));
-    ////selection_run_321054.insert(std::make_pair(9,369121610)); // TEST, NOT A BAD BASELINE
-    ////selection_run_321054.insert(std::make_pair(9,369120437)); // TEST, NOT A BAD BASELINE
-    //selection_run_321054.insert(std::make_pair(23,470422441)); // TEST, NOT A BAD BASELINE
-    //selection_run_321054.insert(std::make_pair(23,470422512)); // TEST, NOT A BAD BASELINE
-    //selection_run_321054.insert(std::make_pair(23,470341157)); // TEST, NOT A BAD BASELINE
-    //selection_run_321054.insert(std::make_pair(23,470442980)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470422441)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470422512)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470341157)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470442980)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470442732)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470425956)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470389157)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,470128558)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,369174796)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,369141274)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,369138262)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,369154572)); // TEST, NOT A BAD BASELINE
-    selection_run_321054.push_back(std::make_pair(23,369175140)); // TEST, NOT A BAD BASELINE
+    //std::map<int,int> Selection; // <event,detid>
+    std::vector<pair<int,int>> Selection;
+    //Selection.insert(std::make_pair(107,369124773));
+    //Selection.insert(std::make_pair(18,470426026));
+    //Selection.insert(std::make_pair(22,436228470));
+    ////Selection.insert(std::make_pair(9,369121610)); // TEST, NOT A BAD BASELINE
+    ////Selection.insert(std::make_pair(9,369120437)); // TEST, NOT A BAD BASELINE
+    //Selection.insert(std::make_pair(23,470422441)); // TEST, NOT A BAD BASELINE
+    //Selection.insert(std::make_pair(23,470422512)); // TEST, NOT A BAD BASELINE
+    //Selection.insert(std::make_pair(23,470341157)); // TEST, NOT A BAD BASELINE
+    //Selection.insert(std::make_pair(23,470442980)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470422441)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470422512)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470341157)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470442980)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470442732)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470425956)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470389157)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,470128558)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369174796)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369141274)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369138262)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369154572)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369175140)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369120358)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369121562)); // TEST, NOT A BAD BASELINE
+    //Selection.push_back(std::make_pair(23,369120637)); // TEST, NOT A BAD BASELINE
+    Selection.push_back(std::make_pair(24,436228793)); // BAD BASELINE
+    Selection.push_back(std::make_pair(67,436245750)); // BAD BASELINE
+    Selection.push_back(std::make_pair(71,470050086)); // BAD BASELINE
 
-    std::vector<bool> check(selection_run_321054.size(),false);
+    std::vector<bool> check(Selection.size(),false);
 
     /* Open file and generate canvas */
     TFile *f;//, *fo;
@@ -100,7 +106,7 @@ void  displayBaselineMacro(TString file, int limit){
                 int n_run = -1;
                 int n_detid = -1;
                 int idx = 0;
-                for (auto const& it : selection_run_321054)
+                for (auto const& it : Selection)
                 {
                     /* Get the event number, detid and run info */
                     TString name  = obj->GetName();
@@ -223,9 +229,9 @@ void  displayBaselineMacro(TString file, int limit){
     }
     C->Print("Baseline.pdf");
     C->Print("Baseline.pdf]");
-    for (int i=0; i<selection_run_321054.size();i++)
+    for (int i=0; i<Selection.size();i++)
     {
         if (!check[i])
-            std::cout<<"[WARNING] Event "<<selection_run_321054[i].first<<", detId "<<selection_run_321054[i].second<<" were not found"<<std::endl;
+            std::cout<<"[WARNING] Event "<<Selection[i].first<<", detId "<<Selection[i].second<<" were not found"<<std::endl;
     }
 }
