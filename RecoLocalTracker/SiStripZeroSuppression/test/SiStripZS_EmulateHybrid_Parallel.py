@@ -185,7 +185,7 @@ process.baselineAnalyzerZS2 = process.SiStripBaselineAnalyzer.clone(
     plotPedestals = cms.bool(True), ## should work in any case
     plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
     plotAPVCM = cms.bool(True), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
-    plotBaseline = cms.bool(False), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
+    plotBaseline = cms.bool(True), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
     plotBaselinePoints = cms.bool(True), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
     plotDigis = cms.bool(False), ## does not do anything
     plotClusters = cms.bool(True), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
@@ -203,6 +203,27 @@ process.baselineComparator = cms.EDAnalyzer("SiStripBaselineComparator",
     srcClusters2 = cms.InputTag('clusterizeZS2',''),
 )
 
+process.hybridBaselineAnalyzer = cms.EDAnalyzer("SiStripHybridBaselineAnalyzer",
+    nModuletoDisplay = cms.uint32(10000),
+    plotPedestals = cms.bool(True), ## should work in any case
+    plotRawDigi = cms.bool(True), ## will plot raw digis, and do ZS on them (customize by setting Algorithms, like for the ZS)
+    plotAPVCM = cms.bool(True), ## if True, pass a CM tag to 'srcAPVCM' (edm::DetSetVector<SiStripProcessedRawDigi>, the ZS will store one under APVCM+tag if storeCM is set to true)
+    plotBaseline = cms.bool(True), ## set to true to plot the baseline, also pass srcBaseline then (from ZS with produceCalculatedBaseline=True, under BADAPVBASELINE+tag)
+    plotBaselinePoints = cms.bool(True), ## set to true to plot the baseline points, also pass srcBaselinePoints then (from ZS with produceBaselinePoints=True, under BADAPVBASELINEPOINTS+tag)
+    plotDigis = cms.bool(False), ## does not do anything
+    plotClusters = cms.bool(True), ## would get the clusters from siStripClusters (hardcoded), so you'd need to change the code to add those plots (but it's independent of all the rest)
+
+    srcVirginRawDigi = inputVR, ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
+    srcZSVirginRawDigi = cms.InputTag('zsHybridEmu','VirginRaw'), ## here pass VR (edm::DetSetVector<SiStripRawDigi>), 'processed' is confusing but it's actually VR
+    srcAPVCM  =  cms.InputTag('zsHybridEmu','APVCMVirginRaw'),
+    srcBaseline =  cms.InputTag('zsHybridEmu','BADAPVBASELINEVirginRaw'),
+    srcBaselineH =  cms.InputTag('zsHybrid','BADAPVBASELINEVirginRaw'),
+    srcBaselinePoints =  cms.InputTag('zsHybridEmu','BADAPVBASELINEPOINTSVirginRaw'),
+    srcBaselinePointsH =  cms.InputTag('zsHybrid','BADAPVBASELINEPOINTSVirginRaw'),
+    srcClusters = cms.InputTag('clusterizeZS1',''),
+
+    Algorithms = algo_zsHybridEmu,
+)
 
 # RecHit
 process.load("RecoLocalTracker.SiStripRecHitConverter.SiStripRecHitConverter_cfi")
@@ -235,9 +256,14 @@ process.load("FWCore.Modules.printContent_cfi")
 process.DigiToRawZS = cms.Sequence(
         process.zsHybridEmu *  process.zsHybrid * process.zsClassic
         # Analyze #
-        * process.diffRawZS * process.digiStatDiff * process.clusterizeZS1 * process.clusterizeZS2 * process.clusterStatDiff
+        ###* process.diffRawZS * process.digiStatDiff
+        * process.clusterizeZS1 * process.clusterizeZS2
+        ###* process.clusterStatDiff
         # Baseline 
-        * process.baselineAnalyzerZS1 * process.baselineAnalyzerZS2 * process.baselineComparator * process.hybridAna * process.classicAna
+        * process.baselineAnalyzerZS1 * process.baselineAnalyzerZS2
+        * process.hybridBaselineAnalyzer
+        * process.baselineComparator
+        * process.hybridAna * process.classicAna
         # RecHit 
         #* process.recHitZS1 * process.recHitZS2
         # read RecHit #
