@@ -30,7 +30,7 @@ lastRun  = int(opt.lastRun)
 calMode  = str(opt.calMode) if not str(opt.calMode)=='' else "AagBunch" # Set default to AAG
 MC=""
 publish = (opt.publish=='True')
-mail = "martin.delcourt@cern.ch "#dimattia@cern.ch"
+mail = "angela.taliercio@cern.ch "#dimattia@cern.ch"
 
 usePCL = (opt.usePCL=='True')
 

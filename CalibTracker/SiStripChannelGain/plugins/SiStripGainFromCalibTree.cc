@@ -94,7 +94,8 @@ class SiStripGainFromCalibTree : public ConditionDBWriter<SiStripApvGain> {
 public:
 	explicit SiStripGainFromCalibTree(const edm::ParameterSet&);
 	~SiStripGainFromCalibTree() override;
-
+  int lower_interval;
+  int upper_interval;
 
 private:
 
@@ -116,7 +117,8 @@ private:
 	void algoComputeMPVandGain();
 	void processEvent(); //what really does the job
 
-	void getPeakOfLandau(TH1* InputHisto, double* FitResults, double LowRange=50, double HighRange=5400);
+  void getPeakOfLandau(TH1* InputHisto, double* FitResults, double LowRange=50, double HighRange=5400);
+  void getPeakOfLandau_old(TH1* InputHisto, double* FitResults, double LowRange=50, double HighRange=5400);
 	bool IsGoodLandauFit(double* FitResults); 
 	void storeOnTree(TFileService* tfs);
         void qualityMonitor();
@@ -249,7 +251,9 @@ private:
         std::vector<APVGain::APVmon> newCharge;
 
 
-	unsigned int NEvent;    
+        unsigned int NEvent;
+        unsigned int fit;
+        unsigned int fit_value;    
 	unsigned int NTrack;
 	unsigned int NClusterStrip;
 	unsigned int NClusterPixel;
@@ -343,7 +347,7 @@ SiStripGainFromCalibTree::SiStripGainFromCalibTree(const edm::ParameterSet& iCon
 
 	AlgoMode                = iConfig.getUntrackedParameter<std::string>("AlgoMode", "CalibTree");
         MagFieldCurrentTh       = iConfig.getUntrackedParameter<double>  ("MagFieldCurrentTh"    ,  2000.);
-	MinNrEntries            = iConfig.getUntrackedParameter<double>  ("minNrEntries"         ,  20);
+	MinNrEntries            = iConfig.getUntrackedParameter<double>  ("minNrEntries"         ,  20);//20
 	MaxMPVError             = iConfig.getUntrackedParameter<double>  ("maxMPVError"          ,  500.0);
 	MaxChi2OverNDF          = iConfig.getUntrackedParameter<double>  ("maxChi2OverNDF"       ,  5.0);
 	MinTrackMomentum        = iConfig.getUntrackedParameter<double>  ("minTrackMomentum"     ,  3.0);
@@ -489,24 +493,30 @@ void SiStripGainFromCalibTree::bookDQMHistos(const char* dqm_dir, const char* ta
     // https://indico.cern.ch/event/649344/contributions/2672267/attachments/1498323/2332518/OptimizeChHisto.pdf
 
     std::vector<float> binXarray;
+    std::cout<<"Before reserve"<<std::endl;
+    std::cout<<NStripAPVs<<std::endl;
+    std::cout<<"Forcing NStripAPVs = 88624"<<std::endl;
+    NStripAPVs = 88624;
     binXarray.reserve( NStripAPVs+1 );
+    std::cout<<"After reserve"<<std::endl;
+
     for(int a=0;a<=NStripAPVs;a++){
        binXarray.push_back( (float)a );
     }
  
-    std::array<float,688> binYarray;
+    std::array<float,1001> binYarray;//688
     double p0 = 5.445;
     double p1 = 0.002113;
     double p2 = 69.01576;
     double y = 0.;
-    for(int b=0;b<687;b++) {
+    for(int b=0;b<1000;b++) {//687
        binYarray[b] = y;
        if(y<=902.) y = y + 2.;
        else y = ( p0 - log(exp(p0-p1*y) - p2*p1)) / p1;
     }
-    binYarray[687] = 4000.;
+    binYarray[1000] = 4000.;//687
 
-    Charge_Vs_Index[elepos]           = dbe->book2S(cvi.c_str()     , cvi.c_str()     , NStripAPVs, &binXarray[0], 687, binYarray.data());
+    Charge_Vs_Index[elepos]           = dbe->book2S(cvi.c_str()     , cvi.c_str()     , NStripAPVs, &binXarray[0], 1000, binYarray.data());//687
     //Charge_Vs_Index_Absolute[elepos]  = dbe->book2S(cviA.c_str()    , cviA.c_str()    , 88625, 0   , 88624,1000,0,4000);
     Charge_Vs_PathlengthTIB[elepos]   = dbe->book2S(cvpTIB.c_str()  , cvpTIB.c_str()  , 20   , 0.3 , 1.3  , 250,0,2000);
     Charge_Vs_PathlengthTOB[elepos]   = dbe->book2S(cvpTOB.c_str()  , cvpTOB.c_str()  , 20   , 0.3 , 1.3  , 250,0,2000);
@@ -633,6 +643,7 @@ void SiStripGainFromCalibTree::algoBeginJob(const edm::EventSetup& iSetup)
         edm::LogInfo("SiStripGainFromCalibTree") << "AlgoMode        : " << AlgoMode          << "\n"
                                                  << "CalibrationMode : " << m_calibrationMode << "\n"
                                                  << "HarvestingMode  : " << m_harvestingMode  << std::endl;
+        std::cout<<"Harversting mode = "<<m_harvestingMode<<std::endl;
         //Setup DQM histograms
 	if(AlgoMode != "PCL" or m_harvestingMode) {
             const char * dqm_dir = "AlCaReco/SiStripGainsHarvesting/";
@@ -708,7 +719,7 @@ void SiStripGainFromCalibTree::algoBeginJob(const edm::EventSetup& iSetup)
 			}
 		}
 	}
-
+  std::cout<<"NstripAPVs = "<<NStripAPVs<<std::endl;
 	for(unsigned int i=0;i<Det.size();i++){  //Make two loop such that the Pixel information is added at the end --> make transition simpler
 		DetId  Detid  = Det[i]->geographicalId();
 		int    SubDet = Detid.subdetId();
@@ -989,6 +1000,7 @@ void SiStripGainFromCalibTree::algoEndRun(const edm::Run& run, const edm::EventS
 
 void 
 SiStripGainFromCalibTree::algoEndJob() {
+
 	if(AlgoMode == "PCL" && !m_harvestingMode) return;//nothing to do in that case
 
 	if(AlgoMode == "CalibTree"){
@@ -1002,17 +1014,19 @@ SiStripGainFromCalibTree::algoEndJob() {
 
 	// Now that we have the full statistics we can extract the information of the 2D histograms
 	algoComputeMPVandGain();
-
+  std::cout<<"Starting quality monitoring"<<std::endl;
         // Result monitoring
-        qualityMonitor();
+  if(m_harvestingMode)      
+    qualityMonitor();
 
         // Force the DB object writing,
         // thus setting the IOV as the first processed run (if timeFromEndRun is set to false)
+  std::cout<<"Starting storeOnDb"<<std::endl;
         storeOnDbNow();
    
 	if(AlgoMode != "PCL" or saveSummary){
             edm::LogInfo("SiStripGainFromCalibTree") << "Saving summary into root file" << std::endl;
-
+            std::cout<<"Saving to file..."<<std::endl;
             //also save the 2D monitor elements to this file as TH2D tfs
             tfs = edm::Service<TFileService>().operator->();
 
@@ -1031,9 +1045,73 @@ SiStripGainFromCalibTree::algoEndJob() {
             if( Charge_Vs_PathlengthTECM2[elepos]!=nullptr ) tfs->make<TH2S> ( *(Charge_Vs_PathlengthTECM2[elepos])->getTH2S() );
 
             storeOnTree(tfs);
+            std::cout<<"Done ! :-)"<<std::endl;
 	}
+  std::cout<<"Goodbye"<<std::endl;
 }
 
+void SiStripGainFromCalibTree::getPeakOfLandau_old(TH1* InputHisto, double* FitResults, double LowRange, double HighRange)
+{
+  FitResults[0]         = -0.5;  //MPV
+  FitResults[1]         =  0;    //MPV error
+  FitResults[2]         = -0.5;  //Width
+  FitResults[3]         =  0;    //Width error
+  FitResults[4]         = -0.5;  //Fit Chi2/NDF
+  FitResults[5]         = 0;     //Normalization
+
+  if( InputHisto->GetEntries() < 20)return;
+
+  // perform fit with standard landau
+
+  //old fit procedure
+  
+  TF1* MyLandau = new TF1("MyLandau","landau",LowRange, HighRange);
+  MyLandau->SetParameter(1,300);
+  InputHisto->Fit(MyLandau,"0QR WW");
+  //InputHisto->Fit(MyLandau,"0Q", "L", LowRange, HighRange);
+
+  lower_interval = LowRange;
+  upper_interval = HighRange;
+  /*
+  
+  TH1D * charge_clone = (TH1D *)InputHisto->Clone("charge_clone");
+  charge_clone->Rebin(10);
+
+  float bin_content = -1;
+  float max_content = -1;
+  int bin_max = -1;
+
+  for(int i = 0; i < charge_clone->GetNbinsX(); i ++){
+    bin_content = charge_clone->GetBinContent(i);
+
+    if(bin_content > max_content and charge_clone->GetXaxis()->GetBinCenter(i) > 100){
+      max_content = bin_content;
+      bin_max = i;
+    }
+  }
+
+  //if(bin_max > -1){
+  int MaxBin_value = charge_clone->GetXaxis()->GetBinCenter(bin_max);
+
+  TF1* MyLandau = new TF1("MyLandau","landau",InputHisto->GetXaxis()->GetXmin(), InputHisto->GetXaxis()->GetXmax());
+  //TF1* MyLandau = new TF1("MyLandau","landau",LowRange, HighRange);
+  MyLandau->SetParameter(1,300);
+  InputHisto->Fit(MyLandau,"0Q", "L", MaxBin_value-100, MaxBin_value+500);
+  
+  lower_interval = MaxBin_value-LowRange;
+  upper_interval = MaxBin_value+HighRange;
+  */
+  FitResults[0]         = MyLandau->GetParameter(1);  //MPV
+  FitResults[1]         = MyLandau->GetParError(1);   //MPV error
+  FitResults[2]         = MyLandau->GetParameter(2);  //Width
+  FitResults[3]         = MyLandau->GetParError(2);   //Width error
+  FitResults[4]         = MyLandau->GetChisquare() / MyLandau->GetNDF();  //Fit Chi2/NDF
+  FitResults[5]         = MyLandau->GetParameter(0);
+
+
+
+  delete MyLandau;
+}
 
 void SiStripGainFromCalibTree::getPeakOfLandau(TH1* InputHisto, double* FitResults, double LowRange, double HighRange)
 { 
@@ -1044,13 +1122,59 @@ void SiStripGainFromCalibTree::getPeakOfLandau(TH1* InputHisto, double* FitResul
 	FitResults[4]         = -0.5;  //Fit Chi2/NDF
 	FitResults[5]         = 0;     //Normalization
 
-	if( InputHisto->GetEntries() < MinNrEntries)return;
+	if( InputHisto->GetEntries() < 20)return;
 
 	// perform fit with standard landau
-	TF1* MyLandau = new TF1("MyLandau","landau",LowRange, HighRange);
-	MyLandau->SetParameter(1,300);
-	InputHisto->Fit(MyLandau,"0QR WW");
+	//new fit wrong
+	/*
+	int MaxBin = InputHisto->GetMaximumBin();
+	int MaxBin_value = InputHisto->GetXaxis()->GetBinCenter(MaxBin);
 
+	TF1* MyLandau = new TF1("MyLandau","landau",InputHisto->GetXaxis()->GetXmin(), InputHisto->GetXaxis()->GetXmax());
+	MyLandau->SetParameter(1,300);
+	InputHisto->Fit(MyLandau,"0Q", "L", MaxBin_value-20, MaxBin_value+400);
+	*/
+	//std::cout << "MaxBin " << MaxBin << "\n";
+	//std::cout << "MaxBin_value " << MaxBin_value << "\n";
+
+	//fit = MaxBin;
+	//fit_value = MaxBin_value;
+	
+
+	//fprintf(Gains1,"fit_value   = %i\n",fit_value);
+	//fprintf(Gains1,"fit_value   = %i\n",fit_value);
+	
+	TH1D * charge_clone = (TH1D *)InputHisto->Clone("charge_clone");
+	charge_clone->Rebin(10);
+
+	float bin_content = -1;
+	float max_content = -1;
+	int bin_max = -1;
+	
+	for(int i = 0; i < charge_clone->GetNbinsX(); i ++){
+	  bin_content = charge_clone->GetBinContent(i);
+	  
+	  if(bin_content > max_content and charge_clone->GetXaxis()->GetBinCenter(i) > 100){
+	    max_content = bin_content;
+	    bin_max = i;
+	  }
+	}
+	
+	//if(bin_max > -1){
+	  int MaxBin_value = charge_clone->GetXaxis()->GetBinCenter(bin_max);
+		  
+	  TF1* MyLandau = new TF1("MyLandau","landau",InputHisto->GetXaxis()->GetXmin(), InputHisto->GetXaxis()->GetXmax());
+	  //TF1* MyLandau = new TF1("MyLandau","landau",LowRange, HighRange);
+	  MyLandau->SetParameter(1,300);
+	  InputHisto->Fit(MyLandau,"0Q", "L", MaxBin_value-LowRange, MaxBin_value+HighRange);
+	
+	  lower_interval = MaxBin_value-LowRange;
+	  upper_interval = MaxBin_value+HighRange;
+	/*
+	TF1* MyLandau_good = new TF1("MyLandau_good","landau",plot_charge->GetXaxis()->GetXmin(), plot_charge->GetXaxis()->GetXmax());
+	MyLandau_good->SetParameter(1,300);
+	plot_charge->Fit(MyLandau_good,"0Q", "L", MaxBin_value-20, MaxBin_value+400);
+	*/
 	// MPV is parameter 1 (0=constant, 1=MPV, 2=Sigma)
 	FitResults[0]         = MyLandau->GetParameter(1);  //MPV
 	FitResults[1]         = MyLandau->GetParError(1);   //MPV error
@@ -1058,8 +1182,9 @@ void SiStripGainFromCalibTree::getPeakOfLandau(TH1* InputHisto, double* FitResul
 	FitResults[3]         = MyLandau->GetParError(2);   //Width error
 	FitResults[4]         = MyLandau->GetChisquare() / MyLandau->GetNDF();  //Fit Chi2/NDF
 	FitResults[5]         = MyLandau->GetParameter(0);
-
+	
 	delete MyLandau;
+	//}
 }
 
 bool SiStripGainFromCalibTree::IsGoodLandauFit(double* FitResults){
@@ -1225,7 +1350,6 @@ void SiStripGainFromCalibTree::algoAnalyzeTheTree()
 		TFile *tfile = TFile::Open(VInputFiles[i].c_str());
                 TString tree_path = TString::Format("gainCalibrationTree%s/tree",m_calibrationMode.c_str());
 		TTree* tree  = dynamic_cast<TTree*> (tfile->Get(tree_path.Data()));
-
 		tree->SetBranchAddress((EventPrefix_ + "event"          + EventSuffix_).c_str(), &eventnumber   , nullptr);
 		tree->SetBranchAddress((EventPrefix_ + "run"            + EventSuffix_).c_str(), &runnumber     , nullptr);
 		tree->SetBranchAddress((EventPrefix_ + "TrigTech"       + EventSuffix_).c_str(), &TrigTech      , nullptr);
@@ -1325,8 +1449,78 @@ void SiStripGainFromCalibTree::algoComputeMPVandGain() {
 			CalibrationLevel = 0;
 			printf("Unknown Calibration Level, will assume %i\n",CalibrationLevel);
 		}
+		FILE* Gains1 = stdout;
+		Gains1=fopen("ciao.txt","w");
+		//if(Proj->GetEntries() > 500){
+		if(APV->R > 90 and APV->R < 120 and APV->z > -100 and APV->z < 100){
+		//getPeakOfLandau(Proj,FitResults,Proj->GetXaxis()->GetXmin(),Proj->GetXaxis()->GetXmax());
+		  getPeakOfLandau(Proj,FitResults,100,500);
+		  //printf("%5i  %5E Entries --> MPV = %f +- %f, upper_inteval %i and lower_interval %i TOB 5 6, APV->R %f\n",I,  Proj->GetEntries(), FitResults[0], FitResults[1], upper_interval, lower_interval, APV->R);fflush(stdout);
+																												
+		  }else{
+		  getPeakOfLandau(Proj,FitResults,40,1000);
+		}
+		if(FitResults[0] < 0 || FitResults[0] > 600){
+		  getPeakOfLandau_old(Proj,FitResults);
+		}
+		  APV->FitMPV      = FitResults[0];
+		  APV->FitMPVErr   = FitResults[1];
+		  APV->FitWidth    = FitResults[2];
+		  APV->FitWidthErr = FitResults[3];
+		  APV->FitChi2     = FitResults[4];
+		  APV->FitNorm     = FitResults[5];
+		  APV->NEntries    = Proj->GetEntries();
+		  fclose(Gains1);
+                  printf("%5i  %5E Entries --> MPV = %f +- %f, upper_inteval %i and lower_interval %i TOB 5 6, APV->R %f\n",I,  Proj->GetEntries(), FitResults[0], FitResults[1], upper_interval, lower_interval, APV->R);fflush(stdout);
+		  if(IsGoodLandauFit(FitResults)){
 
-		getPeakOfLandau(Proj,FitResults);
+		    //APV->FitMPV      = FitResults[0];
+		    APV->Gain = APV->FitMPV / MPVmean;
+		    if(APV->SubDet>2)GOOD++;
+		  }else{
+		    APV->Gain = APV->PreviousGain;
+		    if(APV->SubDet>2)BAD++;
+		  }
+		  if(APV->Gain<=0)           APV->Gain  = 1;
+
+		  //printf("%5i/%5i:  %6i - %1i  %5E Entries --> MPV = %f +- %f\n",I,APVsColl.size(),APV->DetId, APV->APVId, Proj->GetEntries(), FitResults[0], FitResults[1]);fflush(stdout);
+		  //printf("%5i  %5E Entries --> MPV = %f +- %f, upper_inteval %i and lower_interval %i TOB 5 6, APV->R %f\n",I,  Proj->GetEntries(), FitResults[0], FitResults[1], upper_interval, lower_interval, APV->R);fflush(stdout);
+		  //}
+		  delete Proj;
+		  /*
+		  }
+		  else{getPeakOfLandau(Proj,FitResults,Proj->GetXaxis()->GetXmin(),Proj->GetXaxis()->GetXmax());
+		  APV->FitMPV      = FitResults[0];
+		  APV->FitMPVErr   = FitResults[1];
+		  APV->FitWidth    = FitResults[2];
+		  APV->FitWidthErr = FitResults[3];
+		  APV->FitChi2     = FitResults[4];
+		  APV->FitNorm     = FitResults[5];
+		  APV->NEntries    = Proj->GetEntries();
+		  fclose(Gains1);
+		  if(IsGoodLandauFit(FitResults)){
+
+		    //APV->FitMPV      = FitResults[0];
+		    APV->Gain = APV->FitMPV / MPVmean;
+		    if(APV->SubDet>2)GOOD++;
+		  }else{
+		    APV->Gain = APV->PreviousGain;
+		    if(APV->SubDet>2)BAD++;
+		  }
+		  if(APV->Gain<=0)           APV->Gain  = 1;
+
+		  //printf("%5i/%5i:  %6i - %1i  %5E Entries --> MPV = %f +- %f\n",I,APVsColl.size(),APV->DetId, APV->APVId, Proj->GetEntries(), FitResults[0], FitResults[1]);fflush(stdout);
+		  printf("%5i  %5E Entries --> MPV = %f +- %f, upper_inteval %i and lower_interval %i non TOB 5 6, APV->R %f\n",I,  Proj->GetEntries(), FitResults[0], FitResults[1], upper_interval, lower_interval, APV->R);fflush(stdout);
+		  //}
+		  delete Proj;
+		  */
+
+		  //}
+		fprintf(Gains1,"fit_value   = %i\n",fit_value);
+		fprintf(Gains1,"fit_value   = %i\n",fit_value);
+
+		//if(Proj->GetEntries() > 0){
+		/*
 		APV->FitMPV      = FitResults[0];
 		APV->FitMPVErr   = FitResults[1];
 		APV->FitWidth    = FitResults[2];
@@ -1334,19 +1528,26 @@ void SiStripGainFromCalibTree::algoComputeMPVandGain() {
 		APV->FitChi2     = FitResults[4];
 		APV->FitNorm     = FitResults[5];
 		APV->NEntries    = Proj->GetEntries();
-
+		fclose(Gains1);
 		if(IsGoodLandauFit(FitResults)){
-			APV->Gain = APV->FitMPV / MPVmean;
-			if(APV->SubDet>2)GOOD++;
+
+		  //APV->FitMPV      = FitResults[0];
+		  APV->Gain = APV->FitMPV / MPVmean;
+		  if(APV->SubDet>2)GOOD++;
 		}else{
-			APV->Gain = APV->PreviousGain;
-			if(APV->SubDet>2)BAD++;
+		  APV->Gain = APV->PreviousGain;
+		  if(APV->SubDet>2)BAD++;
 		}
 		if(APV->Gain<=0)           APV->Gain  = 1;
-
+		
 		//printf("%5i/%5i:  %6i - %1i  %5E Entries --> MPV = %f +- %f\n",I,APVsColl.size(),APV->DetId, APV->APVId, Proj->GetEntries(), FitResults[0], FitResults[1]);fflush(stdout);
-		delete Proj;
+		printf("%5i  %5E Entries --> MPV = %f +- %f\n",I,  Proj->GetEntries(), FitResults[0], FitResults[1]);fflush(stdout);
+		//}
+		delete Proj;*/
+		//}else continue;
+
 	}printf("\n");
+	std::cout<<"Finished fitting everything."<<std::endl;
 }
 
 void SiStripGainFromCalibTree::qualityMonitor() {
@@ -1354,7 +1555,9 @@ void SiStripGainFromCalibTree::qualityMonitor() {
     int elepos = (AlgoMode == "PCL")? Harvest : statCollectionFromMode(m_calibrationMode.c_str());
 
     for(unsigned int a=0;a<APVsCollOrdered.size();a++) {
+        std::cout<<a<<std::endl;
         stAPVGain* APV = APVsCollOrdered[a];
+        std::cout<<"Position 1"<<std::endl;
         if(APV==nullptr)continue;
 
         unsigned int  Index        = APV->Index;
@@ -1373,6 +1576,7 @@ void SiStripGainFromCalibTree::qualityMonitor() {
 
         if (SubDet<3) continue;  // avoid to loop over Pixel det id
 
+        std::cout<<"Position 2"<<std::endl;
         if (Gain!=1.) {
             std::vector<MonitorElement*> charge_histos = APVGain::FetchMonitor(newCharge, DetId, tTopo_);
             TH2S *chvsidx = (Charge_Vs_Index[elepos])->getTH2S();
@@ -1389,30 +1593,37 @@ void SiStripGainFromCalibTree::qualityMonitor() {
             }
         }
 
+        std::cout<<"Position 3"<<std::endl;
 
         if (FitMPV<=0.) {  // No fit of MPV
+            std::cout<<"Position 3 - 1 "<<std::endl;
             if (APV->isMasked) NoMPVmasked->Fill(z,R);
             else               NoMPVfit->Fill(z,R);
 
         } else {          // Fit of MPV
+            std::cout<<"Position 3 - 1 "<<std::endl;
             if(FitMPV>0.) Gains->Fill(Gain);
 
             MPVs->Fill(FitMPV);
+            std::cout<<"Position 3 - 2 "<<std::endl;
             if(Thickness<0.04) MPVs320->Fill(FitMPV);
             if(Thickness>0.04) MPVs500->Fill(FitMPV);
 
             MPVError->Fill(FitMPVErr);
+            std::cout<<"Position 3 - 3 "<<std::endl;
             MPVErrorVsMPV->Fill(FitMPV,FitMPVErr);
             MPVErrorVsEta->Fill(Eta,FitMPVErr);
             MPVErrorVsPhi->Fill(Phi,FitMPVErr);
             MPVErrorVsN->Fill(NEntries,FitMPVErr);
 
+            std::cout<<"Position 3 - 4 "<<std::endl;
             if(SubDet==3) {
                 MPV_Vs_EtaTIB->Fill(Eta,FitMPV);
                 MPV_Vs_PhiTIB->Fill(Phi,FitMPV);
                 MPVsTIB->Fill(FitMPV);
 
             } else if(SubDet==4) {
+            std::cout<<"Position 3 - 5 "<<std::endl;
                 MPV_Vs_EtaTID->Fill(Eta,FitMPV);
                 MPV_Vs_PhiTID->Fill(Phi,FitMPV);
                 MPVsTID->Fill(FitMPV);
@@ -1420,17 +1631,20 @@ void SiStripGainFromCalibTree::qualityMonitor() {
                 if(Eta>0.) MPVsTIDP->Fill(FitMPV);
 
             } else if (SubDet==5) {
+            std::cout<<"Position 3 - 6 "<<std::endl;
                 MPV_Vs_EtaTOB->Fill(Eta,FitMPV);
                 MPV_Vs_PhiTOB->Fill(Phi,FitMPV);
                 MPVsTOB->Fill(FitMPV);
 
             } else if (SubDet==6) {
+            std::cout<<"Position 3 - 7 "<<std::endl;
                 MPV_Vs_EtaTEC->Fill(Eta,FitMPV);
                 MPV_Vs_PhiTEC->Fill(Phi,FitMPV);
                 MPVsTEC->Fill(FitMPV);
                 if(Eta<0.) MPVsTECM->Fill(FitMPV);
                 if(Eta>0.) MPVsTECP->Fill(FitMPV);
                 if(Thickness<0.04) {
+            std::cout<<"Position 3 - 8 "<<std::endl;
                     MPV_Vs_EtaTECthin->Fill(Eta,FitMPV);
                     MPV_Vs_PhiTECthin->Fill(Phi,FitMPV);
                     MPVsTECthin->Fill(FitMPV);
@@ -1438,6 +1652,7 @@ void SiStripGainFromCalibTree::qualityMonitor() {
                     if(Eta<0.) MPVsTECM1->Fill(FitMPV);
                  }
                 if(Thickness>0.04) {
+            std::cout<<"Position 3 - 9 "<<std::endl;
                     MPV_Vs_EtaTECthick->Fill(Eta,FitMPV);
                     MPV_Vs_PhiTECthick->Fill(Phi,FitMPV);
                     MPVsTECthick->Fill(FitMPV);
@@ -1446,6 +1661,8 @@ void SiStripGainFromCalibTree::qualityMonitor() {
                 }
             }
         }
+
+        std::cout<<"Position 4"<<std::endl;
 
         if(SubDet==3 && PreviousGain!=0. ) DiffWRTPrevGainTIB->Fill(Gain/PreviousGain);
         else if(SubDet==4 && PreviousGain!=0. ) DiffWRTPrevGainTID->Fill(Gain/PreviousGain);
@@ -1513,8 +1730,10 @@ void SiStripGainFromCalibTree::storeOnTree(TFileService* tfs)
 
 
 	FILE* Gains = stdout;
-	fprintf(Gains,"NEvents   = %i\n",NEvent);
+	fprintf(Gains,"NEvents  = %i\n",NEvent);
 	fprintf(Gains,"NTracks   = %i\n",NTrack);
+	fprintf(Gains,"fit  = %i\n",fit);
+        fprintf(Gains,"fit_value   = %i\n",fit_value);
 	//fprintf(Gains,"NClustersPixel = %i\n",NClusterPixel);
 	fprintf(Gains,"NClustersStrip = %i\n",NClusterStrip);
 	//fprintf(Gains,"Number of Pixel Dets = %lu\n",static_cast<unsigned long>(NPixelDets));
@@ -1524,6 +1743,8 @@ void SiStripGainFromCalibTree::storeOnTree(TFileService* tfs)
 	Gains=fopen(OutputGains.c_str(),"w");
 	fprintf(Gains,"NEvents   = %i\n",NEvent);
 	fprintf(Gains,"NTracks   = %i\n",NTrack);
+	fprintf(Gains,"fit  = %i\n",fit);
+        fprintf(Gains,"fit_value   = %i\n",fit_value);
 	//fprintf(Gains,"NClustersPixel = %i\n",NClusterPixel);
 	fprintf(Gains,"NClustersStrip = %i\n",NClusterStrip);
 	fprintf(Gains,"Number of Strip APVs = %lu\n",static_cast<unsigned long>(NStripAPVs));
@@ -1537,6 +1758,8 @@ void SiStripGainFromCalibTree::storeOnTree(TFileService* tfs)
 		if(APV==nullptr)continue;
 //     printf(      "%i | %i | PreviousGain = %7.5f NewGain = %7.5f (#clusters=%8.0f)\n", APV->DetId,APV->APVId,APV->PreviousGain,APV->Gain, APV->NEntries);
 		fprintf(Gains,"%i | %i | PreviousGain = %7.5f(tick) x %7.5f(particle) NewGain (particle) = %7.5f (#clusters=%8.0f)\n", APV->DetId,APV->APVId,APV->PreviousGainTick, APV->PreviousGain,APV->Gain, APV->NEntries);
+		fprintf(Gains,"fit  = %i\n",fit);
+		fprintf(Gains,"fit_value   = %i\n",fit_value);
 
 		tree_Index      = APV->Index;
 		tree_Bin        = (Charge_Vs_Index[elepos])->getTH2S()->GetXaxis()->FindBin(APV->Index);

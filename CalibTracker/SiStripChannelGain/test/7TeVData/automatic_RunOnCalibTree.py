@@ -15,17 +15,17 @@ def numberOfEvents(file,mode):
       mode="StdBunch0T"
    rootfile = ROOT.TFile.Open(file,'read')
    tree = ROOT.TTree()
-   rootfile.GetObject("gainCalibrationTree%s/tree"%mode,tree)
+   rootfile.GetObject("gainCalibrationTreeStdBunch/tree",tree)
    NEntries = tree.GetEntries()
    rootfile.Close()
    print file +' --> '+str(NEntries)
    print "gainCalibrationTree%s/tree"%mode
-   return NEntries	
+   return NEntries
 
 
 PCLDATASET = "/StreamExpress/Run2017*-PromptCalibProdSiStripGains__AAG__-Express-v*/ALCAPROMPT"
-CALIBTREEPATH = '/store/group/dpg_tracker_strip/comm_tracker/Strip/Calibration/calibrationtree/GR17__AAG__' #used if usePCL==False
-
+CALIBTREEPATH = '/store/group/dpg_tracker_strip/comm_tracker/Strip/Calibration/calibrationtree/GR16__AAG__' #used if usePCL==False
+CALIBTREEPATH = '/store/group/dpg_tracker_strip/comm_tracker/archival/ArchivedCalibrationTreesGR16/GR16__AAG__'
 runValidation = 273555
 runsToVeto = [272935, 273290, 273294, 273295, 273296, 273531,
               273537, 273526, 273523, 273514, 273589,  # Low PU
@@ -57,7 +57,7 @@ mail = ""
 automatic = True;
 usePCL = (opt.usePCL=='True')
 minNEvents = 3000      # minimum events for a run to be accepted for the gain payload computation
-maxNEvents = 3000000   # maximum events allowed in a gain payload computation
+maxNEvents = 5000000   # maximum events allowed in a gain payload computation
 
 if(firstRun!=-1 or lastRun!=-1): automatic = False
 
@@ -97,7 +97,7 @@ run = 0
 FileList = ""
 
 dataCertInfo = dataCert.get()
-print "Loaded certification info. Last update : %s"%dataCertInfo["Last update"] 
+#print "Loaded certification info. Last update : %s"%dataCertInfo["Last update"]
 
 lastGoodRun = -1
 if(usePCL==True):
@@ -112,7 +112,7 @@ if(usePCL==True):
        print "***** DAS OUTPUT *****"
        print dasOutput
        print "**********************"
-       exit (0) 
+       exit (0)
 
    runs = []
    for dataset in datasets:
@@ -127,9 +127,9 @@ if(usePCL==True):
    for dataset, run_number in runs:
       run  = int(run_number)
       if(run<firstRun or run in runsToVeto):continue
-      if(lastRun>0 and run>lastRun):continue      
+      if(lastRun>0 and run>lastRun):continue
       if not dataCert.checkRun(run,dataCertInfo):
-         print "Skipping..."
+         print "Skipping, bad data certification..."
          continue
       lastGoodRun = run
       sys.stdout.write( 'Gathering infos for RUN %i:  ' % run )
@@ -186,19 +186,19 @@ else:
       if(run<firstRun or run in runsToVeto):continue
       if(lastRun>0 and run>lastRun):continue
       if not dataCert.checkRun(run,dataCertInfo):
-         print "Skipping..."
+         print "Skipping, bad data certification"
          continue
-      if run<295310:
-         print "Skipping..."
-         continue
+#      if run<295310:
+#         print "Skipping, for unknown reasons..."
+#         continue
       lastGoodRun = run
-      NEvents = numberOfEvents("root://eoscms//eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);	
+      NEvents = numberOfEvents("root://eoscms//eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);
       if(NEvents<=3000):continue #only keep runs with at least 3K events
       if(FileList==""):firstRun=run;
       FileList += 'calibTreeList.extend(["root://eoscms//eos/cms'+CALIBTREEPATH+'/'+info[0]+'"]) #' + str(size).rjust(6)+'MB  NEvents='+str(NEvents/1000).rjust(8)+'K\n'
       NTotalEvents += NEvents;
       print("Current number of events to process is " + str(NTotalEvents))
-      if(automatic==True and NTotalEvents >= maxNEvents):break;
+      if(NTotalEvents >= maxNEvents):break;
 
 if lastGoodRun < 0:
    print "No good run to process."
@@ -252,7 +252,7 @@ print submitCMD
 os.system(submitCMD)
 
 #if(os.system("sh sequence.sh \"" + name + "\" \"" + calMode + "\" \"CMS Preliminary  -  Run " + str(firstRun) + " to " + str(lastRun) + "\"")!=0):
-#	os.system('echo "Gain calibration failed" | mail -s "Gain calibration failed ('+name+')" ' + mail)        
+#	os.system('echo "Gain calibration failed" | mail -s "Gain calibration failed ('+name+')" ' + mail)
 #else:
 #	if(publish==True):os.system("sh sequence.sh " + name);
 #	os.system('echo "Gain calibration done\nhttps://test-stripcalibvalidation.web.cern.ch/test-stripcalibvalidation/CalibrationValidation/ParticleGain/" | mail -s "Gain calibration done ('+name+')" ' + mail)

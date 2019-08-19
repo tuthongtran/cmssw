@@ -49,29 +49,29 @@ def getHTMLtable(fName=".certif_temp.html"):
       return(0,0)
     title = certifRaw[certifRaw.find("<title>")+len("<title>"):certifRaw.find("</title>")]
     table=certifRaw.split("table>")[1]
-  
+
   return(title,table)
 
 
-def generateJSON():  
+def generateJSON():
   # Getting certification HTML file
-  os.system("wget http://vocms061.cern.ch/event_display/RunList/status.Collisions17.html -O .certif_temp.html > /dev/null 2>&1") 
-  
+  os.system("wget http://vocms061.cern.ch/event_display/RunList/status.Collisions17.html -O .certif_temp.html > /dev/null 2>&1")
+
   if not os.path.isfile(".certif_temp.html"):
     print "Unable to download file"
     return(1)
-  
+
   runQuality = getRunQuality()
-  
+
   if runQuality == {}:
     print "Warning, no %s found. Creating new list."%JSON_NAME
-  
+
   (title,table)=getHTMLtable()
   if table==0:
     print "Error, Unable to download run table."
     return(1)
   runQuality["Last update"] = title[title.find("(")+1:title.find(")")]
-  
+
   #Clean table and split per line
   table.replace("\n","").replace("<tr>","")
   table=table.split("</tr>")
@@ -82,7 +82,7 @@ def generateJSON():
 
   for line in table:
     entry = splitByTag(line)
-    if lenExpected < 0 : 
+    if lenExpected < 0 :
       lenExpected = len(entry)
       for i in range(len(entry)):
         if STREAM.lower() in entry[i].lower():
@@ -94,9 +94,9 @@ def generateJSON():
       elif len(entry)>0:
         print "Error, unrecognized line !"
         return 1
-    
 
-  with open(JSON_NAME,'w') as data_file:    
+
+  with open(JSON_NAME,'w') as data_file:
       data_file.write(json.dumps(runQuality))
 
 
@@ -106,7 +106,7 @@ def generateJSON():
 def get():
    if generateJSON()!=0:
       print "ERROR, JSON file not updated... Loading old file."
-   
+
    if not JSON_NAME in os.listdir("."):
       print "ERROR, no JSON file available..."
       return({})
@@ -114,6 +114,8 @@ def get():
       return getRunQuality()
 
 def checkRun(runNumber, runQuality):
+   print "skipping check... set to good."
+   return 1
    if not str(runNumber) in runQuality.keys():
       print "WARNING : no certification info for run %s"%runNumber
       return(0)
