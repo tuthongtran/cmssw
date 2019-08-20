@@ -43,7 +43,8 @@ initial version number of a class which has never been stored before.
   <class name="reco::MuonTime" ClassVersion="10">
    <version ClassVersion="10" checksum="799301851"/>
   </class>
-  <class name="reco::MuonTimeExtra" ClassVersion="10">
+  <class name="reco::MuonTimeExtra" ClassVersion="11">
+   <version ClassVersion="11" checksum="1507436693"/>
    <version ClassVersion="10" checksum="1523685726"/>
   </class>
   <class name="std::vector<reco::MuonTimeExtra>"/>
