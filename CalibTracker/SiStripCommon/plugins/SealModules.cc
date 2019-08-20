@@ -19,7 +19,7 @@ DEFINE_FWK_SERVICE(SiStripDetInfoFileReader);
 #include "CalibTracker/SiStripCommon/interface/ShallowTrackClustersProducer.h"
 #include "CalibTracker/SiStripCommon/interface/ShallowTrackClustersProducerCombined.h"
 #include "CalibTracker/SiStripCommon/interface/ShallowTrackClustersProducerCombinedVR.h"
-#include "CalibTracker/SiStripCommon/interface/ShallowTrackClustersProducerCombinedChandi.h"
+//#include "CalibTracker/SiStripCommon/interface/ShallowTrackClustersProducerCombinedChandi.h"
 #include "CalibTracker/SiStripCommon/interface/ShallowRechitClustersProducer.h"
 #include "CalibTracker/SiStripCommon/interface/ShallowSimhitClustersProducer.h"
 #include "CalibTracker/SiStripCommon/interface/ShallowTracksProducer.h"
@@ -33,7 +33,7 @@ DEFINE_FWK_MODULE(ShallowClustersProducer);
 DEFINE_FWK_MODULE(ShallowTrackClustersProducer);
 DEFINE_FWK_MODULE(ShallowTrackClustersProducerCombined);
 DEFINE_FWK_MODULE(ShallowTrackClustersProducerCombinedVR);
-DEFINE_FWK_MODULE(ShallowTrackClustersProducerCombinedChandi);
+//DEFINE_FWK_MODULE(ShallowTrackClustersProducerCombinedChandi);
 DEFINE_FWK_MODULE(ShallowRechitClustersProducer);
 DEFINE_FWK_MODULE(ShallowSimhitClustersProducer);
 DEFINE_FWK_MODULE(ShallowTracksProducer);
