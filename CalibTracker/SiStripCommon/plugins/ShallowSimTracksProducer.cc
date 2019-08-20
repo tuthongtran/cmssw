@@ -58,10 +58,10 @@ ShallowSimTracksProducer::ShallowSimTracksProducer(const edm::ParameterSet& conf
        t1->GetEntry(b);
        //get map in loop over event in branch
        if( moduleKeyOUT != 0) //Key = detId
-           moduleOrder.insert(pair<uint32_t,uint32_t>(moduleKeyOUT, moduleValueOUT));
+           moduleOrder.insert(std::pair<uint32_t,uint32_t>(moduleKeyOUT, moduleValueOUT));
 
    }
-   cout << " map size " << moduleOrder.size() << endl;
+   std::cout << " map size " << moduleOrder.size() << std::endl;
 }
 
 
@@ -93,8 +93,8 @@ produce(edm::Event& event, const edm::EventSetup& setup) {
    std::map< uint32_t, uint32_t > oneEventTracks;
    for (std::map< uint32_t, uint32_t >::iterator it0=moduleOrder.begin(); it0!=moduleOrder.end(); ++it0)
    { 
-       cout << "used modules " << it0->first << "its alias " << it0->second <<  endl; 
-       oneEventTracks.insert(pair<uint32_t,uint32_t>(it0->second, 0));
+       std::cout << "used modules " << it0->first << "its alias " << it0->second <<  std::endl; 
+       oneEventTracks.insert(std::pair<uint32_t,uint32_t>(it0->second, 0));
    }
 
    
@@ -120,7 +120,7 @@ produce(edm::Event& event, const edm::EventSetup& setup) {
           if(it != moduleOrder.end() )
           {
               uint32_t moduleValue = it->second;
-              cout << "module " << moduleValue << "track " << i << " hit " << h <<  endl; 
+              std::cout << "module " << moduleValue << "track " << i << " hit " << h <<  std::endl; 
               std::map<uint32_t,uint32_t>::iterator it2 = oneEventTracks.find( moduleValue  );
               (it2->second)++;
           }
@@ -142,7 +142,7 @@ produce(edm::Event& event, const edm::EventSetup& setup) {
  
   for (std::map< uint32_t, uint32_t >::iterator it3=oneEventTracks.begin(); it3!=oneEventTracks.end(); ++it3)
   {
-      cout << "filling into profile x-axis" << it3->first << " y=axis  "<< it3->second << endl;
+      std::cout << "filling into profile x-axis" << it3->first << " y=axis  "<< it3->second << std::endl;
       modHits->Fill( it3->first, it3->second ); 
   }
 
@@ -171,7 +171,7 @@ void ShallowSimTracksProducer::endJob( )
     //f1->Close();
     TFile* f2 = NULL;
     f2 = new TFile( (TString)RootFile+"Tracking.root" ,"recreate");
-    cout << "f2 " << f2 << endl;
+    std::cout << "f2 " << f2 << std::endl;
     //f2->Write("hitsinmodules");
     modHits->Write();
 

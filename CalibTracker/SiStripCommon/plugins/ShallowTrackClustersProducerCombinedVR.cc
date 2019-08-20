@@ -648,14 +648,11 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   //@MJ@ TODO collision data
   if(true)
   //if(iEvent.id().run() == 303357)
-  //{
+  //
 
-
-  float PU_=0;
-  PU_=vtx->size();
 
   *nrofevents = 1;
-  PU->push_back(PU_);
+  PU->push_back(vtx->size());
   bx->push_back(iEvent.bunchCrossing());
   run->push_back(iEvent.id().run()   );
   *nroftracks = 0;
@@ -694,7 +691,7 @@ cout << "before good track " << endl;
       const reco::TrackRef muT = MuCollection->at(mmu).outerTrack();
       if(muT.isNull())
           continue;
-      float timeZero = MuCollection->at(mmu).t0();
+      float timeZero = const_cast<reco::Muon&>(MuCollection->at(mmu)).t0();
       reco::MuonRef muTR(MuCollection, mmu);
       if(muTR.isNull())
           continue;
@@ -746,13 +743,13 @@ cout << "before good track " << endl;
   cout << "number of global tracks " << globalCounter << endl;
      
 
-     bool tPresent = false; 
+     //bool tPresent = false; 
        nrOfMus->push_back(muType.size());
        if(muType.size()==2) 
        {
             if(vzOfMu.at(0) > vzOfMu.at(1)-5 && vzOfMu.at(0) < vzOfMu.at(1)+5)
             {
-                tPresent = true;
+                //tPresent = true;
                 //cout << "after z cut " << endl;
                 if(muType.at(0) == 1 && muType.at(1) == 2 )
                 {
@@ -945,7 +942,7 @@ cout << " after good track " << endl;
 
       (*nroftracks)++;
 
-    BOOST_FOREACH( const TrajectoryMeasurement measurement, traj->measurements() ) {
+    for( const TrajectoryMeasurement measurement : traj->measurements() ) {
       const TrajectoryStateOnSurface tsos = measurement.updatedState();
       const TrajectoryStateOnSurface unbiased = combiner(measurement.forwardPredictedState(), measurement.backwardPredictedState());
 
@@ -1067,7 +1064,7 @@ cout << " after good track " << endl;
 				if(nassociations == 1) onTrkClusterIdx->at(i) = ontrk_cluster_idx; //link: general cluster info --> on track cluster
 				clusterIdx->push_back(  i );  //link: on trk cluster --> general cluster info
 //if(PU_>lowBound && PU_<highBound)
-//{
+//
       (number->at(0))++;
       (number->at(moduleV.subdetid))++;
                      
@@ -1369,7 +1366,7 @@ cout << " after good track " << endl;
                                 //http://cmsdoxygen.web.cern.ch/cmsdoxygen/CMSSW_9_2_0/doc/html/d6/d85/PV3DBase_8h_source.html
             				
 				ontrk_cluster_idx++;
-      } //for(unsigned h=0; h<2; h++) { //loop over possible Hit options (1D, 2D)
+      } //for(unsigned h=0; h<2; h++) //loop over possible Hit options (1D, 2D)
     } //BOOST_FOREACH( const TrajectoryMeasurement measurement, traj->measurements() )
 
 		onTrkClustersBegin->at(trk_idx) = trk_strt_idx;
@@ -1379,8 +1376,6 @@ cout << " after good track " << endl;
 
 
    //beforePut:
-}
-
 }
 
   iEvent.put(std::move(clusterIdx        ), Suffix + "clusterIdx"  );
