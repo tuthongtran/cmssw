@@ -59,7 +59,7 @@ mail = ""
 automatic = True;
 usePCL = (opt.usePCL=='True')
 minNEvents = 3000      # minimum events for a run to be accepted for the gain payload computation
-maxNEvents = 1000000 #5000000   # maximum events allowed in a gain payload computation
+maxNEvents = 10000 #5000000   # maximum events allowed in a gain payload computation
 
 if(firstRun!=-1 or lastRun!=-1): automatic = False
 
@@ -272,9 +272,10 @@ with open("condor.cfg","w") as cond:
    cond.write(condor)
 os.system("chmod +x condor.cfg")
 
-submitCMD =  'bsub  -q 2nd -J G2prod -R "type == SLC6_64 && pool > 30000" "job.sh"'
+#submitCMD =  'bsub  -q 2nd -J G2prod -R "type == SLC6_64 && pool > 30000" "job.sh"'
+submitCMD = 'condor_submit condor.cfg'
 print submitCMD
-#os.system(submitCMD)
+os.system(submitCMD)
 
 #if(os.system("sh sequence.sh \"" + name + "\" \"" + calMode + "\" \"CMS Preliminary  -  Run " + str(firstRun) + " to " + str(lastRun) + "\"")!=0):
 #	os.system('echo "Gain calibration failed" | mail -s "Gain calibration failed ('+name+')" ' + mail)
