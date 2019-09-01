@@ -213,7 +213,7 @@ void GainPlot()
       TH1D* ProjAbsolute = ChargeDistribA->ProjectionY("projA",tree_Index, tree_Index);
 
 
-      if(tree_SubDet==3                       ) MPV_Vs_EtaTIB ->Fill(tree_Eta,tree_FitMPV);
+      if(tree_SubDet==3                       ) MPV_Vs_EtfaTIB ->Fill(tree_Eta,tree_FitMPV);
       if(tree_SubDet==4                       ) MPV_Vs_EtaTID ->Fill(tree_Eta,tree_FitMPV);
       if(tree_SubDet==5                       ) MPV_Vs_EtaTOB ->Fill(tree_Eta,tree_FitMPV);
       if(tree_SubDet==6                       ) MPV_Vs_EtaTEC ->Fill(tree_Eta,tree_FitMPV);

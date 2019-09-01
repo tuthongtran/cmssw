@@ -33,6 +33,8 @@ runsToVeto = [272935, 273290, 273294, 273295, 273296, 273531,
               275326, 275656, 276764, 275765, 275769, 275783, 275825, 275829, 275838
 ]
 
+runsToSkip = [278240]
+
 #read arguments to the command line
 #configure
 usage = 'usage: %prog [options]'
@@ -57,7 +59,7 @@ mail = ""
 automatic = True;
 usePCL = (opt.usePCL=='True')
 minNEvents = 3000      # minimum events for a run to be accepted for the gain payload computation
-maxNEvents = 5000000   # maximum events allowed in a gain payload computation
+maxNEvents = 1000000 #5000000   # maximum events allowed in a gain payload computation
 
 if(firstRun!=-1 or lastRun!=-1): automatic = False
 
@@ -81,14 +83,15 @@ os.chdir("..");
 
 #identify last run of the previous calibration
 if(firstRun<=0):
-   out = commands.getstatusoutput("ls /afs/cern.ch/cms/tracker/sistrvalidation/WWW/CalibrationValidation/ParticleGain/ | grep Run_ | tail -n 1");
+   out = commands.getstatusoutput("ls /afs/cern.ch/cms/tracker/sistrvalidation/WWW/CalibrationValidation/ParticleGain/ | grep Run_ | tail -n 1"); #insert your path
    firstRun = int(out[1].split('_')[3])+1
    print "firstRun set to " +str(firstRun)
    print
 
-initEnv='cd ' + os.getcwd() + ';'
-initEnv+='source /afs/cern.ch/cms/cmsset_default.sh' + ';'
-initEnv+='eval `scramv1 runtime -sh`' + ';'
+initEnv='#!/bin/bash' + '\n'
+initEnv+='cd ' + os.getcwd() + '\n' 
+initEnv+='source /cvmfs/cms.cern.ch/cmsset_default.sh' + '\n' #/afs/cern.ch/cms/cmsset_default.sh
+initEnv+='eval `scramv1 runtime -sh`' + '\n'
 
 
 #Get List of Files to process:
@@ -191,14 +194,16 @@ else:
 #      if run<295310:
 #         print "Skipping, for unknown reasons..."
 #         continue
-      lastGoodRun = run
+      if(run in runsToSkip): break;
+
+      lastGoodRun = run 
       NEvents = numberOfEvents("root://eoscms//eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);
       if(NEvents<=3000):continue #only keep runs with at least 3K events
       if(FileList==""):firstRun=run;
       FileList += 'calibTreeList.extend(["root://eoscms//eos/cms'+CALIBTREEPATH+'/'+info[0]+'"]) #' + str(size).rjust(6)+'MB  NEvents='+str(NEvents/1000).rjust(8)+'K\n'
       NTotalEvents += NEvents;
       print("Current number of events to process is " + str(NTotalEvents))
-      if(NTotalEvents >= maxNEvents):break;
+      if(NTotalEvents >= maxNEvents):break; #or run in runsToSkip
 
 if lastGoodRun < 0:
    print "No good run to process."
@@ -219,7 +224,7 @@ else:               name = name+"_CalibTree"
 print name
 
 oldDirectory = "7TeVData"
-newDirectory = "Data_"+name;
+newDirectory = "DataNew_"+name;
 os.system("mkdir -p " + newDirectory);
 os.system("cp " + oldDirectory + "/* " + newDirectory+"/.");
 file = open(newDirectory+"/FileList_cfg.py", "w")
@@ -237,19 +242,39 @@ os.system("sed -i 's|XXX_CALMODE_XXX|"+calMode+"|g' "+newDirectory+"/*_cfg.py")
 os.system("sed -i 's|XXX_DQMDIR_XXX|"+DQM_dir+"|g' "+newDirectory+"/*_cfg.py")
 os.chdir(newDirectory);
 
+condor = 'universe = vanilla' +'\n'
+condor += 'Executable = job.sh' + '\n'
+condor += 'Should_Transfer_Files = YES' + '\n'
+condor += 'WhenToTransferOutput = ON_EXIT' + '\n'
+condor += 'Requirements = (OpSysAndVer =?= "SLCern6")' + '\n'
+condor += 'Transfer_Input_Files = %s'%(os.getcwd()) + '/Gains_Compute_cfg.py' + '\n'
+condor += '+JobFlavour = "tomorrow"' + '\n'
+condor += 'request_memory = 4GB' + '\n'
+condor += 'Output = job.stdout' + '\n'
+condor += 'Error = job.stderr' + '\n'
+condor += 'Log = job.log' + '\n'
+condor += 'notify_user = angela.taliercio@ba.infn.it' + '\n'
+condor += 'Queue 1'
+
 job = initEnv
-job+= "\ncd %s; \npwd; \nls; \npython submitJob.py -f %s -l %s -p %s -P %s"%(os.getcwd(),firstRun,lastRun,usePCL,publish)
-job+= " -m %s -s %s -a %s"%(calMode,scriptDir,automatic)
+job+= "cd %s; \npwd; \nls; \ncmsRun Gains_Compute_cfg.py"%(os.getcwd()) #\npython submitJob.py -f %s -l %s -p %s -P %s"%(os.getcwd(),firstRun,lastRun,usePCL,publish)
+#job+= " -m %s -s %s -a %s"%(calMode,scriptDir,automatic)
 
 print "*** JOB : ***"
 print job
+print "*** CONDOR : ***"
+print condor
 print "cwd = %s"%(os.getcwd())
 with open("job.sh","w") as f:
    f.write(job)
 os.system("chmod +x job.sh")
+with open("condor.cfg","w") as cond:
+   cond.write(condor)
+os.system("chmod +x condor.cfg")
+
 submitCMD =  'bsub  -q 2nd -J G2prod -R "type == SLC6_64 && pool > 30000" "job.sh"'
 print submitCMD
-os.system(submitCMD)
+#os.system(submitCMD)
 
 #if(os.system("sh sequence.sh \"" + name + "\" \"" + calMode + "\" \"CMS Preliminary  -  Run " + str(firstRun) + " to " + str(lastRun) + "\"")!=0):
 #	os.system('echo "Gain calibration failed" | mail -s "Gain calibration failed ('+name+')" ' + mail)
