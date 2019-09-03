@@ -49,6 +49,7 @@
 #include "CalibFormats/SiStripObjects/interface/SiStripDetCabling.h"
 #include "CalibTracker/Records/interface/SiStripDependentRecords.h"
 #include "CondFormats/DataRecord/interface/SiStripCondDataRecords.h"
+#include "CondFormats/SiStripObjects/interface/SiStripApvSimulationParameters.h"
 
 //Random Number
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -66,7 +67,8 @@ SiStripDigitizer::SiStripDigitizer(const edm::ParameterSet& conf, edm::ProducerB
       geometryType(conf.getParameter<std::string>("GeometryType")),
       useConfFromDB(conf.getParameter<bool>("TrackerConfigurationFromDB")),
       zeroSuppression(conf.getParameter<bool>("ZeroSuppression")),
-      makeDigiSimLinks_(conf.getUntrackedParameter<bool>("makeDigiSimLinks", false)) {
+      makeDigiSimLinks_(conf.getUntrackedParameter<bool>("makeDigiSimLinks", false)),
+      includeAPVSimulation_(conf.getParameter<bool>("includeAPVSimulation")) {
   const std::string alias("simSiStripDigis");
 
   mixMod.produces<edm::DetSetVector<SiStripDigi>>(ZSDigi).setBranchAlias(ZSDigi);
@@ -228,10 +230,14 @@ void SiStripDigitizer::finalizeEvent(edm::Event& iEvent, edm::EventSetup const& 
   edm::ESHandle<SiStripNoises> noiseHandle;
   edm::ESHandle<SiStripThreshold> thresholdHandle;
   edm::ESHandle<SiStripPedestals> pedestalHandle;
+  edm::ESHandle<SiStripApvSimulationParameters> apvSimulationParametersHandle;
   iSetup.get<SiStripGainSimRcd>().get(gainLabel, gainHandle);
   iSetup.get<SiStripNoisesRcd>().get(noiseHandle);
   iSetup.get<SiStripThresholdRcd>().get(thresholdHandle);
   iSetup.get<SiStripPedestalsRcd>().get(pedestalHandle);
+  if ( includeAPVSimulation_ ) {
+    iSetup.get<SiStripApvSimulationParametersRcd>().get(apvSimulationParametersHandle);
+  }
   std::vector<edm::DetSet<SiStripDigi>> theDigiVector;
   std::vector<edm::DetSet<SiStripRawDigi>> theRawDigiVector;
   std::vector<edm::DetSet<SiStripRawDigi>> theStripAmplitudeVector;
@@ -276,6 +282,7 @@ void SiStripDigitizer::finalizeEvent(edm::Event& iEvent, edm::EventSetup const& 
                             thresholdHandle,
                             noiseHandle,
                             pedestalHandle,
+                            apvSimulationParametersHandle,
                             theAffectedAPVvector,
                             randomEngine_,
                             tTopo);

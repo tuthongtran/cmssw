@@ -22,6 +22,7 @@
 #include "CondFormats/SiStripObjects/interface/SiStripPedestals.h"
 #include "CondFormats/SiStripObjects/interface/SiStripThreshold.h"
 #include "CondFormats/SiStripObjects/interface/SiStripBadStrip.h"
+#include "CondFormats/SiStripObjects/interface/SiStripApvSimulationParameters.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripGain.h"
 #include "SimTracker/SiStripDigitizer/interface/SiTrivialDigitalConverter.h"
 #include "SimTracker/SiStripDigitizer/interface/SiGaussianTailNoiseAdder.h"
@@ -92,6 +93,7 @@ public:
                 edm::ESHandle<SiStripThreshold>&,
                 edm::ESHandle<SiStripNoises>&,
                 edm::ESHandle<SiStripPedestals>&,
+                edm::ESHandle<SiStripApvSimulationParameters>&,
                 std::vector<std::pair<int, std::bitset<6>>>& theAffectedAPVvector,
                 CLHEP::HepRandomEngine*,
                 const TrackerTopology* tTopo);
@@ -186,43 +188,7 @@ private:
   int NumberOfBxBetweenHIPandEvent;
 
   bool includeAPVSimulation_;
-  edm::FileInPath apvBaselinesFile_tib1_;
-  edm::FileInPath apvBaselinesFile_tib2_;
-  edm::FileInPath apvBaselinesFile_tib3_;
-  edm::FileInPath apvBaselinesFile_tib4_;
-  edm::FileInPath apvBaselinesFile_tob1_;
-  edm::FileInPath apvBaselinesFile_tob2_;
-  edm::FileInPath apvBaselinesFile_tob3_;
-  edm::FileInPath apvBaselinesFile_tob4_;
-  edm::FileInPath apvBaselinesFile_tob5_;
-  edm::FileInPath apvBaselinesFile_tob6_;
-
   unsigned int nTruePU_;
-  unsigned int apvBaselines_nBinsPerBaseline_;
-  double apvBaselines_minBaseline_;
-  double apvBaselines_maxBaseline_;
-  std::vector<double> apvBaselines_puBinEdges_;
-  std::vector<double> apvBaselines_zBinEdges_;
-
-  std::vector<std::vector<std::vector<TH1F>>> apvBaselineHistograms_tib_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tib1_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tib2_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tib3_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tib4_;
-
-  std::vector<std::vector<std::vector<TH1F>>> apvBaselineHistograms_tob_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob1_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob2_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob3_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob4_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob5_;
-  std::vector<std::vector<TH1F>> apvBaselineHistograms_tob6_;
-
-  // std::vector< std::vector<TH1F> > apvBaselineHistograms_tid_;
-  // std::vector< std::vector<TH1F> > apvBaselineHistograms_tec_;
-
-  void fillAPVBaselineHistograms(std::vector<std::vector<TH1F>>& apvHistograms,
-                                 const std::string& apvBaselinesFileName);
 };
 
 #endif
