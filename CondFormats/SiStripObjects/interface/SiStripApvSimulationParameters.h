@@ -4,6 +4,7 @@
 #include "CondFormats/Serialization/interface/Serializable.h"
 
 #include <vector>
+#include "CondFormats/PhysicsToolsObjects/interface/Histogram2D.h"
 #include "CondFormats/PhysicsToolsObjects/interface/Histogram3D.h"
 
 namespace CLHEP {
@@ -22,9 +23,12 @@ public:
     : m_nTIB(nTIB), m_nTOB(nTOB)
   {
     m_barrelParam.resize(m_nTIB+m_nTOB);
+    m_barrelParam_zInt.resize(m_nTIB+m_nTOB);
   }
   SiStripApvSimulationParameters() {}
   ~SiStripApvSimulationParameters() {}
+
+  void calculateIntegrals(); // make sure integrals have been calculated
 
   bool putTIB(layerid layer, const LayerParameters& params) { return putTIB(layer, LayerParameters(params)); }
   bool putTIB(layerid layer, LayerParameters&& params);
@@ -41,6 +45,7 @@ public:
 private:
   layerid m_nTIB, m_nTOB;
   std::vector<PhysicsTools::Calibration::HistogramF3D> m_barrelParam;
+  std::vector<PhysicsTools::Calibration::HistogramF2D> m_barrelParam_zInt;
 
   float sampleBarrel(layerid layerIdx, float z, float pu, CLHEP::HepRandomEngine* engine) const;
 
