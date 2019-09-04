@@ -60,7 +60,7 @@ float SiStripApvSimulationParameters::sampleBarrel(layerid layerIdx,
   }
   const auto layerParam = m_barrelParam[layerIdx];
   const int iz = layerParam.findBinX(z);
-  const int ip = layerParam.findBinX(pu);
+  const int ip = layerParam.findBinY(pu);
   const float norm = m_barrelParam_zInt[layerIdx].binContent(iz, ip);
   const auto val = CLHEP::RandFlat::shoot(engine) * norm;
   if (val < layerParam.binContent(iz, ip, 0)) {  // underflow
