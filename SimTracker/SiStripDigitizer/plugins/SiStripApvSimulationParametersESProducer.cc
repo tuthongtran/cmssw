@@ -6,13 +6,13 @@
 #include <fstream>
 #include <boost/range/adaptor/indexed.hpp>
 
-class SiStripApvSimulationParametersESProducer : public edm::ESProducer
-{
+class SiStripApvSimulationParametersESProducer : public edm::ESProducer {
 public:
   explicit SiStripApvSimulationParametersESProducer(const edm::ParameterSet& conf);
-  virtual ~SiStripApvSimulationParametersESProducer() override {}
+  ~SiStripApvSimulationParametersESProducer() override {}
 
   std::unique_ptr<SiStripApvSimulationParameters> produce(const SiStripApvSimulationParametersRcd& record);
+
 private:
   std::vector<edm::FileInPath> baselineFiles_TOB_;
   std::vector<edm::FileInPath> baselineFiles_TIB_;
@@ -26,35 +26,30 @@ private:
 };
 
 SiStripApvSimulationParametersESProducer::SiStripApvSimulationParametersESProducer(const edm::ParameterSet& conf)
-:
-  baseline_nBins_(conf.getParameter<unsigned int>("apvBaselines_nBinsPerBaseline")),
-  baseline_min_(conf.getParameter<double>("apvBaselines_minBaseline")),
-  baseline_max_(conf.getParameter<double>("apvBaselines_maxBaseline"))
-{
+    : baseline_nBins_(conf.getParameter<unsigned int>("apvBaselines_nBinsPerBaseline")),
+      baseline_min_(conf.getParameter<double>("apvBaselines_minBaseline")),
+      baseline_max_(conf.getParameter<double>("apvBaselines_maxBaseline")) {
   setWhatProduced(this);
-  for ( const auto x : conf.getParameter<std::vector<double>>("apvBaselines_puBinEdges") ) {
+  for (const auto x : conf.getParameter<std::vector<double>>("apvBaselines_puBinEdges")) {
     puBinEdges_.push_back(x);
   }
-  for ( const auto x : conf.getParameter<std::vector<double>>("apvBaselines_zBinEdges") ) {
+  for (const auto x : conf.getParameter<std::vector<double>>("apvBaselines_zBinEdges")) {
     zBinEdges_.push_back(x);
   }
-  baselineFiles_TIB_ = {
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib1"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib2"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib3"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib4")
-    };
-  baselineFiles_TOB_ = {
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob1"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob2"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob3"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob4"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob5"),
-    conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob6")
-    };
+  baselineFiles_TIB_ = {conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib1"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib2"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib3"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib4")};
+  baselineFiles_TOB_ = {conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob1"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob2"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob3"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob4"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob5"),
+                        conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob6")};
 }
 
-SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersESProducer::makeLayerParameters(const std::string& apvBaselinesFileName) const {
+SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersESProducer::makeLayerParameters(
+    const std::string& apvBaselinesFileName) const {
   // Prepare histograms
   unsigned int nZBins = zBinEdges_.size();
   unsigned int nPUBins = puBinEdges_.size();
@@ -63,9 +58,9 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
     throw cms::Exception("MissingInput") << "The parameters for the APV simulation are not correctly configured\n";
   }
   std::vector<float> baselineBinEdges{};
-  auto baseline_binWidth = (baseline_max_-baseline_min_)/baseline_nBins_;
-  for ( unsigned i{0}; i != baseline_nBins_; ++i ) {
-    baselineBinEdges.push_back(baseline_min_+i*baseline_binWidth);
+  auto baseline_binWidth = (baseline_max_ - baseline_min_) / baseline_nBins_;
+  for (unsigned i{0}; i != baseline_nBins_; ++i) {
+    baselineBinEdges.push_back(baseline_min_ + i * baseline_binWidth);
   }
   baselineBinEdges.push_back(baseline_max_);
 
@@ -102,8 +97,7 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
   for (auto const& apvBaseline : theAPVBaselines | boost::adaptors::indexed(0)) {
     unsigned int binInCurrentHistogram = apvBaseline.index() % baseline_nBins_ + 1;
     unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_);
-    unsigned int binInPU =
-        int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_;
+    unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_;
 
     layerParams.setBinContent(binInZ, binInPU, binInCurrentHistogram, apvBaseline.value());
   }
@@ -111,14 +105,15 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
   return layerParams;
 }
 
-std::unique_ptr<SiStripApvSimulationParameters> SiStripApvSimulationParametersESProducer::produce(const SiStripApvSimulationParametersRcd& record)
-{
-  auto apvSimParams = std::make_unique<SiStripApvSimulationParameters>(baselineFiles_TIB_.size(), baselineFiles_TOB_.size());
-  for ( unsigned int i{0}; i != baselineFiles_TIB_.size(); ++i ) {
-    apvSimParams->putTIB(i+1, makeLayerParameters(baselineFiles_TIB_[i].fullPath()));
+std::unique_ptr<SiStripApvSimulationParameters> SiStripApvSimulationParametersESProducer::produce(
+    const SiStripApvSimulationParametersRcd& record) {
+  auto apvSimParams =
+      std::make_unique<SiStripApvSimulationParameters>(baselineFiles_TIB_.size(), baselineFiles_TOB_.size());
+  for (unsigned int i{0}; i != baselineFiles_TIB_.size(); ++i) {
+    apvSimParams->putTIB(i + 1, makeLayerParameters(baselineFiles_TIB_[i].fullPath()));
   }
-  for ( unsigned int i{0}; i != baselineFiles_TOB_.size(); ++i ) {
-    apvSimParams->putTOB(i+1, makeLayerParameters(baselineFiles_TOB_[i].fullPath()));
+  for (unsigned int i{0}; i != baselineFiles_TOB_.size(); ++i) {
+    apvSimParams->putTOB(i + 1, makeLayerParameters(baselineFiles_TOB_[i].fullPath()));
   }
   return apvSimParams;
 }

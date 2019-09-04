@@ -19,16 +19,14 @@ public:
   using layerid = unsigned int;
   using LayerParameters = PhysicsTools::Calibration::HistogramF3D;
 
-  SiStripApvSimulationParameters(layerid nTIB, layerid nTOB)
-    : m_nTIB(nTIB), m_nTOB(nTOB)
-  {
-    m_barrelParam.resize(m_nTIB+m_nTOB);
-    m_barrelParam_zInt.resize(m_nTIB+m_nTOB);
+  SiStripApvSimulationParameters(layerid nTIB, layerid nTOB) : m_nTIB(nTIB), m_nTOB(nTOB) {
+    m_barrelParam.resize(m_nTIB + m_nTOB);
+    m_barrelParam_zInt.resize(m_nTIB + m_nTOB);
   }
   SiStripApvSimulationParameters() {}
   ~SiStripApvSimulationParameters() {}
 
-  void calculateIntegrals(); // make sure integrals have been calculated
+  void calculateIntegrals();  // make sure integrals have been calculated
 
   bool putTIB(layerid layer, const LayerParameters& params) { return putTIB(layer, LayerParameters(params)); }
   bool putTIB(layerid layer, LayerParameters&& params);
@@ -36,11 +34,15 @@ public:
   bool putTOB(layerid layer, const LayerParameters& params) { return putTOB(layer, LayerParameters(params)); }
   bool putTOB(layerid layer, LayerParameters&& params);
 
-  const LayerParameters& getTIB(layerid layer) const { return m_barrelParam[layer-1]; }
-  const LayerParameters& getTOB(layerid layer) const { return m_barrelParam[m_nTIB+layer-1]; }
+  const LayerParameters& getTIB(layerid layer) const { return m_barrelParam[layer - 1]; }
+  const LayerParameters& getTOB(layerid layer) const { return m_barrelParam[m_nTIB + layer - 1]; }
 
-  float sampleTIB(layerid layer, float z, float pu, CLHEP::HepRandomEngine* engine) const { return sampleBarrel(layer-1, z, pu, engine); }
-  float sampleTOB(layerid layer, float z, float pu, CLHEP::HepRandomEngine* engine) const { return sampleBarrel(m_nTIB+layer-1, z, pu, engine); };
+  float sampleTIB(layerid layer, float z, float pu, CLHEP::HepRandomEngine* engine) const {
+    return sampleBarrel(layer - 1, z, pu, engine);
+  }
+  float sampleTOB(layerid layer, float z, float pu, CLHEP::HepRandomEngine* engine) const {
+    return sampleBarrel(m_nTIB + layer - 1, z, pu, engine);
+  };
 
 private:
   layerid m_nTIB, m_nTOB;

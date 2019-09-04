@@ -235,7 +235,7 @@ void SiStripDigitizer::finalizeEvent(edm::Event& iEvent, edm::EventSetup const& 
   iSetup.get<SiStripNoisesRcd>().get(noiseHandle);
   iSetup.get<SiStripThresholdRcd>().get(thresholdHandle);
   iSetup.get<SiStripPedestalsRcd>().get(pedestalHandle);
-  if ( includeAPVSimulation_ ) {
+  if (includeAPVSimulation_) {
     iSetup.get<SiStripApvSimulationParametersRcd>().get(apvSimulationParametersHandle);
   }
   std::vector<edm::DetSet<SiStripDigi>> theDigiVector;

@@ -344,9 +344,9 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
 
           // Get APV baseline
           double baselineV = 0;
-          if ( SubDet == 3 ) {
+          if (SubDet == 3) {
             baselineV = apvSimulationParametersHandle->sampleTIB(tTopo->tibLayer(detId), detSet_z, nTruePU_, engine);
-          } else if ( SubDet == 5 ) {
+          } else if (SubDet == 5) {
             baselineV = apvSimulationParametersHandle->sampleTOB(tTopo->tobLayer(detId), detSet_z, nTruePU_, engine);
           }
           // Store APV baseline for this strip
