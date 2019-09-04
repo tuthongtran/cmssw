@@ -1,5 +1,5 @@
 #include "FWCore/Framework/interface/ESProducer.h"
-#include "FWCore/Framework/interface/ModuleFactory.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "CondFormats/DataRecord/interface/SiStripCondDataRecords.h"
 #include "CondFormats/SiStripObjects/interface/SiStripApvSimulationParameters.h"
@@ -96,8 +96,8 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
   // Put baselines into histograms
   for (auto const& apvBaseline : theAPVBaselines | boost::adaptors::indexed(0)) {
     unsigned int binInCurrentHistogram = apvBaseline.index() % baseline_nBins_ + 1;
-    unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_);
-    unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_;
+    unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_) + 1;
+    unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_ + 1;
 
     layerParams.setBinContent(binInZ, binInPU, binInCurrentHistogram, apvBaseline.value());
   }
@@ -110,12 +110,21 @@ std::unique_ptr<SiStripApvSimulationParameters> SiStripApvSimulationParametersES
   auto apvSimParams =
       std::make_unique<SiStripApvSimulationParameters>(baselineFiles_TIB_.size(), baselineFiles_TOB_.size());
   for (unsigned int i{0}; i != baselineFiles_TIB_.size(); ++i) {
-    apvSimParams->putTIB(i + 1, makeLayerParameters(baselineFiles_TIB_[i].fullPath()));
+    if ( ! apvSimParams->putTIB(i + 1, makeLayerParameters(baselineFiles_TIB_[i].fullPath())) ) {
+      throw cms::Exception("SiStripApvSimulationParameters") << "Could not add parameters for TIB layer " << (i+1);
+    } else {
+      LogDebug("SiStripApvSimulationParameters") << "Added parameters for TIB layer " << (i+1);
+    }
   }
   for (unsigned int i{0}; i != baselineFiles_TOB_.size(); ++i) {
-    apvSimParams->putTOB(i + 1, makeLayerParameters(baselineFiles_TOB_[i].fullPath()));
+    if ( ! apvSimParams->putTOB(i + 1, makeLayerParameters(baselineFiles_TOB_[i].fullPath())) ) {
+      throw cms::Exception("SiStripApvSimulationParameters") << "Could not add parameters for TOB layer " << (i+1);
+    } else {
+      LogDebug("SiStripApvSimulationParameters") << "Added parameters for TOB layer " << (i+1);
+    }
   }
   return apvSimParams;
 }
 
+#include "FWCore/Framework/interface/ModuleFactory.h"
 DEFINE_FWK_EVENTSETUP_MODULE(SiStripApvSimulationParametersESProducer);
