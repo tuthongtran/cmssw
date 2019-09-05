@@ -4,7 +4,15 @@
 
 namespace {
   PhysicsTools::Calibration::HistogramF2D calculateZInt(const SiStripApvSimulationParameters::LayerParameters& params) {
-    auto hZInt = PhysicsTools::Calibration::HistogramF2D(params.upperLimitsX(), params.upperLimitsY());
+    auto hZInt = (
+        params.hasEquidistantBinsX() ?
+          ( params.hasEquidistantBinsY() ?
+            PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsX(), params.rangeX(), params.numberOfBinsY(), params.rangeY())
+          : PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsX(), params.rangeX(), params.upperLimitsX()) )
+        : ( params.hasEquidistantBinsY() ?
+            PhysicsTools::Calibration::HistogramF2D(params.upperLimitsX(), params.numberOfBinsY(), params.rangeY())
+          : PhysicsTools::Calibration::HistogramF2D(params.upperLimitsX(), params.upperLimitsY()) )
+        );
     for (int i{0}; i != params.numberOfBinsX() + 2; ++i) {
       for (int j{0}; j != params.numberOfBinsY() + 2; ++j) {
         float zInt = 0.;
@@ -15,6 +23,17 @@ namespace {
       }
     }
     return hZInt;
+  }
+
+  float zBinPos(const SiStripApvSimulationParameters::LayerParameters& hist, int iBin, float pos=0.5) {
+    // NOTE: does not work for under- and overflow bins (iBin = 0 and iBIn == hist.numberOfBinsZ()+1)
+    if ( hist.hasEquidistantBinsZ() ) {
+      const auto range = hist.rangeZ();
+      const auto binWidth = (range.max-range.min)/hist.numberOfBinsZ();
+      return range.min+(iBin-1+pos)*binWidth;
+    } else {
+      return (1.-pos)*hist.upperLimitsZ()[iBin-1]+pos*hist.upperLimitsZ()[iBin];
+    }
   }
 }  // namespace
 
@@ -64,15 +83,15 @@ float SiStripApvSimulationParameters::sampleBarrel(layerid layerIdx,
   const float norm = m_barrelParam_zInt[layerIdx].binContent(iz, ip);
   const auto val = CLHEP::RandFlat::shoot(engine) * norm;
   if (val < layerParam.binContent(iz, ip, 0)) {  // underflow
-    return layerParam.upperLimitsZ()[0];
+    return layerParam.rangeZ().min;
   } else if (norm - val < layerParam.binContent(iz, ip, layerParam.numberOfBinsZ() + 1)) {  // overflow
-    return layerParam.upperLimitsZ()[layerParam.numberOfBinsZ()];
+    return layerParam.rangeZ().max;
   } else {  // loop over bins, return center of our bin
     float sum = layerParam.binContent(iz, ip, 0);
     for (int i{1}; i != layerParam.numberOfBinsZ() + 1; ++i) {
       sum += layerParam.binContent(iz, ip, i);
       if (sum > val) {
-        return .5 * (layerParam.upperLimitsZ()[i - 1] + layerParam.upperLimitsZ()[i]);
+        return zBinPos(layerParam, i, (sum-val)/layerParam.binContent(iz, ip, i));
       }
     }
   }
