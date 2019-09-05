@@ -78,20 +78,20 @@ float SiStripApvSimulationParameters::sampleBarrel(layerid layerIdx,
     throw cms::Exception("LogicError") << "x-integrals of 3D histograms have not been calculated";
   }
   const auto layerParam = m_barrelParam[layerIdx];
-  const int iz = layerParam.findBinY(z);
-  const int ip = layerParam.findBinZ(pu);
-  const float norm = m_barrelParam_xInt[layerIdx].binContent(iz, ip);
+  const int ip = layerParam.findBinY(pu);
+  const int iz = layerParam.findBinZ(z);
+  const float norm = m_barrelParam_xInt[layerIdx].binContent(ip, iz);
   const auto val = CLHEP::RandFlat::shoot(engine) * norm;
-  if (val < layerParam.binContent(0, iz, ip)) {  // underflow
+  if (val < layerParam.binContent(0, ip, iz)) {  // underflow
     return layerParam.rangeX().min;
-  } else if (norm - val < layerParam.binContent(layerParam.numberOfBinsX() + 1, iz, ip)) { // overflow
+  } else if (norm - val < layerParam.binContent(layerParam.numberOfBinsX() + 1, ip, iz)) { // overflow
     return layerParam.rangeX().max;
   } else {  // loop over bins, return center of our bin
-    float sum = layerParam.binContent(0, iz, ip);
+    float sum = layerParam.binContent(0, ip, iz);
     for (int i{1}; i != layerParam.numberOfBinsX() + 1; ++i) {
-      sum += layerParam.binContent(i, iz, ip);
+      sum += layerParam.binContent(i, ip, iz);
       if (sum > val) {
-        return xBinPos(layerParam, i, (sum-val)/layerParam.binContent(i, iz, ip));
+        return xBinPos(layerParam, i, (sum-val)/layerParam.binContent(i, ip, iz));
       }
     }
   }
