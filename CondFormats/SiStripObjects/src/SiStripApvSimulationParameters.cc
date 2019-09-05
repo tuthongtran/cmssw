@@ -3,45 +3,45 @@
 #include "CLHEP/Random/RandFlat.h"
 
 namespace {
-  PhysicsTools::Calibration::HistogramF2D calculateZInt(const SiStripApvSimulationParameters::LayerParameters& params) {
-    auto hZInt = (
-        params.hasEquidistantBinsX() ?
-          ( params.hasEquidistantBinsY() ?
-            PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsX(), params.rangeX(), params.numberOfBinsY(), params.rangeY())
-          : PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsX(), params.rangeX(), params.upperLimitsX()) )
-        : ( params.hasEquidistantBinsY() ?
-            PhysicsTools::Calibration::HistogramF2D(params.upperLimitsX(), params.numberOfBinsY(), params.rangeY())
-          : PhysicsTools::Calibration::HistogramF2D(params.upperLimitsX(), params.upperLimitsY()) )
+  PhysicsTools::Calibration::HistogramF2D calculateXInt(const SiStripApvSimulationParameters::LayerParameters& params) {
+    auto hXInt = (
+        params.hasEquidistantBinsY() ?
+          ( params.hasEquidistantBinsZ() ?
+            PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsY(), params.rangeY(), params.numberOfBinsZ(), params.rangeZ())
+          : PhysicsTools::Calibration::HistogramF2D(params.numberOfBinsY(), params.rangeY(), params.upperLimitsZ()) )
+        : ( params.hasEquidistantBinsZ() ?
+            PhysicsTools::Calibration::HistogramF2D(params.upperLimitsY(), params.numberOfBinsZ(), params.rangeZ())
+          : PhysicsTools::Calibration::HistogramF2D(params.upperLimitsY(), params.upperLimitsZ()) )
         );
-    for (int i{0}; i != params.numberOfBinsX() + 2; ++i) {
-      for (int j{0}; j != params.numberOfBinsY() + 2; ++j) {
-        float zInt = 0.;
-        for (int k{0}; k != params.numberOfBinsZ() + 2; ++k) {
-          zInt += params.binContent(i, j, k);
+    for (int i{0}; i != params.numberOfBinsY() + 2; ++i) {
+      for (int j{0}; j != params.numberOfBinsZ() + 2; ++j) {
+        float xInt = 0.;
+        for (int k{0}; k != params.numberOfBinsX() + 2; ++k) {
+          xInt += params.binContent(k, i, j);
         }
-        hZInt.setBinContent(i, j, zInt);
+        hXInt.setBinContent(i, j, xInt);
       }
     }
-    return hZInt;
+    return hXInt;
   }
 
-  float zBinPos(const SiStripApvSimulationParameters::LayerParameters& hist, int iBin, float pos=0.5) {
-    // NOTE: does not work for under- and overflow bins (iBin = 0 and iBIn == hist.numberOfBinsZ()+1)
-    if ( hist.hasEquidistantBinsZ() ) {
-      const auto range = hist.rangeZ();
-      const auto binWidth = (range.max-range.min)/hist.numberOfBinsZ();
+  float xBinPos(const SiStripApvSimulationParameters::LayerParameters& hist, int iBin, float pos=0.5) {
+    // NOTE: does not work for under- and overflow bins (iBin = 0 and iBIn == hist.numberOfBinsX()+1)
+    if ( hist.hasEquidistantBinsX() ) {
+      const auto range = hist.rangeX();
+      const auto binWidth = (range.max-range.min)/hist.numberOfBinsX();
       return range.min+(iBin-1+pos)*binWidth;
     } else {
-      return (1.-pos)*hist.upperLimitsZ()[iBin-1]+pos*hist.upperLimitsZ()[iBin];
+      return (1.-pos)*hist.upperLimitsX()[iBin-1]+pos*hist.upperLimitsX()[iBin];
     }
   }
 }  // namespace
 
 void SiStripApvSimulationParameters::calculateIntegrals() {
-  if (m_barrelParam.size() != m_barrelParam_zInt.size()) {
-    m_barrelParam_zInt.resize(m_barrelParam.size());
+  if (m_barrelParam.size() != m_barrelParam_xInt.size()) {
+    m_barrelParam_xInt.resize(m_barrelParam.size());
     for (unsigned int i{0}; i != m_barrelParam.size(); ++i) {
-      m_barrelParam_zInt[i] = calculateZInt(m_barrelParam[i]);
+      m_barrelParam_xInt[i] = calculateXInt(m_barrelParam[i]);
     }
   }
 }
@@ -54,7 +54,7 @@ bool SiStripApvSimulationParameters::putTIB(SiStripApvSimulationParameters::laye
     return false;
   }
   m_barrelParam[layer - 1] = params;
-  m_barrelParam_zInt[layer - 1] = calculateZInt(params);
+  m_barrelParam_xInt[layer - 1] = calculateXInt(params);
   return true;
 }
 
@@ -66,7 +66,7 @@ bool SiStripApvSimulationParameters::putTOB(SiStripApvSimulationParameters::laye
     return false;
   }
   m_barrelParam[m_nTIB + layer - 1] = params;
-  m_barrelParam_zInt[m_nTIB + layer - 1] = calculateZInt(params);
+  m_barrelParam_xInt[m_nTIB + layer - 1] = calculateXInt(params);
   return true;
 }
 
@@ -74,24 +74,24 @@ float SiStripApvSimulationParameters::sampleBarrel(layerid layerIdx,
                                                    float z,
                                                    float pu,
                                                    CLHEP::HepRandomEngine* engine) const {
-  if (m_barrelParam.size() != m_barrelParam_zInt.size()) {
-    throw cms::Exception("LogicError") << "z-integrals of 3D histograms have not been calculated";
+  if (m_barrelParam.size() != m_barrelParam_xInt.size()) {
+    throw cms::Exception("LogicError") << "x-integrals of 3D histograms have not been calculated";
   }
   const auto layerParam = m_barrelParam[layerIdx];
-  const int iz = layerParam.findBinX(z);
-  const int ip = layerParam.findBinY(pu);
-  const float norm = m_barrelParam_zInt[layerIdx].binContent(iz, ip);
+  const int iz = layerParam.findBinY(z);
+  const int ip = layerParam.findBinZ(pu);
+  const float norm = m_barrelParam_xInt[layerIdx].binContent(iz, ip);
   const auto val = CLHEP::RandFlat::shoot(engine) * norm;
-  if (val < layerParam.binContent(iz, ip, 0)) {  // underflow
-    return layerParam.rangeZ().min;
-  } else if (norm - val < layerParam.binContent(iz, ip, layerParam.numberOfBinsZ() + 1)) {  // overflow
-    return layerParam.rangeZ().max;
+  if (val < layerParam.binContent(0, iz, ip)) {  // underflow
+    return layerParam.rangeX().min;
+  } else if (norm - val < layerParam.binContent(layerParam.numberOfBinsX() + 1, iz, ip)) { // overflow
+    return layerParam.rangeX().max;
   } else {  // loop over bins, return center of our bin
-    float sum = layerParam.binContent(iz, ip, 0);
-    for (int i{1}; i != layerParam.numberOfBinsZ() + 1; ++i) {
-      sum += layerParam.binContent(iz, ip, i);
+    float sum = layerParam.binContent(0, iz, ip);
+    for (int i{1}; i != layerParam.numberOfBinsX() + 1; ++i) {
+      sum += layerParam.binContent(i, iz, ip);
       if (sum > val) {
-        return zBinPos(layerParam, i, (sum-val)/layerParam.binContent(iz, ip, i));
+        return xBinPos(layerParam, i, (sum-val)/layerParam.binContent(i, iz, ip));
       }
     }
   }

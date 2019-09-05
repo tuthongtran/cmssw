@@ -21,7 +21,7 @@ public:
 
   SiStripApvSimulationParameters(layerid nTIB, layerid nTOB) : m_nTIB(nTIB), m_nTOB(nTOB) {
     m_barrelParam.resize(m_nTIB + m_nTOB);
-    m_barrelParam_zInt.resize(m_nTIB + m_nTOB);
+    m_barrelParam_xInt.resize(m_nTIB + m_nTOB);
   }
   SiStripApvSimulationParameters() {}
   ~SiStripApvSimulationParameters() {}
@@ -47,7 +47,7 @@ public:
 private:
   layerid m_nTIB, m_nTOB;
   std::vector<PhysicsTools::Calibration::HistogramF3D> m_barrelParam;
-  std::vector<PhysicsTools::Calibration::HistogramF2D> m_barrelParam_zInt;
+  std::vector<PhysicsTools::Calibration::HistogramF2D> m_barrelParam_xInt;
 
   float sampleBarrel(layerid layerIdx, float z, float pu, CLHEP::HepRandomEngine* engine) const;
 

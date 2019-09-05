@@ -76,7 +76,7 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
   }
   baselineBinEdges.push_back(baseline_max_);
 
-  SiStripApvSimulationParameters::LayerParameters layerParams{zBinEdges_, puBinEdges_, baselineBinEdges};
+  SiStripApvSimulationParameters::LayerParameters layerParams{baselineBinEdges, zBinEdges_, puBinEdges_};
 
   // Read apv baselines from text files
   std::vector<double> theAPVBaselines;
@@ -111,7 +111,7 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
     unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_);
     unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_;
 
-    layerParams.setBinContent(binInZ+1, binInPU+1, binInCurrentHistogram, apvBaseline.value());
+    layerParams.setBinContent(binInCurrentHistogram, binInZ+1, binInPU+1, apvBaseline.value());
   }
 
   return layerParams;
