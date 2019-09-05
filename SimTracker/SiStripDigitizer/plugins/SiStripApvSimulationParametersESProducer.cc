@@ -58,7 +58,7 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
     throw cms::Exception("MissingInput") << "The parameters for the APV simulation are not correctly configured\n";
   }
   std::vector<float> baselineBinEdges{};
-  auto baseline_binWidth = (baseline_max_ - baseline_min_) / baseline_nBins_;
+  const auto baseline_binWidth = (baseline_max_ - baseline_min_) / baseline_nBins_;
   for (unsigned i{0}; i != baseline_nBins_; ++i) {
     baselineBinEdges.push_back(baseline_min_ + i * baseline_binWidth);
   }
@@ -96,10 +96,10 @@ SiStripApvSimulationParameters::LayerParameters SiStripApvSimulationParametersES
   // Put baselines into histograms
   for (auto const& apvBaseline : theAPVBaselines | boost::adaptors::indexed(0)) {
     unsigned int binInCurrentHistogram = apvBaseline.index() % baseline_nBins_ + 1;
-    unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_) + 1;
-    unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_ + 1;
+    unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * baseline_nBins_);
+    unsigned int binInPU = int(apvBaseline.index() - binInZ * (nPUBins)*baseline_nBins_) / baseline_nBins_;
 
-    layerParams.setBinContent(binInZ, binInPU, binInCurrentHistogram, apvBaseline.value());
+    layerParams.setBinContent(binInZ+1, binInPU+1, binInCurrentHistogram, apvBaseline.value());
   }
 
   return layerParams;
