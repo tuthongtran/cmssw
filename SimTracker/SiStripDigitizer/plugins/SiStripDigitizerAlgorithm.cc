@@ -34,7 +34,6 @@
 #include <sstream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/indexed.hpp>
 
 SiStripDigitizerAlgorithm::SiStripDigitizerAlgorithm(const edm::ParameterSet& conf)
     : lorentzAngleName(conf.getParameter<std::string>("LorentzAngle")),
@@ -74,34 +73,7 @@ SiStripDigitizerAlgorithm::SiStripDigitizerAlgorithm(const edm::ParameterSet& co
       theSiDigitalConverter(new SiTrivialDigitalConverter(theElectronPerADC, PreMixing_)),
       theSiZeroSuppress(new SiStripFedZeroSuppression(theFedAlgo)),
       APVProbabilityFile(conf.getParameter<edm::FileInPath>("APVProbabilityFile")),
-      includeAPVSimulation_(conf.getParameter<bool>("includeAPVSimulation")),
-      apvBaselinesFile_tib1_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib1")),
-      apvBaselinesFile_tib2_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib2")),
-      apvBaselinesFile_tib3_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib3")),
-      apvBaselinesFile_tib4_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tib4")),
-      apvBaselinesFile_tob1_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob1")),
-      apvBaselinesFile_tob2_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob2")),
-      apvBaselinesFile_tob3_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob3")),
-      apvBaselinesFile_tob4_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob4")),
-      apvBaselinesFile_tob5_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob5")),
-      apvBaselinesFile_tob6_(conf.getParameter<edm::FileInPath>("apvBaselinesFile_tob6")),
-      apvBaselines_nBinsPerBaseline_(conf.getParameter<unsigned int>("apvBaselines_nBinsPerBaseline")),
-      apvBaselines_minBaseline_(conf.getParameter<double>("apvBaselines_minBaseline")),
-      apvBaselines_maxBaseline_(conf.getParameter<double>("apvBaselines_maxBaseline")),
-      apvBaselines_puBinEdges_(conf.getParameter<std::vector<double>>("apvBaselines_puBinEdges")),
-      apvBaselines_zBinEdges_(conf.getParameter<std::vector<double>>("apvBaselines_zBinEdges")),
-      apvBaselineHistograms_tib_(std::vector<std::vector<std::vector<TH1F>>>()),
-      apvBaselineHistograms_tib1_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tib2_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tib3_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tib4_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob_(std::vector<std::vector<std::vector<TH1F>>>()),
-      apvBaselineHistograms_tob1_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob2_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob3_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob4_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob5_(std::vector<std::vector<TH1F>>()),
-      apvBaselineHistograms_tob6_(std::vector<std::vector<TH1F>>()) {
+      includeAPVSimulation_(conf.getParameter<bool>("includeAPVSimulation")) {
   if (peakMode) {
     LogDebug("StripDigiInfo") << "APVs running in peak mode (poor time resolution)";
   } else {
@@ -131,87 +103,6 @@ SiStripDigitizerAlgorithm::SiStripDigitizerAlgorithm(const edm::ParameterSet& co
       APVProbaFile.close();
     } else
       throw cms::Exception("MissingInput") << "It seems that the APV probability list is missing\n";
-  }
-
-  if (includeAPVSimulation_) {
-    fillAPVBaselineHistograms(apvBaselineHistograms_tib1_, apvBaselinesFile_tib1_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tib2_, apvBaselinesFile_tib2_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tib3_, apvBaselinesFile_tib3_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tib4_, apvBaselinesFile_tib4_.fullPath());
-
-    apvBaselineHistograms_tib_.push_back(apvBaselineHistograms_tib1_);
-    apvBaselineHistograms_tib_.push_back(apvBaselineHistograms_tib2_);
-    apvBaselineHistograms_tib_.push_back(apvBaselineHistograms_tib3_);
-    apvBaselineHistograms_tib_.push_back(apvBaselineHistograms_tib4_);
-
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob1_, apvBaselinesFile_tob1_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob2_, apvBaselinesFile_tob2_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob3_, apvBaselinesFile_tob3_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob4_, apvBaselinesFile_tob4_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob5_, apvBaselinesFile_tob5_.fullPath());
-    fillAPVBaselineHistograms(apvBaselineHistograms_tob6_, apvBaselinesFile_tob6_.fullPath());
-
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob1_);
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob2_);
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob3_);
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob4_);
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob5_);
-    apvBaselineHistograms_tob_.push_back(apvBaselineHistograms_tob6_);
-  }
-}
-
-void SiStripDigitizerAlgorithm::fillAPVBaselineHistograms(std::vector<std::vector<TH1F>>& apvHistograms,
-                                                          const std::string& apvBaselinesFileName) {
-  // Prepare histograms
-  unsigned int nZBins = apvBaselines_zBinEdges_.size();
-  unsigned int nPUBins = apvBaselines_puBinEdges_.size();
-
-  if (nPUBins == 0 || nZBins == 0 || apvBaselines_nBinsPerBaseline_ == 0) {
-    throw cms::Exception("MissingInput") << "The parameters for the APV simulation are not correctly configured\n";
-  }
-  apvHistograms.resize(nZBins);
-  for (unsigned int iZBin = 0; iZBin < nZBins; ++iZBin) {
-    for (unsigned int iPUBin = 0; iPUBin < nPUBins; ++iPUBin) {
-      apvHistograms.at(iZBin).push_back(
-          TH1F("temp", "temp", apvBaselines_nBinsPerBaseline_, apvBaselines_minBaseline_, apvBaselines_maxBaseline_));
-    }
-  }
-
-  // Read apv baselines from text files
-  std::vector<double> theAPVBaselines;
-  std::ifstream apvBaselineFile(apvBaselinesFileName.c_str());
-  if (!apvBaselineFile.good()) {
-    throw cms::Exception("FileError") << "Problem opening APV baselines file: " << apvBaselinesFileName;
-  }
-  std::string line;
-  while (std::getline(apvBaselineFile, line)) {
-    if (!line.empty()) {
-      std::istringstream lStr{line};
-      double value;
-      while (lStr >> value) {
-        theAPVBaselines.push_back(value);
-      }
-    }
-  }
-  if (theAPVBaselines.empty()) {
-    throw cms::Exception("WrongAPVBaselines")
-        << "Problem reading from APV baselines file " << apvBaselinesFileName << ": no values read in";
-  }
-
-  if (theAPVBaselines.size() != nZBins * nPUBins * apvBaselines_nBinsPerBaseline_) {
-    throw cms::Exception("WrongAPVBaselines") << "Problem reading from APV baselines file " << apvBaselinesFileName
-                                              << ": number of baselines read different to that expected i.e. nZBins * "
-                                                 "nPUBins * apvBaselines_nBinsPerBaseline_";
-  }
-
-  // Put baselines into histograms
-  for (auto const& apvBaseline : theAPVBaselines | boost::adaptors::indexed(0)) {
-    unsigned int binInCurrentHistogram = apvBaseline.index() % apvBaselines_nBinsPerBaseline_ + 1;
-    unsigned int binInZ = int(apvBaseline.index()) / (nPUBins * apvBaselines_nBinsPerBaseline_);
-    unsigned int binInPU =
-        int(apvBaseline.index() - binInZ * (nPUBins)*apvBaselines_nBinsPerBaseline_) / apvBaselines_nBinsPerBaseline_;
-
-    apvHistograms.at(binInZ).at(binInPU).SetBinContent(binInCurrentHistogram, apvBaseline.value());
   }
 }
 
@@ -404,6 +295,7 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
                                          edm::ESHandle<SiStripThreshold>& thresholdHandle,
                                          edm::ESHandle<SiStripNoises>& noiseHandle,
                                          edm::ESHandle<SiStripPedestals>& pedestalHandle,
+                                         edm::ESHandle<SiStripApvSimulationParameters>& apvSimulationParametersHandle,
                                          std::vector<std::pair<int, std::bitset<6>>>& theAffectedAPVvector,
                                          CLHEP::HepRandomEngine* engine,
                                          const TrackerTopology* tTopo) {
@@ -436,22 +328,6 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
     LocalPoint localPos = topol->localPosition(0);
     GlobalPoint globalPos = det->surface().toGlobal(Local3DPoint(localPos.x(), localPos.y(), localPos.z()));
     float detSet_z = fabs(globalPos.z());
-    std::vector<double>::iterator high =
-        std::upper_bound(apvBaselines_zBinEdges_.begin(), apvBaselines_zBinEdges_.end(), detSet_z);
-    unsigned int detSet_zBin = high - apvBaselines_zBinEdges_.begin() - 1;
-    high = std::upper_bound(apvBaselines_puBinEdges_.begin(), apvBaselines_puBinEdges_.end(), nTruePU_);
-    unsigned int puBin = high - apvBaselines_puBinEdges_.begin() - 1;
-
-    // Get the corresponding APV baseline distribution for this subdetector and layer
-    TH1F* apvBaselineDistribution = nullptr;
-    int layer = -1;
-    if (SubDet == 3) {
-      layer = tTopo->tibLayer(detId);
-      apvBaselineDistribution = &apvBaselineHistograms_tib_[layer - 1][detSet_zBin][puBin];
-    } else if (SubDet == 5) {
-      layer = tTopo->tobLayer(detId);
-      apvBaselineDistribution = &apvBaselineHistograms_tob_[layer - 1][detSet_zBin][puBin];
-    }
 
     // Store SCD, before APV sim
     for (int strip = 0; strip < numStrips; ++strip) {
@@ -467,7 +343,12 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
           double stripCharge = detAmpl[strip] * apv_fCPerElectron;
 
           // Get APV baseline
-          double baselineV = apvBaselineDistribution->GetRandom();
+          double baselineV = 0;
+          if (SubDet == 3) {
+            baselineV = apvSimulationParametersHandle->sampleTIB(tTopo->tibLayer(detId), detSet_z, nTruePU_, engine);
+          } else if (SubDet == 5) {
+            baselineV = apvSimulationParametersHandle->sampleTOB(tTopo->tobLayer(detId), detSet_z, nTruePU_, engine);
+          }
           // Store APV baseline for this strip
           outStripAPVBaselines.push_back(SiStripRawDigi(baselineV));
 
