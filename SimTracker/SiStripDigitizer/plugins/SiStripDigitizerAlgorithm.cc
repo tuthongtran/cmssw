@@ -336,7 +336,7 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
     }
 
     // Simulate APV response for each strip
-    if (SubDet == 3 || SubDet == 5) {
+    if (SubDet == SiStripSubdetector::TIB || SubDet == SiStripSubdetector::TOB) {
       for (int strip = 0; strip < numStrips; ++strip) {
         if (detAmpl[strip] > 0) {
           // Convert charge from electrons to fC
@@ -344,9 +344,9 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
 
           // Get APV baseline
           double baselineV = 0;
-          if (SubDet == 3) {
+          if (SubDet == SiStripSubdetector::TIB) {
             baselineV = apvSimulationParametersHandle->sampleTIB(tTopo->tibLayer(detId), detSet_z, nTruePU_, engine);
-          } else if (SubDet == 5) {
+          } else if (SubDet == SiStripSubdetector::TOB) {
             baselineV = apvSimulationParametersHandle->sampleTOB(tTopo->tobLayer(detId), detSet_z, nTruePU_, engine);
           }
           // Store APV baseline for this strip
@@ -577,15 +577,19 @@ void SiStripDigitizerAlgorithm::digitize(edm::DetSet<SiStripDigi>& outdigi,
     if (CommonModeNoise) {
       float cmnRMS = 0.;
       DetId detId(detID);
-      uint32_t SubDet = detId.subdetId();
-      if (SubDet == 3) {
-        cmnRMS = cmnRMStib;
-      } else if (SubDet == 4) {
-        cmnRMS = cmnRMStid;
-      } else if (SubDet == 5) {
-        cmnRMS = cmnRMStob;
-      } else if (SubDet == 6) {
-        cmnRMS = cmnRMStec;
+      switch (detId.subdetId()) {
+        case SiStripSubdetector::TIB:
+          cmnRMS = cmnRMStib;
+          break;
+        case SiStripSubdetector::TID:
+          cmnRMS = cmnRMStid;
+          break;
+        case SiStripSubdetector::TOB:
+          cmnRMS = cmnRMStob;
+          break;
+        case SiStripSubdetector::TEC:
+          cmnRMS = cmnRMStec;
+          break;
       }
       cmnRMS *= theElectronPerADC;
       theSiNoiseAdder->addCMNoise(detAmpl, cmnRMS, badChannels, engine);
