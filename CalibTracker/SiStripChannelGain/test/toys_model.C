@@ -158,24 +158,24 @@ void langaus() {
 
   TH1D *his = new TH1D("","",100,0,1000);
 
-  TH2D *histo = new TH2D("","",4900, 100, 5000, 165, 150, 315);
+  TH2D *histo = new TH2D("","",5400, 100, 5500, 150, 200, 350);
   histo->SetMarkerStyle(2);
   histo->GetXaxis()->SetTitle("Entries");
-  histo->GetYaxis()->SetTitle("MPV");
+  histo->GetYaxis()->SetTitle("Errors");
 
-  TH2D *histo_entries = new TH2D("","",4900, 100, 5000, 20, 0, 20);
+  TH2D *histo_entries = new TH2D("","",10, 1000, 5000, 100, 0, 100);//4900, 100, 5000
   histo_entries->SetMarkerStyle(2);
   histo_entries->GetXaxis()->SetTitle("Entries");
-  histo_entries->GetYaxis()->SetTitle("% good fit");
+  histo_entries->GetYaxis()->SetTitle("# good fit");
 
   TH1D *normal_histo = new TH1D("", "", 4900, 100, 5000);
 
-  for(int i = 100; i < 4000; i=i+50){ //i = number of entries used for the generatino of the convolutiono
+  for(int i = 1000; i < 5000; i=i+500){ //i = number of entries used for the generatino of the convolutiono
     int count = 0;
     int conv = 0;
     cout << "i " << i << "\n";
 
-    for(int j = 0; j < 20; j++){ //repeat for j times the fit and regenerate the convolution
+    for(int j = 0; j < 100; j++){ //repeat for j times the fit and regenerate the convolution
 
       TH1D *fitsnr = langaucon(his,fr,sv, i);
       TH1D *fitsnr_clone = (TH1D *)fitsnr->Clone();
@@ -198,8 +198,8 @@ void langaus() {
       int MaxBin_value = fitsnr_clone->GetXaxis()->GetBinCenter(bin_max);
       
       Double_t new_fr[2];
-      new_fr[0] =MaxBin_value-100;
-      new_fr[1] =MaxBin_value+500;
+      new_fr[0] =100;//MaxBin_value-100;
+      new_fr[1] =500;//MaxBin_value+500;
       
       Double_t new_sv[4], new_pllo[4], new_plhi[4], new_fp[4], new_fpe[4];
       new_pllo[0]=0.5; new_pllo[1]=0; new_pllo[2]=1.0; new_pllo[3]=0;
@@ -207,7 +207,7 @@ void langaus() {
       new_sv[0]=1; new_sv[1]=1; new_sv[2]=1; new_sv[3]=1;
       
 
-      //for(int j = 0; j < 10; j++){
+      //for(int j = 0; j < 100; j++){
       TH1D *fit = langaufit_real((TH1D *)fitsnr_clone,new_fr,new_sv,new_pllo,new_plhi,new_fp,new_fpe,&chisqr,&ndf).first;
       TString str = langaufit_real((TH1D *)fitsnr_clone,new_fr,new_sv,new_pllo,new_plhi,new_fp,new_fpe,&chisqr,&ndf).second;
       cout << str <<"\n";
@@ -215,7 +215,7 @@ void langaus() {
       if(str.Contains("CONV")){
 	conv++;
 	//histo->Fill(i,new_fp[1]);
-	normal_histo->Fill(i);
+	//normal_histo->Fill(i);
       }else{count++;}
     }
     histo_entries->Fill(i, conv);
@@ -223,6 +223,7 @@ void langaus() {
   }
   //normal_histo->Draw();
   //cout << count << "\n";
+  //histo_entries->Draw();
   histo_entries->Draw();
   //TF1* fit = new TF1("MyLandau","landau",fitsnr_clone->GetXaxis()->GetXmin(), fitsnr_clone->GetXaxis()->GetXmax());
   //MyLandau->SetParameter(1,300);
