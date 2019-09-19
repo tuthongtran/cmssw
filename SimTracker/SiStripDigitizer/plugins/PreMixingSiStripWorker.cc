@@ -361,7 +361,6 @@ void PreMixingSiStripWorker::put(edm::Event& e,
   if (simulateAPVInThisEvent) {
     iSetup.get<TrackerTopologyRcd>().get(tTopo);
     iSetup.get<SiStripApvSimulationParametersRcd>().get(apvSimulationParametersHandle);
-    // TODO get number of true pileup
     const auto it = std::find_if(
         std::begin(ps), std::end(ps), [](const PileupSummaryInfo& bxps) { return bxps.getBunchCrossing() == 0; });
     if (it != std::begin(ps)) {
