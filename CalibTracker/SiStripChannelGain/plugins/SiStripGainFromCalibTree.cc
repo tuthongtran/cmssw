@@ -1232,8 +1232,6 @@ void SiStripGainFromCalibTree::getPeakOfLandau(TH1* InputHisto, double* FitResul
 	  upper_interval = MaxBin_value+HighRange;
 
 
-	  printf("Fitting...\n");
-
 	  // Setting fit range and start values
 	  Double_t fr[2];
 	  Double_t sv[4], pllo[4], plhi[4], fp[4], fpe[4];
@@ -1284,9 +1282,9 @@ bool SiStripGainFromCalibTree::IsGoodLandauFit(double* FitResults){
 
 void SiStripGainFromCalibTree::processEvent() {
 
-        edm::LogInfo("SiStripGainFromCalibTree") << "Processing run " << runnumber 
-                                                 << " and event " << eventnumber 
-                                                 << " for " << m_calibrationMode << " calibration." << std::endl;
+        LogDebug("SiStripGainFromCalibTree") << "Processing run " << runnumber
+                                             << " and event " << eventnumber
+                                             << " for " << m_calibrationMode << " calibration." << std::endl;
 
 	if(runnumber<SRun)SRun=runnumber;
 	if(runnumber>ERun)ERun=runnumber;
@@ -1477,7 +1475,9 @@ void SiStripGainFromCalibTree::algoAnalyzeTheTree()
       if(ientry%TreeStep==0){printf(".");fflush(stdout);}
 			tree->GetEntry(ientry);
 			processEvent();
-		}printf("\n");// END OF EVENT LOOP
+		}
+                tfile->Close();
+                printf("\n");// END OF EVENT LOOP
 	}
 }
 
