@@ -197,10 +197,10 @@ else:
       if(run in runsToSkip): continue;
 
       lastGoodRun = run 
-      NEvents = numberOfEvents("root://eoscms//eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);
+      NEvents = numberOfEvents("/eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);
       if(NEvents<=3000):continue #only keep runs with at least 3K events
       if(FileList==""):firstRun=run;
-      FileList += 'calibTreeList.extend(["root://eoscms//eos/cms'+CALIBTREEPATH+'/'+info[0]+'"]) #' + str(size).rjust(6)+'MB  NEvents='+str(NEvents/1000).rjust(8)+'K\n'
+      FileList += 'calibTreeList.extend(["/eos/cms'+CALIBTREEPATH+'/'+info[0]+'"]) #' + str(size).rjust(6)+'MB  NEvents='+str(NEvents/1000).rjust(8)+'K\n'
       NTotalEvents += NEvents;
       print("Current number of events to process is " + str(NTotalEvents))
       if(NTotalEvents >= maxNEvents):break; #or run in runsToSkip
