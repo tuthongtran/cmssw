@@ -35,6 +35,7 @@ process.SiStripCalib.FirstSetOfConstants = cms.untracked.bool(False)
 process.SiStripCalib.CalibrationLevel    = cms.untracked.int32(0) # 0==APV, 1==Laser, 2==module
 process.SiStripCalib.saveSummary         = cms.untracked.bool(True)
 process.SiStripCalib.calibrationMode     = cms.untracked.string( 'XXX_CALMODE_XXX' )
+process.SiStripCalib.harvestingMode      = cms.untracked.bool(True)
 
 
 if(XXX_PCL_XXX):
