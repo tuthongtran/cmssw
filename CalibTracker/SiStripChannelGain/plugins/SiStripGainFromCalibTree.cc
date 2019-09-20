@@ -1064,10 +1064,8 @@ void SiStripGainFromCalibTree::getPeakOfLandau_old(TH1* InputHisto, double* FitR
   FitResults[4]         = -0.5;  //Fit Chi2/NDF
   FitResults[5]         = 0;     //Normalization
 
-  if( InputHisto->GetEntries() < 20)return;
-
   // perform fit with standard landau
-
+  /*
   //old fit procedure
   
   TF1* MyLandau = new TF1("MyLandau","landau",LowRange, HighRange);
@@ -1077,6 +1075,38 @@ void SiStripGainFromCalibTree::getPeakOfLandau_old(TH1* InputHisto, double* FitR
 
   lower_interval = LowRange;
   upper_interval = HighRange;
+  */
+
+
+  if( InputHisto->GetEntries() < 20)return;
+
+  TH1D * charge_clone = (TH1D *)InputHisto->Clone("charge_clone");
+  charge_clone->Rebin(10);
+
+  float bin_content = -1;
+  float max_content = -1;
+  int bin_max = -1;
+
+  for(int i = 0; i < charge_clone->GetNbinsX(); i ++){
+    bin_content = charge_clone->GetBinContent(i);
+
+    if(bin_content > max_content and charge_clone->GetXaxis()->GetBinCenter(i) > 100){
+      max_content = bin_content;
+      bin_max = i;
+    }
+  }
+
+  //if(bin_max > -1){
+  int MaxBin_value = charge_clone->GetXaxis()->GetBinCenter(bin_max);
+
+  lower_interval = MaxBin_value-LowRange;
+  upper_interval = MaxBin_value+HighRange;
+
+  TF1* MyLandau = new TF1("MyLandau","landau",InputHisto->GetXaxis()->GetXmin(), InputHisto->GetXaxis()->GetXmax());
+  MyLandau->SetParameter(1,300);
+  InputHisto->Fit(MyLandau,"0Q", "L", lower_interval, upper_interval);
+
+
 
   FitResults[0]         = MyLandau->GetParameter(1);  //MPV
   FitResults[1]         = MyLandau->GetParError(1);   //MPV error
@@ -1152,7 +1182,7 @@ TF1 * langaufit(TH1D *his, Double_t *fitrange, Double_t *startvalues, Double_t *
     ffit->SetParLimits(i, parlimitslo[i], parlimitshi[i]);
   }
 
-  his->Fit(FunName,"RB0");   // fit within specified range, use ParLimits, do not plot
+  his->Fit(FunName,"QRB0");   // fit within specified range, use ParLimits, do not plot
 
 
 
@@ -1233,12 +1263,12 @@ void SiStripGainFromCalibTree::getPeakOfLandau(TH1* InputHisto, double* FitResul
 	FitResults[4]         = MyLandau->GetChisquare() / MyLandau->GetNDF();  //Fit Chi2/NDF
 	FitResults[5]         = MyLandau->GetParameter(0);*/
 	
-	FitResults[0]         = fp[1];  //MPV
-        FitResults[1]         = fpe[1];   //MPV error
-        FitResults[2]         = fp[0];  //Width
-        FitResults[3]         = fpe[0];   //Width error
-        FitResults[4]         = chisqr / ndf;  //Fit Chi2/NDF
-        FitResults[5]         = fp[2];
+	  FitResults[0]         = fitsnr->GetMaximumX();  //MPV
+	  FitResults[1]         = fpe[1];   //MPV error
+	  FitResults[2]         = fp[0];  //Width
+	  FitResults[3]         = fpe[0];   //Width error
+	  FitResults[4]         = chisqr / ndf;  //Fit Chi2/NDF
+	  FitResults[5]         = fp[2];
 
 
 	delete fitsnr;
@@ -1508,11 +1538,11 @@ void SiStripGainFromCalibTree::algoComputeMPVandGain() {
 			printf("Unknown Calibration Level, will assume %i\n",CalibrationLevel);
 		}
 		
-		//if(APV->R > 90 and APV->R < 120 and APV->z > -100 and APV->z < 100){
-		getPeakOfLandau(Proj,FitResults,100, 500);
-		//}else{
-		//getPeakOfLandau(Proj,FitResults,40,1000);
-		//}
+		if(APV->R > 90 and APV->R < 120 and APV->z > -100 and APV->z < 100){
+		getPeakOfLandau_old(Proj,FitResults,100, 500);
+		}else{
+		getPeakOfLandau(Proj,FitResults,100,500);
+		}
 		//if(FitResults[0] < 0 || FitResults[0] > 600){
 		//getPeakOfLandau_old(Proj,FitResults);
 		//}

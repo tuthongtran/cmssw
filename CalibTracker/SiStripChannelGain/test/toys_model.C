@@ -124,7 +124,7 @@ if (ffitold) delete ffitold;
     ffit->SetParLimits(i, parlimitslo[i], parlimitshi[i]);
   }
 
-  his->Fit(FunName,"RB0","L",fitrange[0],fitrange[1]);//RB0   // fit within specified range, use ParLimits, do not plot
+  his->Fit(FunName,"QRB0","L",fitrange[0],fitrange[1]);//RB0   // fit within specified range, use ParLimits, do not plot
   
   cout << "fit status " << gMinuit->fStatus << "\n";
   TString status = gMinuit->fCstatu.Data();
@@ -175,7 +175,7 @@ void langaus() {
     int conv = 0;
     cout << "i " << i << "\n";
 
-    for(int j = 0; j < 100; j++){ //repeat for j times the fit and regenerate the convolution
+    //for(int j = 0; j < 100; j++){ //repeat for j times the fit and regenerate the convolution
 
       TH1D *fitsnr = langaucon(his,fr,sv, i);
       TH1D *fitsnr_clone = (TH1D *)fitsnr->Clone();
@@ -196,7 +196,9 @@ void langaus() {
       }
       
       int MaxBin_value = fitsnr_clone->GetXaxis()->GetBinCenter(bin_max);
-      
+      cout << "max bin by me " << MaxBin_value << "\n";
+      cout << "Get Maximum " << (TH1 *)fitsnr_clone->GetMaximumX() << "\n";      
+
       Double_t new_fr[2];
       new_fr[0] =100;//MaxBin_value-100;
       new_fr[1] =500;//MaxBin_value+500;
@@ -217,14 +219,14 @@ void langaus() {
 	//histo->Fill(i,new_fp[1]);
 	//normal_histo->Fill(i);
       }else{count++;}
-    }
+      //}
     histo_entries->Fill(i, conv);
     cout <<  conv << "\n";
   }
   //normal_histo->Draw();
   //cout << count << "\n";
   //histo_entries->Draw();
-  histo_entries->Draw();
+  //histo_entries->Draw();
   //TF1* fit = new TF1("MyLandau","landau",fitsnr_clone->GetXaxis()->GetXmin(), fitsnr_clone->GetXaxis()->GetXmax());
   //MyLandau->SetParameter(1,300);
   //(TH1D *)fitsnr_clone->Fit(MyLandau,"0Q", "L", 100, 500);

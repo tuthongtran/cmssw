@@ -33,7 +33,7 @@ runsToVeto = [272935, 273290, 273294, 273295, 273296, 273531,
               275326, 275656, 276764, 275765, 275769, 275783, 275825, 275829, 275838
 ]
 
-runsToSkip = []
+runsToSkip = [278770, 275567, 275932]
 
 #read arguments to the command line
 #configure
@@ -59,7 +59,7 @@ mail = ""
 automatic = True;
 usePCL = (opt.usePCL=='True')
 minNEvents = 3000      # minimum events for a run to be accepted for the gain payload computation
-maxNEvents = 1001810#10000 #5000000   # maximum events allowed in a gain payload computation 1001810
+maxNEvents = 1700000#10000 #5000000   # maximum events allowed in a gain payload computation 1001810
 
 if(firstRun!=-1 or lastRun!=-1): automatic = False
 
@@ -194,7 +194,7 @@ else:
 #      if run<295310:
 #         print "Skipping, for unknown reasons..."
 #         continue
-      if(run in runsToSkip): break;
+      if(run in runsToSkip): continue;
 
       lastGoodRun = run 
       NEvents = numberOfEvents("root://eoscms//eos/cms"+CALIBTREEPATH+'/'+info[0],calMode);
