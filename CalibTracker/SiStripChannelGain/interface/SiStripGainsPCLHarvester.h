@@ -56,11 +56,12 @@ class SiStripGainsPCLHarvester : public  DQMEDHarvester {
       void dqmEndJob(DQMStore::IBooker& ibooker_, DQMStore::IGetter& igetter_) override;
 
       void gainQualityMonitor(DQMStore::IBooker& ibooker_, const MonitorElement* Charge_Vs_Index) const;
+      void storeGainsTree(const TAxis* chVsIdxXaxis) const;
 
       int statCollectionFromMode(const char* tag) const;
 
       void algoComputeMPVandGain(const MonitorElement* Charge_Vs_Index);
-      void getPeakOfLandau(TH1* InputHisto, double* FitResults, double LowRange=50, double HighRange=5400);
+      void getPeakOfLandau(TH1* InputHisto, double* FitResults, double LowRange=50, double HighRange=5400, bool gaussianConvolution=false);
       bool IsGoodLandauFit(double* FitResults); 
 
       bool produceTagFilter(const MonitorElement* Charge_Vs_Index);
@@ -68,6 +69,7 @@ class SiStripGainsPCLHarvester : public  DQMEDHarvester {
 
       bool doStoreOnDB;
       bool doChargeMonitorPerPlane;   /*!< Charge monitor per detector plane */
+      bool storeGainsTree_;
       unsigned int GOOD;
       unsigned int BAD;
       unsigned int MASKED;
@@ -96,4 +98,8 @@ class SiStripGainsPCLHarvester : public  DQMEDHarvester {
       std::vector<std::shared_ptr<stAPVGain> > APVsCollOrdered;
       std::unordered_map<unsigned int, std::shared_ptr<stAPVGain> > APVsColl; 
 
+      // fit options
+      bool fit_gaussianConvolution_ = false;
+      bool fit_gaussianConvolutionTOBL56_ = false;
+      bool fit_dataDrivenRange_ = false;
 };
