@@ -26,4 +26,5 @@
 <use   name="TrackingTools/MeasurementDet"/>
 <use   name="TrackingTools/KalmanUpdators"/>
 <use   name="RecoTracker/TransientTrackingRecHit"/>
+<use   name="DQMServices/Core"/>
 <flags   EDM_PLUGIN="1"/>
