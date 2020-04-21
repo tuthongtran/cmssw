@@ -7,6 +7,7 @@ process = cms.Process("Demo")
 options = VarParsing.VarParsing("analysis")
 options.register('globalTag', "auto:run2_data", VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string, "GlobalTag")
 options.register('runNumber', 306054, VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.int, "run number")
+options.register('shifts', "pedestalShifts.dat", VarParsing.VarParsing.multiplicity.singleton, VarParsing.VarParsing.varType.string, "Pedestal shifts")
 options.parseArguments()
 
 ## MessageLogger
@@ -43,6 +44,7 @@ process.PoolDBOutputService = cms.Service("PoolDBOutputService",
     )
 
 process.load("CondTools.SiStrip.shiftPedestalsPerAPV_cfi")
+process.shiftPedestalsPerAPV.shifts = cms.FileInPath(options.shifts)
 process.p = cms.Path(process.shiftPedestalsPerAPV)
 
 

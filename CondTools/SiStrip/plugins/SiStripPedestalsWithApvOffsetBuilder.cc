@@ -9,10 +9,12 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
 
+#include "DataFormats/Common/interface/DetSetVector.h"
+#include "DataFormats/SiStripDigi/interface/SiStripProcessedRawDigi.h"
+
 #include "CondFormats/SiStripObjects/interface/SiStripPedestals.h"
 #include "CondFormats/SiStripObjects/interface/SiStripFedCabling.h"
 #include "CondFormats/DataRecord/interface/SiStripCondDataRecords.h"
-#include "CalibFormats/SiStripObjects/interface/SiStripFecCabling.h"
 #include "CalibTracker/Records/interface/SiStripDependentRecords.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -29,17 +31,18 @@ public:
 private:
   void analyze(const edm::Event&, const edm::EventSetup&) override;
 
+  edm::FileInPath m_shiftsFile;
   uint32_t m_printDebug;
   edm::ESGetToken<SiStripPedestals, SiStripPedestalsRcd> m_origPedestalsToken;
   edm::ESGetToken<SiStripFedCabling, SiStripFedCablingRcd> m_fedCablingToken;
-  edm::ESGetToken<SiStripFecCabling, SiStripFecCablingRcd> m_fecCablingToken;
 };
 
 SiStripPedestalsWithApvOffsetBuilder::SiStripPedestalsWithApvOffsetBuilder(const edm::ParameterSet& iConfig) {
   m_origPedestalsToken = esConsumes<SiStripPedestals, SiStripPedestalsRcd>();
   m_fedCablingToken = esConsumes<SiStripFedCabling, SiStripFedCablingRcd>();
-  m_fecCablingToken = esConsumes<SiStripFecCabling, SiStripFecCablingRcd>();
 
+  m_shiftsFile = iConfig.getParameter<edm::FileInPath>("shifts");
+  edm::LogInfo("SiStripPedestalsWithApvOffsetBuilder") << "Reading shifts from " << m_shiftsFile.fullPath();
   m_printDebug = iConfig.getUntrackedParameter<uint32_t>("printDebug", 5);
 }
 
@@ -47,15 +50,37 @@ void SiStripPedestalsWithApvOffsetBuilder::fillDescriptions(edm::ConfigurationDe
 {
   edm::ParameterSetDescription desc;
   desc.setComment("Shift pedestals per APV, to get the same common mode");
+  desc.add<edm::FileInPath>("shifts");
   desc.addUntracked<uint32_t>("printDebug", 5);
   descriptions.add("shiftPedestalsPerAPV", desc);
 }
 
 void SiStripPedestalsWithApvOffsetBuilder::analyze(const edm::Event& evt, const edm::EventSetup& iSetup) {
-
   const auto& origPedestals = iSetup.getData(m_origPedestalsToken);
-  // const auto& fedCabling = iSetup.getData(m_fedCablingToken);
-  // const auto& fecCabling = iSetup.getData(m_fecCablingToken);
+
+  const auto& fedCabling = iSetup.getData(m_fedCablingToken);
+
+  edm::DetSetVector<SiStripProcessedRawDigi> shifts;
+  static const decltype(shifts)::detset empty_shifts{};
+  std::ifstream shiftsFile{m_shiftsFile.fullPath()};
+  uint16_t fedId, fedCh, apvId;
+  float shift;
+  while ( shiftsFile >> fedId >> fedCh >> apvId >> shift ) {
+    const auto conn = fedCabling.fedConnection(fedId, fedCh);
+    auto& shiftds = shifts.find_or_insert(conn.detId());
+    if ( shiftds.empty() ) { // initialize with zeroes
+      for ( std::size_t i{0}; i != conn.nApvs(); ++i ) {
+        shiftds.push_back(0.);
+      }
+    }
+    const auto iAPV = 2*conn.apvPairNumber() + apvId;
+    if ( shiftds[iAPV].adc() != 0. ) {
+      edm::LogError("SiStripPedestalsWithApvOffsetBuilder") << "Duplicate entry for DetId " << std::hex << conn.detId() << std::dec << " APV#" << iAPV << ", replacing previous " << shiftds[iAPV].adc() << " with new value " << shift;
+    } else {
+      LogDebug("SiStripPedestalsWithApvOffsetBuilder") << "Read shift for DetId " << std::hex << conn.detId() << std::dec << " APV#" << iAPV << ": " << shift;
+    }
+    shiftds[iAPV] = shift;
+  }
 
   auto pedestals = std::make_unique<SiStripPedestals>();
   std::vector<uint32_t> detids;
@@ -69,9 +94,10 @@ void SiStripPedestalsWithApvOffsetBuilder::analyze(const edm::Event& evt, const 
       edm::LogError("SiStripPedestalsWithApvOffsetBuilder") << "Pedestals no multiple of 128: " << nPedsInRange;
     newPed.reserve(nPedsInRange);
     const auto nAPVs = nPedsInRange / 128;
+    const auto itShifts = shifts.find(det);
+    const auto& detShifts = ( shifts.end() != itShifts ) ? *itShifts : empty_shifts;
     for ( std::size_t iAPV = 0; iAPV != nAPVs; ++iAPV ) {
-      // TODO get the actual shift from somewhere
-      const float apvShift = 0.;
+      const float apvShift = (!detShifts.empty()) ? detShifts[iAPV].adc() : 0.;
       for ( std::size_t i = 128*iAPV; i != 128*(iAPV+1); ++i ) {
         newPed.push_back(origPedestals.getPed(i, pedRange)+apvShift);
       }
