@@ -16,13 +16,23 @@ SiStripRawProcessingAlgorithms::SiStripRawProcessingAlgorithms(std::unique_ptr<S
                                                                std::unique_ptr<SiStripFedZeroSuppression> zs,
                                                                std::unique_ptr<SiStripAPVRestorer> res,
                                                                bool doAPVRest,
-                                                               bool useCMMap)
+                                                               bool useCMMap,
+                                                               std::vector<uint32_t> debugModules)
     : subtractorPed(std::move(ped)),
       subtractorCMN(std::move(cmn)),
       suppressor(std::move(zs)),
       restorer(std::move(res)),
       doAPVRestore(doAPVRest),
-      useCMMeanMap(useCMMap) {}
+      useCMMeanMap(useCMMap),
+      debugModules_(debugModules) {
+
+  std::sort(debugModules_.begin(), debugModules_.end());
+}
+
+bool SiStripRawProcessingAlgorithms::shouldDebug(uint32_t id) const {
+  const auto dbg_it = std::lower_bound(debugModules_.begin(), debugModules_.end(), id);
+  return ( debugModules_.end() != dbg_it ) && ( *dbg_it == id );
+}
 
 void SiStripRawProcessingAlgorithms::initialize(const edm::EventSetup& es) {
   subtractorPed->init(es);
@@ -62,9 +72,17 @@ uint16_t SiStripRawProcessingAlgorithms::suppressHybridData(uint32_t id,
                                                             uint16_t firstAPV,
                                                             digivector_t& procRawDigis,
                                                             edm::DetSet<SiStripDigi>& suppressedDigis) {
+  const auto debug = shouldDebug(id);
   digivector_t procRawDigisPedSubtracted(procRawDigis);
 
   subtractorCMN->subtract(id, firstAPV, procRawDigis);
+  if ( debug ) {
+    std::stringstream cmS;
+    for ( const auto itm : subtractorCMN->getAPVsCM() ) {
+      cmS << "" << itm.first << ": " << itm.second << ", ";
+    }
+    LogDebug("SiStripZeroSuppression") << "Common modes (starting with APV#" << firstAPV << "): " << cmS.str();
+  }
 
   const auto nAPVFlagged =
       restorer->inspectAndRestore(id, firstAPV, procRawDigisPedSubtracted, procRawDigis, subtractorCMN->getAPVsCM());
@@ -107,6 +125,7 @@ uint16_t SiStripRawProcessingAlgorithms::suppressHybridData_faster(const edm::De
     // TODO check if this ever happens - will anything be unpacked then?
     return 0;
   }
+  const auto debug = shouldDebug(hybridDigis.id);
   const auto stripModuleGeom = dynamic_cast<const StripGeomDetUnit*>(trGeo->idToDetUnit(hybridDigis.id));
   const std::size_t nStrips = stripModuleGeom->specificTopology().nstrips();
   const std::size_t nAPVs = nStrips / 128;
@@ -126,8 +145,17 @@ uint16_t SiStripRawProcessingAlgorithms::suppressHybridData_faster(const edm::De
       for (auto it = beginAPV; it != endAPV; ++it) {
         procRawDigis[it->strip() - 128 * iAPV] = it->adc() * 2 - 1024;
       }
+      if (debug) {
+        std::stringstream rawDigiS;
+        for ( const auto rd : procRawDigis ) {
+          rawDigiS << rd << " ";
+        }
+        LogDebug("SiStripZeroSuppression") << "[faster] Raw digis for APV#" << iAPV << ": " << rawDigiS.str();
+      }
       // hybrid reusing previous code - my be able to sve a bit more
       const auto nFlag = suppressHybridData(hybridDigis.id, iAPV, procRawDigis, suppressedDigis);
+      if ( nFlag != 1 )
+        LogDebug("SiStripZeroSuppression") << nDigisInAPV << " digis but not flagged by hybrid inspector!!!";
       nAPVFlagged += nFlag;
     } else {  // already zero-suppressed, copy and truncate
       std::transform(beginAPV, endAPV, std::back_inserter(suppressedDigis), [this](const SiStripDigi inDigi) {
@@ -135,6 +163,16 @@ uint16_t SiStripRawProcessingAlgorithms::suppressHybridData_faster(const edm::De
       });
     }
     beginAPV = endAPV;
+  }
+  if (debug) {
+    std::stringstream flagsS;
+    for ( const auto flag : apvFlags ) {
+      if (flag)
+        flagsS << "T";
+      else
+        flagsS << "F";
+    }
+    LogDebug("SiStripZeroSuppression") << "[faster] Det " << hybridDigis.id << " APV flags: " << flagsS.str();
   }
   return nAPVFlagged;
 }
@@ -158,6 +196,7 @@ uint16_t SiStripRawProcessingAlgorithms::suppressHybridData(const edm::DetSet<Si
  */
 void SiStripRawProcessingAlgorithms::convertHybridDigiToRawDigiVector(const edm::DetSet<SiStripDigi>& inDigis,
                                                                       digivector_t& rawDigis) {
+  const auto debug = shouldDebug(inDigis.id);
   const auto stripModuleGeom = dynamic_cast<const StripGeomDetUnit*>(trGeo->idToDetUnit(inDigis.id));
   const std::size_t nStrips = stripModuleGeom->specificTopology().nstrips();
   const std::size_t nAPVs = nStrips / 128;
@@ -175,6 +214,23 @@ void SiStripRawProcessingAlgorithms::convertHybridDigiToRawDigiVector(const edm:
       for (uint16_t strip = iAPV * 128; strip < (iAPV + 1) * 128; ++strip)
         rawDigis[strip] = rawDigis[strip] * 2 - 1024;
     }
+    if (debug) {
+      std::stringstream rawDigiS;
+      for (uint16_t strip = iAPV * 128; strip != (iAPV + 1) * 128; ++strip) {
+        rawDigiS << rawDigis[strip] << " ";
+      }
+      LogDebug("SiStripZeroSuppression") << "[legacy] Raw digis for APV#" << iAPV << ": " << rawDigiS.str();
+    }
+  }
+  if (debug) {
+    std::stringstream flagsS;
+    for ( const auto nAPVDigis : stripsPerAPV ) {
+      if (nAPVDigis > 64)
+        flagsS << "T";
+      else
+        flagsS << "F";
+    }
+    LogDebug("SiStripZeroSuppression") << "[legacy] Det " << inDigis.id << " APV flags: " << flagsS.str();
   }
 }
 

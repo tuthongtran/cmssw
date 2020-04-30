@@ -67,6 +67,8 @@ public:
 private:
   const bool doAPVRestore;
   const bool useCMMeanMap;
+  std::vector<uint32_t> debugModules_;
+  bool shouldDebug(uint32_t id) const;
 
   const TrackerGeometry* trGeo;
 
@@ -75,6 +77,7 @@ private:
                                  std::unique_ptr<SiStripFedZeroSuppression> zs,
                                  std::unique_ptr<SiStripAPVRestorer> res,
                                  bool doAPVRest,
-                                 bool useCMMap);
+                                 bool useCMMap,
+                                 std::vector<uint32_t> debugModules);
 };
 #endif

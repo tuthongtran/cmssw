@@ -17,7 +17,8 @@ std::unique_ptr<SiStripRawProcessingAlgorithms> SiStripRawProcessingFactory::cre
                                          create_Suppressor(conf),
                                          create_Restorer(conf),
                                          conf.getParameter<bool>("doAPVRestore"),
-                                         conf.getParameter<bool>("useCMMeanMap")));
+                                         conf.getParameter<bool>("useCMMeanMap"),
+                                         conf.getUntrackedParameter<std::vector<uint32_t>>("debugModules", {})));
 }
 
 std::unique_ptr<SiStripPedestalsSubtractor> SiStripRawProcessingFactory::create_SubtractorPed(
