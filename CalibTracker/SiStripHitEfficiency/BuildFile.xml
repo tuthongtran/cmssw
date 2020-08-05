@@ -27,4 +27,5 @@
 <use   name="TrackingTools/KalmanUpdators"/>
 <use   name="RecoTracker/TransientTrackingRecHit"/>
 <use   name="DQMServices/Core"/>
+<use   name="DQM/SiStripCommon"/>
 <flags   EDM_PLUGIN="1"/>
