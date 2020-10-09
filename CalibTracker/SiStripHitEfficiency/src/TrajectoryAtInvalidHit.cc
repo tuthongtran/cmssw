@@ -16,8 +16,8 @@
 
 using namespace std;
 TrajectoryAtInvalidHit::TrajectoryAtInvalidHit(const TrajectoryMeasurement& tm,
-                                               const TrackerTopology* tTopo,
-                                               const TrackerGeometry* tracker,
+                                               const TrackerTopology& tTopo,
+                                               const TrackerGeometry& tracker,
                                                const Propagator& propagator,
                                                const unsigned int mono) {
   if (tm.backwardPredictedState().isValid())
@@ -53,7 +53,7 @@ TrajectoryAtInvalidHit::TrajectoryAtInvalidHit(const TrajectoryMeasurement& tm,
     unsigned int matched_iidd = iidd - (iidd & 0x3);
     DetId matched_id(matched_iidd);
 
-    const GluedGeomDet* gdet = static_cast<const GluedGeomDet*>(tracker->idToDet(matched_id));
+    const GluedGeomDet* gdet = static_cast<const GluedGeomDet*>(tracker.idToDet(matched_id));
 
     // get the sensor det indicated by mono
     if (mono == 1)
@@ -63,7 +63,7 @@ TrajectoryAtInvalidHit::TrajectoryAtInvalidHit(const TrajectoryMeasurement& tm,
 
     // set theCombinedPredictedState to be on the sensor surface, not the matched surface
     DetId mono_id = monodet->geographicalId();
-    const Surface& surface = tracker->idToDet(mono_id)->surface();
+    const Surface& surface = tracker.idToDet(mono_id)->surface();
     theCombinedPredictedState = propagator.propagate(theCombinedPredictedState, surface);
 
     if (!theCombinedPredictedState.isValid()) {
@@ -157,30 +157,30 @@ bool TrajectoryAtInvalidHit::withinAcceptance() const { return acceptance; }
 
 bool TrajectoryAtInvalidHit::validHit() const { return hasValidHit; }
 
-bool TrajectoryAtInvalidHit::isDoubleSided(unsigned int iidd, const TrackerTopology* tTopo) const {
+bool TrajectoryAtInvalidHit::isDoubleSided(unsigned int iidd, const TrackerTopology& tTopo) const {
   StripSubdetector strip = StripSubdetector(iidd);
   unsigned int subid = strip.subdetId();
   unsigned int layer = 0;
   if (subid == StripSubdetector::TIB) {
-    layer = tTopo->tibLayer(iidd);
+    layer = tTopo.tibLayer(iidd);
     if (layer == 1 || layer == 2)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TOB) {
-    layer = tTopo->tobLayer(iidd) + 4;
+    layer = tTopo.tobLayer(iidd) + 4;
     if (layer == 5 || layer == 6)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TID) {
-    layer = tTopo->tidRing(iidd) + 10;
+    layer = tTopo.tidRing(iidd) + 10;
     if (layer == 11 || layer == 12)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TEC) {
-    layer = tTopo->tecRing(iidd) + 13;
+    layer = tTopo.tecRing(iidd) + 13;
     if (layer == 14 || layer == 15 || layer == 18)
       return true;
     else

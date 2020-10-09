@@ -1,4 +1,3 @@
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "DataFormats/Common/interface/Handle.h"
@@ -32,6 +31,14 @@
 #include "DataFormats/SiStripDigi/interface/SiStripRawDigi.h"
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterInfo.h"
 
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "Geometry/Records/interface/TrackerTopologyRcd.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+#include "TrackingTools/Records/interface/TransientRecHitRecord.h"
+#include "RecoTracker/Record/interface/CkfComponentsRecord.h"
+#include "CalibTracker/Records/interface/SiStripQualityRcd.h"
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1F.h"
@@ -44,16 +51,14 @@
 #include "Riostream.h"
 #include "TRandom2.h"
 
-class TrackerTopology;
-
 class HitEff : public edm::EDAnalyzer {
 public:
   explicit HitEff(const edm::ParameterSet& conf);
   double checkConsistency(const StripClusterParameterEstimator::LocalValues& parameters, double xx, double xerr);
-  bool isDoubleSided(unsigned int iidd, const TrackerTopology* tTopo) const;
+  bool isDoubleSided(unsigned int iidd, const TrackerTopology& tTopo) const;
   bool check2DPartner(unsigned int iidd, const std::vector<TrajectoryMeasurement>& traj);
   ~HitEff() override;
-  unsigned int checkLayer(unsigned int iidd, const TrackerTopology* tTopo);
+  unsigned int checkLayer(unsigned int iidd, const TrackerTopology& tTopo);
 
 private:
   void beginJob() override;
@@ -81,6 +86,15 @@ private:
   const edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster> > clusters_token_;
   const edm::EDGetTokenT<DetIdCollection> digis_token_;
   const edm::EDGetTokenT<MeasurementTrackerEvent> trackerEvent_token_;
+
+  const edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> tTopoToken_;
+  const edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> tkGeomToken_;
+  const edm::ESGetToken<StripClusterParameterEstimator, TkStripCPERecord> stripCPEToken_;
+  const edm::ESGetToken<SiStripQuality, SiStripQualityRcd> stripQualityToken_;
+  const edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken_;
+  const edm::ESGetToken<MeasurementTracker, CkfComponentsRecord> measTrackerToken_;
+  const edm::ESGetToken<Chi2MeasurementEstimatorBase, TrackingComponentsRecord> chi2EstToken_;
+  const edm::ESGetToken<Propagator, TrackingComponentsRecord> propagatorToken_;
 
   edm::ParameterSet conf_;
 

@@ -20,26 +20,20 @@
 #include "CalibTracker/SiStripHitEfficiency/interface/HitEff.h"
 #include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
 #include "DataFormats/Common/interface/Handle.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/GeometryVector/interface/GlobalVector.h"
 #include "DataFormats/GeometryVector/interface/LocalVector.h"
 #include "DataFormats/GeometrySurface/interface/TrapezoidalPlaneBounds.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
-#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/CommonDetUnit/interface/GeomDetType.h"
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/TrackReco/interface/TrackExtra.h"
 #include "DataFormats/TrackReco/interface/TrackBase.h"
-#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
-#include "TrackingTools/Records/interface/TransientRecHitRecord.h"
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 #include "CalibTracker/SiStripHitEfficiency/interface/TrajectoryAtInvalidHit.h"
-#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
-#include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "RecoLocalTracker/ClusterParameterEstimator/interface/StripClusterParameterEstimator.h"
 #include "TrackingTools/GeomPropagators/interface/AnalyticalPropagator.h"
 #include "DataFormats/TrackReco/interface/DeDxData.h"
@@ -48,10 +42,6 @@
 #include "RecoTracker/MeasurementDet/interface/MeasurementTracker.h"
 #include "RecoTracker/MeasurementDet/interface/MeasurementTrackerEvent.h"
 
-#include "RecoTracker/Record/interface/CkfComponentsRecord.h"
-#include "CalibTracker/Records/interface/SiStripDetCablingRcd.h"
-#include "CalibFormats/SiStripObjects/interface/SiStripDetCabling.h"
-#include "CalibTracker/Records/interface/SiStripQualityRcd.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
 #include "Geometry/CommonDetUnit/interface/GluedGeomDet.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
@@ -81,6 +71,14 @@ HitEff::HitEff(const edm::ParameterSet& conf)
           consumes<edmNew::DetSetVector<SiStripCluster> >(conf.getParameter<edm::InputTag>("siStripClusters"))),
       digis_token_(consumes<DetIdCollection>(conf.getParameter<edm::InputTag>("siStripDigis"))),
       trackerEvent_token_(consumes<MeasurementTrackerEvent>(conf.getParameter<edm::InputTag>("trackerEvent"))),
+      tTopoToken_(esConsumes()),
+      tkGeomToken_(esConsumes()),
+      stripCPEToken_(esConsumes(edm::ESInputTag("StripCPEfromTrackAngle"))),
+      stripQualityToken_(esConsumes()),
+      magFieldToken_(esConsumes()),
+      measTrackerToken_(esConsumes()),
+      chi2EstToken_(esConsumes(edm::ESInputTag("Chi2"))),
+      propagatorToken_(esConsumes(edm::ESInputTag("PropagatorWithMaterial"))),
       conf_(conf) {
   compSettings = conf_.getUntrackedParameter<int>("CompressionSettings", -1);
   layers = conf_.getParameter<int>("Layer");
@@ -158,10 +156,7 @@ void HitEff::beginJob() {
 }
 
 void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
-  //Retrieve tracker topology from geometry
-  edm::ESHandle<TrackerTopology> tTopoHandle;
-  es.get<TrackerTopologyRcd>().get(tTopoHandle);
-  const TrackerTopology* const tTopo = tTopoHandle.product();
+  const auto& tTopo = es.getData(tTopoToken_);
 
   siStripClusterInfo_.initEvent(es);
 
@@ -213,48 +208,30 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
   e.getByToken(clusters_token_, theClusters);
 
   //get tracker geometry
-  edm::ESHandle<TrackerGeometry> tracker;
-  es.get<TrackerDigiGeometryRecord>().get(tracker);
-  const TrackerGeometry* tkgeom = &(*tracker);
+  const auto& tkgeom = es.getData(tkGeomToken_);
 
   //get Cluster Parameter Estimator
-  //std::string cpe = conf_.getParameter<std::string>("StripCPE");
-  edm::ESHandle<StripClusterParameterEstimator> parameterestimator;
-  es.get<TkStripCPERecord>().get("StripCPEfromTrackAngle", parameterestimator);
-  const StripClusterParameterEstimator& stripcpe(*parameterestimator);
+  const auto& stripcpe = es.getData(stripCPEToken_);
 
   // get the SiStripQuality records
-  edm::ESHandle<SiStripQuality> SiStripQuality_;
-  //LQ commenting the try/catch that causes problem in 74X calibTree production
-  //  try {
-  //    es.get<SiStripQualityRcd>().get("forCluster",SiStripQuality_);
-  //  }
-  //  catch (...) {
-  es.get<SiStripQualityRcd>().get(SiStripQuality_);
-  //  }
+  const auto& siStripQuality = es.getData(stripQualityToken_);
 
-  edm::ESHandle<MagneticField> magFieldHandle;
-  es.get<IdealMagneticFieldRecord>().get(magFieldHandle);
-  const MagneticField* magField_ = magFieldHandle.product();
+  const MagneticField* magField_ = &es.getData(magFieldToken_);
 
   // get the list of module IDs with FED-detected errors
   edm::Handle<DetIdCollection> fedErrorIds;
   //e.getByLabel("siStripDigis", fedErrorIds );
   e.getByToken(digis_token_, fedErrorIds);
 
-  ESHandle<MeasurementTracker> measurementTrackerHandle;
-  es.get<CkfComponentsRecord>().get(measurementTrackerHandle);
+  const auto& measTracker = es.getData(measTrackerToken_);
 
   edm::Handle<MeasurementTrackerEvent> measurementTrackerEvent;
   //e.getByLabel("MeasurementTrackerEvent", measurementTrackerEvent);
   e.getByToken(trackerEvent_token_, measurementTrackerEvent);
 
-  edm::ESHandle<Chi2MeasurementEstimatorBase> est;
-  es.get<TrackingComponentsRecord>().get("Chi2", est);
+  const auto& estimator = es.getData(chi2EstToken_);
 
-  edm::ESHandle<Propagator> prop;
-  es.get<TrackingComponentsRecord>().get("PropagatorWithMaterial", prop);
-  const Propagator* thePropagator = prop.product();
+  const auto& thePropagator = es.getData(propagatorToken_);
 
   events++;
 
@@ -269,7 +246,7 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
     // DSViter is a vector of SiStripClusters located on a single module
     unsigned int ClusterId = DSViter->id();
     DetId ClusterDetId(ClusterId);
-    const StripGeomDetUnit * stripdet=(const StripGeomDetUnit*)tkgeom->idToDetUnit(ClusterDetId);
+    const StripGeomDetUnit * stripdet=(const StripGeomDetUnit*)tkgeom.idToDetUnit(ClusterDetId);
     
     edmNew::DetSet<SiStripCluster>::const_iterator begin=DSViter->begin();
     edmNew::DetSet<SiStripCluster>::const_iterator end  =DSViter->end();
@@ -459,13 +436,11 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
         if (TKlayers == 9 && isValid && isLastTOB5) {
           //	  if ( TKlayers==9 && itm==TMeas.rbegin()) {
           //	  if ( TKlayers==9 && (itm==TMeas.back()) ) {	  // to check for only the last entry in the trajectory for propagation
-          std::vector<BarrelDetLayer const*> barrelTOBLayers =
-              measurementTrackerHandle->geometricSearchTracker()->tobLayers();
+          std::vector<BarrelDetLayer const*> barrelTOBLayers = measTracker.geometricSearchTracker()->tobLayers();
           const DetLayer* tob6 = barrelTOBLayers[barrelTOBLayers.size() - 1];
-          const MeasurementEstimator* estimator = est.product();
-          const LayerMeasurements layerMeasurements{*measurementTrackerHandle, *measurementTrackerEvent};
+          const LayerMeasurements layerMeasurements{measTracker, *measurementTrackerEvent};
           const TrajectoryStateOnSurface tsosTOB5 = itm->updatedState();
-          auto tmp = layerMeasurements.measurements(*tob6, tsosTOB5, *thePropagator, *estimator);
+          auto tmp = layerMeasurements.measurements(*tob6, tsosTOB5, thePropagator, estimator);
 
           if (!tmp.empty()) {
             LogDebug("SiStripHitEfficiency:HitEff") << "size of TM from propagation = " << tmp.size() << endl;
@@ -493,29 +468,26 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
         }
 
         if (TKlayers == 21 && isValid && isLastTEC8) {
-          std::vector<const ForwardDetLayer*> posTecLayers =
-              measurementTrackerHandle->geometricSearchTracker()->posTecLayers();
+          std::vector<const ForwardDetLayer*> posTecLayers = measTracker.geometricSearchTracker()->posTecLayers();
           const DetLayer* tec9pos = posTecLayers[posTecLayers.size() - 1];
-          std::vector<const ForwardDetLayer*> negTecLayers =
-              measurementTrackerHandle->geometricSearchTracker()->negTecLayers();
+          std::vector<const ForwardDetLayer*> negTecLayers = measTracker.geometricSearchTracker()->negTecLayers();
           const DetLayer* tec9neg = negTecLayers[negTecLayers.size() - 1];
 
-          const MeasurementEstimator* estimator = est.product();
-          const LayerMeasurements layerMeasurements{*measurementTrackerHandle, *measurementTrackerEvent};
+          const LayerMeasurements layerMeasurements{measTracker, *measurementTrackerEvent};
           const TrajectoryStateOnSurface tsosTEC9 = itm->updatedState();
 
           // check if track on positive or negative z
           if (!(iidd == StripSubdetector::TEC))
             LogDebug("SiStripHitEfficiency:HitEff") << "there is a problem with TEC 9 extrapolation" << endl;
 
-          //cout << " tec9 id = " << iidd << " and side = " << tTopo->tecSide(iidd) << endl;
+          //cout << " tec9 id = " << iidd << " and side = " << tTopo.tecSide(iidd) << endl;
           vector<TrajectoryMeasurement> tmp;
-          if (tTopo->tecSide(iidd) == 1) {
-            tmp = layerMeasurements.measurements(*tec9neg, tsosTEC9, *thePropagator, *estimator);
+          if (tTopo.tecSide(iidd) == 1) {
+            tmp = layerMeasurements.measurements(*tec9neg, tsosTEC9, thePropagator, estimator);
             //cout << "on negative side" << endl;
           }
-          if (tTopo->tecSide(iidd) == 2) {
-            tmp = layerMeasurements.measurements(*tec9pos, tsosTEC9, *thePropagator, *estimator);
+          if (tTopo.tecSide(iidd) == 2) {
+            tmp = layerMeasurements.measurements(*tec9pos, tsosTEC9, thePropagator, estimator);
             //cout << "on positive side" << endl;
           }
 
@@ -617,7 +589,7 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
                   LogDebug("SiStripHitEfficiency:HitEff")
                       << "found  (ClusterId == iidd) with ClusterId = " << ClusterId << " and iidd = " << iidd << endl;
                   DetId ClusterDetId(ClusterId);
-                  const StripGeomDetUnit* stripdet = (const StripGeomDetUnit*)tkgeom->idToDetUnit(ClusterDetId);
+                  const StripGeomDetUnit* stripdet = (const StripGeomDetUnit*)tkgeom.idToDetUnit(ClusterDetId);
                   const StripTopology& Topo = stripdet->specificTopology();
 
                   float hbedge = 0.0;
@@ -796,8 +768,8 @@ void HitEff::analyze(const edm::Event& e, const edm::EventSetup& es) {
               run = run_nr;
               event = ev_nr;
               bunchx = bunch_nr;
-              //if ( SiStripQuality_->IsModuleBad(iidd) ) {
-              if (SiStripQuality_->getBadApvs(iidd) != 0) {
+              //if ( siStripQuality.IsModuleBad(iidd) ) {
+              if (siStripQuality.getBadApvs(iidd) != 0) {
                 SiStripQualBad = 1;
                 LogDebug("SiStripHitEfficiency:HitEff") << "strip is bad from SiStripQuality" << endl;
               } else {
@@ -888,30 +860,30 @@ double HitEff::checkConsistency(const StripClusterParameterEstimator::LocalValue
   return consistency;
 }
 
-bool HitEff::isDoubleSided(unsigned int iidd, const TrackerTopology* tTopo) const {
+bool HitEff::isDoubleSided(unsigned int iidd, const TrackerTopology& tTopo) const {
   StripSubdetector strip = StripSubdetector(iidd);
   unsigned int subid = strip.subdetId();
   unsigned int layer = 0;
   if (subid == StripSubdetector::TIB) {
-    layer = tTopo->tibLayer(iidd);
+    layer = tTopo.tibLayer(iidd);
     if (layer == 1 || layer == 2)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TOB) {
-    layer = tTopo->tobLayer(iidd) + 4;
+    layer = tTopo.tobLayer(iidd) + 4;
     if (layer == 5 || layer == 6)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TID) {
-    layer = tTopo->tidRing(iidd) + 10;
+    layer = tTopo.tidRing(iidd) + 10;
     if (layer == 11 || layer == 12)
       return true;
     else
       return false;
   } else if (subid == StripSubdetector::TEC) {
-    layer = tTopo->tecRing(iidd) + 13;
+    layer = tTopo.tecRing(iidd) + 13;
     if (layer == 14 || layer == 15 || layer == 18)
       return true;
     else
@@ -938,20 +910,20 @@ bool HitEff::check2DPartner(unsigned int iidd, const std::vector<TrajectoryMeasu
   return found2DPartner;
 }
 
-unsigned int HitEff::checkLayer(unsigned int iidd, const TrackerTopology* tTopo) {
+unsigned int HitEff::checkLayer(unsigned int iidd, const TrackerTopology& tTopo) {
   StripSubdetector strip = StripSubdetector(iidd);
   unsigned int subid = strip.subdetId();
   if (subid == StripSubdetector::TIB) {
-    return tTopo->tibLayer(iidd);
+    return tTopo.tibLayer(iidd);
   }
   if (subid == StripSubdetector::TOB) {
-    return tTopo->tobLayer(iidd) + 4;
+    return tTopo.tobLayer(iidd) + 4;
   }
   if (subid == StripSubdetector::TID) {
-    return tTopo->tidWheel(iidd) + 10;
+    return tTopo.tidWheel(iidd) + 10;
   }
   if (subid == StripSubdetector::TEC) {
-    return tTopo->tecWheel(iidd) + 13;
+    return tTopo.tecWheel(iidd) + 13;
   }
   return 0;
 }
