@@ -333,6 +333,23 @@ void SiStripFEDMonitorPlugin::analyze(const edm::Event& iEvent, const edm::Event
                                   nToterr,
                                   nErr);
     fedHists_.fillFEDHistograms(fedErrors_, lSize, fullDebugMode_, aLumiSection, lNBadChannels_perFEDID);
+
+    bool any_td3 = false;
+    for ( const auto& feErrs : fedErrors_.getFELevelErrors() ) {
+      if ( feErrs.TimeDifference == 3 ) {
+        any_td3 = true;
+        edm::LogInfo("SiStripMonitorHardware") << "Found time difference ==3 for FED ID " << fedId << " FE ID " << feErrs.FeID;
+      }
+    }
+    if ( any_td3 ) {
+      sistrip::FEDBuffer buffer{fedData, true};
+      buffer.findChannels();  // no need to check the status, also bad buffers are allowed
+      edm::LogWarning("SiStripMonitorHardware") << "FED ID " << fedId << " l1ID: " << buffer.daqHeader().l1ID() << " --- full DAQ header: " << buffer.daqHeader();
+      // std::ostringstream debugStream;
+      // debugStream << buffer << "\n";
+      // buffer.dump(debugStream);
+      // edm::LogWarning("SiStripMonitorHardware") << "Dump for FED ID " << fedId << "\n" << debugStream.str();
+    }
   }  //loop over FED IDs
 
   if (doFEMajorityCheck_) {

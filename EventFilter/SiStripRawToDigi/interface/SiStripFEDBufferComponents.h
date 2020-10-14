@@ -887,7 +887,9 @@ namespace sistrip {
   inline uint8_t TrackerSpecialHeader::apvAddressErrorRegister() const { return specialHeader_[ADDRESSERROR]; }
 
   inline bool TrackerSpecialHeader::majorityAddressErrorForFEUnit(const uint8_t internalFEUnitNum) const {
-    return (!(readoutMode() == READOUT_MODE_SCOPE) && !((0x1 << internalFEUnitNum) & apvAddressErrorRegister()));
+    const auto res = (!(readoutMode() == READOUT_MODE_SCOPE) && !((0x1 << internalFEUnitNum) & apvAddressErrorRegister()));
+    LogDebug("FEDErrors") << "TrackerSpecialHeader::majorityAddressErrorForFEUnit " << res << " with readout mode " << readoutMode() << " error register: " << std::hex << uint16_t(apvAddressErrorRegister()) << std::dec << " internalFEUnitNum: " << uint16_t(internalFEUnitNum);
+    return res;
   }
 
   inline uint8_t TrackerSpecialHeader::feEnableRegister() const { return specialHeader_[FEENABLE]; }

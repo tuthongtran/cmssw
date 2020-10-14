@@ -420,6 +420,7 @@ bool FEDErrors::fillFEErrors(const sistrip::FEDBuffer& aBuffer,
     //!aBuffer.checkFEUnitAPVAddresses(): for all FE's....
     //want to do it only for this FE... do it directly with the time difference.
     if (aBuffer.majorityAddressErrorForFEUnit(iFE)) {
+      LogDebug("FEDErrors") << "FEDErrors::fillFEErorrs detected bad majority address (FED " << iFE << ")";
       lFeErr.BadMajorityAddress = true;
       foundBadMajority = true;
       //no continue to fill the timeDifference.
@@ -862,6 +863,7 @@ void FEDErrors::addBadFE(const FEDErrors::FELevelErrors& aFE) {
     (feCounter_.nFEMissing)++;
     feErrors_.push_back(aFE);
   } else if (aFE.BadMajorityAddress) {
+    LogDebug("FEDErrors") << "FEDErrors::addBadFE adding bad majority address (FED " << aFE.FeID << ")";
     fedErrors_.FEsBadMajorityAddress = true;
     (feCounter_.nFEBadMajorityAddresses)++;
     feErrors_.push_back(aFE);
