@@ -1,8 +1,6 @@
 #include "RecoLocalTracker/SiStripZeroSuppression/interface/SiStripFedZeroSuppression.h"
 
-#include "CondFormats/DataRecord/interface/SiStripNoisesRcd.h"
 #include "CondFormats/SiStripObjects/interface/SiStripNoises.h"
-#include "CondFormats/DataRecord/interface/SiStripThresholdRcd.h"
 #include "CondFormats/SiStripObjects/interface/SiStripThreshold.h"
 
 //#define DEBUG_SiStripZeroSuppression_
@@ -10,16 +8,11 @@
 using namespace std;
 
 void SiStripFedZeroSuppression::init(const edm::EventSetup& es) {
-  uint32_t n_cache_id = es.get<SiStripNoisesRcd>().cacheIdentifier();
-  uint32_t t_cache_id = es.get<SiStripThresholdRcd>().cacheIdentifier();
-
-  if (n_cache_id != noise_cache_id) {
-    es.get<SiStripNoisesRcd>().get(noiseHandle);
-    noise_cache_id = n_cache_id;
+  if (noiseWatcher_.check(es)) {
+    noiseHandle = &es.getData(noiseToken_);
   }
-  if (t_cache_id != threshold_cache_id) {
-    es.get<SiStripThresholdRcd>().get(thresholdHandle);
-    threshold_cache_id = t_cache_id;
+  if (thresholdWatcher_.check(es)) {
+    thresholdHandle = &es.getData(thresholdToken_);
   }
 }
 
@@ -32,8 +25,8 @@ void SiStripFedZeroSuppression::suppress(const std::vector<SiStripDigi>& in,
 void SiStripFedZeroSuppression::suppress(const std::vector<SiStripDigi>& in,
                                          std::vector<SiStripDigi>& selectedSignal,
                                          uint32_t detID,
-                                         edm::ESHandle<SiStripNoises>& noiseHandle,
-                                         edm::ESHandle<SiStripThreshold>& thresholdHandle) {
+                                         const SiStripNoises* noiseHandle,
+                                         const SiStripThreshold* thresholdHandle) {
   int i;
   int inSize = in.size();
   SiStripNoises::Range detNoiseRange = noiseHandle->getRange(detID);
