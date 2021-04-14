@@ -11,10 +11,10 @@
 #include "CalibTracker/SiStripESProducers/interface/SiStripQualityHelpers.h"
 #include "DQMServices/Core/interface/DQMEDHarvester.h"
 
-class SiStripQualityDBWriter : public DQMEDHarvester {
+class SiStripBadStripFromQualityDBWriter : public DQMEDHarvester {
 public:
-  explicit SiStripQualityDBWriter(const edm::ParameterSet&);
-  ~SiStripQualityDBWriter() override {}
+  explicit SiStripBadStripFromQualityDBWriter(const edm::ParameterSet&);
+  ~SiStripBadStripFromQualityDBWriter() override {}
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
@@ -34,7 +34,7 @@ private:
   const SiStripQuality* siStripQuality_;
 };
 
-SiStripQualityDBWriter::SiStripQualityDBWriter(const edm::ParameterSet& iConfig)
+SiStripBadStripFromQualityDBWriter::SiStripBadStripFromQualityDBWriter(const edm::ParameterSet& iConfig)
     : rcdName_{iConfig.getParameter<std::string>("record")},
       openIOVAt_{iConfig.getUntrackedParameter<std::string>("OpenIovAt", "beginOfTime")},
       openIOVAtTime_{iConfig.getUntrackedParameter<uint32_t>("OpenIovAtTime", 1)},
@@ -44,7 +44,7 @@ SiStripQualityDBWriter::SiStripQualityDBWriter(const edm::ParameterSet& iConfig)
       fedCablingToken_{addBadCompFromFedErr_ ? decltype(fedCablingToken_){esConsumes<edm::Transition::EndRun>()}
                                              : decltype(fedCablingToken_){}} {}
 
-void SiStripQualityDBWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+void SiStripBadStripFromQualityDBWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<std::string>("record", "");
   desc.addUntracked<std::string>("OpenIovAt", "beginOfTime");
@@ -54,7 +54,7 @@ void SiStripQualityDBWriter::fillDescriptions(edm::ConfigurationDescriptions& de
   descriptions.add("siStripBadStripFromQualityDBWriter", desc);
 }
 
-void SiStripQualityDBWriter::endRun(edm::Run const& /*run*/, edm::EventSetup const& iSetup) {
+void SiStripBadStripFromQualityDBWriter::endRun(edm::Run const& /*run*/, edm::EventSetup const& iSetup) {
   if (stripQualityWatcher_.check(iSetup)) {
     siStripQuality_ = &iSetup.getData(stripQualityToken_);
     if (addBadCompFromFedErr_) {
@@ -63,7 +63,7 @@ void SiStripQualityDBWriter::endRun(edm::Run const& /*run*/, edm::EventSetup con
   }
 }
 
-void SiStripQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/, DQMStore::IGetter& getter) {
+void SiStripBadStripFromQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/, DQMStore::IGetter& getter) {
   auto mergedQuality = std::make_unique<SiStripQuality>(*siStripQuality_);
   if (addBadCompFromFedErr_) {
     auto fedErrQuality = sistrip::badStripFromFedErr(getter, *fedCabling_, fedErrCutoff_);
@@ -81,12 +81,12 @@ void SiStripQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/, DQMStore::
     else
       time = openIOVAtTime_;
 
-    dbservice->writeOne(mergedQuality.release(), time, rcdName_);
+    dbservice->writeOne<SiStripBadStrip>(mergedQuality.release(), time, rcdName_);
   } else {
-    edm::LogError("SiStripQualityDBWriter") << "Service is unavailable" << std::endl;
+    edm::LogError("SiStripBadStripFromQualityDBWriter") << "Service is unavailable" << std::endl;
   }
 }
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/ModuleFactory.h"
-DEFINE_FWK_MODULE(SiStripQualityDBWriter);
+DEFINE_FWK_MODULE(SiStripBadStripFromQualityDBWriter);
