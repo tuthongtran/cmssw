@@ -64,12 +64,12 @@ void SiStripBadStripFromQualityDBWriter::endRun(edm::Run const& /*run*/, edm::Ev
 }
 
 void SiStripBadStripFromQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/, DQMStore::IGetter& getter) {
-  auto mergedQuality = std::make_unique<SiStripQuality>(*siStripQuality_);
+  auto mergedQuality = SiStripQuality(*siStripQuality_);
   if (addBadCompFromFedErr_) {
     auto fedErrQuality = sistrip::badStripFromFedErr(getter, *fedCabling_, fedErrCutoff_);
-    mergedQuality->add(fedErrQuality.get());
-    mergedQuality->cleanUp();
-    mergedQuality->fillBadComponents();
+    mergedQuality.add(fedErrQuality.get());
+    mergedQuality.cleanUp();
+    mergedQuality.fillBadComponents();
   }
   cond::Time_t time;
   edm::Service<cond::service::PoolDBOutputService> dbservice;
@@ -81,7 +81,7 @@ void SiStripBadStripFromQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/
     else
       time = openIOVAtTime_;
 
-    dbservice->writeOne<SiStripBadStrip>(mergedQuality.release(), time, rcdName_);
+    dbservice->writeOne(new SiStripBadStrip(mergedQuality), time, rcdName_);
   } else {
     edm::LogError("SiStripBadStripFromQualityDBWriter") << "Service is unavailable" << std::endl;
   }
