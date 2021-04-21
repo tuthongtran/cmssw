@@ -11,7 +11,7 @@ process.load('Configuration.Geometry.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, "auto:run2_mc")
+process.GlobalTag = GlobalTag(process.GlobalTag, "auto:run2_data")
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.StandardSequences.Services_cff')
@@ -19,7 +19,8 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(-1))
 
 process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/d/davidp/private/tkdpg/CT20/CMSSW_11_2_0_pre3/src/1311.0_MinBias_13+MinBias_13+DIGIUP15+RECOMINUP15+HARVESTMINUP15+ALCAMINUP15/SiStripCalMinBias.root"),
+        ##fileNames = cms.untracked.vstring("file:/afs/cern.ch/user/d/davidp/private/tkdpg/CT20/CMSSW_11_2_0_pre3/src/1311.0_MinBias_13+MinBias_13+DIGIUP15+RECOMINUP15+HARVESTMINUP15+ALCAMINUP15/SiStripCalMinBias.root"),
+        fileNames = cms.untracked.vstring("file:/eos/cms/store/express/Run2018E/StreamExpress/ALCARECO/SiStripCalMinBias-Express-v1/000/325/310/00000/FCD0C1A1-06A4-274B-8373-119CE5C5DF37.root")
      )
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )

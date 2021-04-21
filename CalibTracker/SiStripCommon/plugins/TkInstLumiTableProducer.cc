@@ -9,11 +9,10 @@
 class TkInstLumiTableProducer : public edm::stream::EDProducer<> {
 public:
   explicit TkInstLumiTableProducer(const edm::ParameterSet& params)
-    : m_name(params.getParameter<std::string>("name")),
-      m_doc(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
-      m_extension(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
-      m_scalerToken(consumes<LumiScalersCollection>(params.getParameter<edm::InputTag>("lumiScalers")))
-  {
+      : m_name(params.getParameter<std::string>("name")),
+        m_doc(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
+        m_extension(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
+        m_scalerToken(consumes<LumiScalersCollection>(params.getParameter<edm::InputTag>("lumiScalers"))) {
     produces<nanoaod::FlatTable>();
   }
 
@@ -27,6 +26,7 @@ public:
   }
 
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+
 private:
   const std::string m_name;
   const std::string m_doc;
