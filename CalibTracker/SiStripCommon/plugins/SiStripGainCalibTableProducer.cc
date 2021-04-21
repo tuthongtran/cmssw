@@ -22,11 +22,11 @@
 class SiStripGainCalibTableProducer : public edm::stream::EDProducer<> {
 public:
   explicit SiStripGainCalibTableProducer(const edm::ParameterSet& params)
-    : m_name(params.getParameter<std::string>("name")),
-      m_doc(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
-      m_extension(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
-      m_tracks_token(consumes<edm::View<reco::Track>>(params.getParameter<edm::InputTag>("Tracks"))),
-      m_association_token(consumes<TrajTrackAssociationCollection>(params.getParameter<edm::InputTag>("Tracks"))) {
+      : m_name(params.getParameter<std::string>("name")),
+        m_doc(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
+        m_extension(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : false),
+        m_tracks_token(consumes<edm::View<reco::Track>>(params.getParameter<edm::InputTag>("Tracks"))),
+        m_association_token(consumes<TrajTrackAssociationCollection>(params.getParameter<edm::InputTag>("Tracks"))) {
     produces<nanoaod::FlatTable>();
   }
 
@@ -40,12 +40,13 @@ public:
   }
 
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+
 private:
   const std::string m_name;
   const std::string m_doc;
   bool m_extension;
 
-  const edm::EDGetTokenT<edm::View<reco::Track> > m_tracks_token;
+  const edm::EDGetTokenT<edm::View<reco::Track>> m_tracks_token;
   const edm::EDGetTokenT<TrajTrackAssociationCollection> m_association_token;
 
   std::map<DetId, double> m_thicknessMap;
@@ -53,15 +54,15 @@ private:
 };
 
 namespace {
-  template<typename VALUES>
+  template <typename VALUES>
   void addColumn(nanoaod::FlatTable* table, const std::string& name, VALUES&& values, const std::string& doc) {
     using value_type = typename std::remove_reference<VALUES>::type::value_type;
     table->template addColumn<value_type>(name, values, doc);
   }
 
   int findTrackIndex(const edm::View<reco::Track>& tracks, const reco::Track* track) {
-    for ( auto iTr = tracks.begin(); iTr != tracks.end(); ++iTr ) {
-      if ( &(*iTr) == track ) {
+    for (auto iTr = tracks.begin(); iTr != tracks.end(); ++iTr) {
+      if (&(*iTr) == track) {
         return iTr - tracks.begin();
       }
     }
@@ -73,7 +74,7 @@ namespace {
     const SiStripCluster* strip;
     const SiPixelCluster* pixel;
     HitCluster(uint32_t detId, const SiStripCluster* strip, const SiPixelCluster* pixel)
-      : det(detId), strip(strip), pixel(pixel) {}
+        : det(detId), strip(strip), pixel(pixel) {}
   };
   std::vector<HitCluster> getClusters(const TrackingRecHit* hit) {
     const auto simple1d = dynamic_cast<const SiStripRecHit1D*>(hit);
@@ -95,10 +96,10 @@ namespace {
   }
 
   bool isFarFromBorder(const TrajectoryStateOnSurface& trajState, uint32_t detId, const TrackerGeometry* tGeom) {
-
     const auto gdu = tGeom->idToDetUnit(detId);
-    if ( (!dynamic_cast<const StripGeomDetUnit*>(gdu)) && (!dynamic_cast<const PixelGeomDetUnit*>(gdu)) ) {
-      edm::LogWarning("SiStripGainCalibTableProducer") << "DetId " << detId << " does not seem to belong to the tracker";
+    if ((!dynamic_cast<const StripGeomDetUnit*>(gdu)) && (!dynamic_cast<const PixelGeomDetUnit*>(gdu))) {
+      edm::LogWarning("SiStripGainCalibTableProducer")
+          << "DetId " << detId << " does not seem to belong to the tracker";
       return false;
     }
     const auto plane = gdu->surface();
@@ -110,19 +111,19 @@ namespace {
     if (trapBounds) {
       halfLength = trapBounds->parameters()[3];
     } else if (rectBounds) {
-      halfLength = .5*gdu->surface().bounds().length();
+      halfLength = .5 * gdu->surface().bounds().length();
     } else {
       return false;
     }
 
     const auto pos = trajState.localPosition();
     const auto posError = trajState.localError().positionError();
-    if ( std::abs(pos.y()) + posError.yy() >= (halfLength-distFromBorder) )
+    if (std::abs(pos.y()) + posError.yy() >= (halfLength - distFromBorder))
       return false;
 
     return true;
   }
-}
+}  // namespace
 
 double SiStripGainCalibTableProducer::thickness(DetId id, const TrackerGeometry* tGeom) {
   const auto it = m_thicknessMap.find(id);
@@ -134,7 +135,8 @@ double SiStripGainCalibTableProducer::thickness(DetId id, const TrackerGeometry*
     const auto isPixel = (dynamic_cast<const PixelGeomDetUnit*>(gdu) != nullptr);
     const auto isStrip = (dynamic_cast<const StripGeomDetUnit*>(gdu) != nullptr);
     if (!isPixel && !isStrip) {
-      edm::LogWarning("SiStripGainCalibTableProducer") << "DetId " << id.rawId() << " doesn't seem to belong to the Tracker";
+      edm::LogWarning("SiStripGainCalibTableProducer")
+          << "DetId " << id.rawId() << " doesn't seem to belong to the Tracker";
     } else {
       detThickness = gdu->surface().bounds().thickness();
     }
@@ -169,20 +171,20 @@ void SiStripGainCalibTableProducer::produce(edm::Event& iEvent, const edm::Event
   std::vector<double> c_path;
   // NOTE only very few types are supported by NanoAOD, but more could be added (to discuss with XPOG / core software)
   // NOTE removed amplitude vector, I don't think it was used anywhere
-  std::vector<float> c_gainused; // NOTE was double
-  std::vector<float> c_gainusedTick; // NOTE was double
+  std::vector<float> c_gainused;      // NOTE was double
+  std::vector<float> c_gainusedTick;  // NOTE was double
 
-  for ( const auto& assoc : *trajTrackAssociations ) {
+  for (const auto& assoc : *trajTrackAssociations) {
     const auto traj = assoc.key.get();
     const auto track = assoc.val.get();
 
-    for ( const auto& meas : traj->measurements() ) {
+    for (const auto& meas : traj->measurements()) {
       const auto& trajState = meas.updatedState();
       if (!trajState.isValid())
         continue;
 
       // there can be 2 (stereo module), 1 (no stereo module), or 0 (no pixel or strip hit) clusters
-      for ( const auto hitCluster : getClusters(meas.recHit()->hit()) ) {
+      for (const auto hitCluster : getClusters(meas.recHit()->hit())) {
         bool saturation = false;
         bool overlapping = false;
         unsigned int charge = 0;
@@ -195,20 +197,21 @@ void SiStripGainCalibTableProducer::produce(edm::Event& iEvent, const edm::Event
           firstStrip = hitCluster.strip->firstStrip();
           nStrips = ampls.size();
           if (stripGains.isValid()) {
-            prevGain = stripGains->getApvGain(firstStrip/128, stripGains->getRange(hitCluster.det, 1), 1);
-            prevGainTick = stripGains->getApvGain(firstStrip/128, stripGains->getRange(hitCluster.det, 0), 1);
+            prevGain = stripGains->getApvGain(firstStrip / 128, stripGains->getRange(hitCluster.det, 1), 1);
+            prevGainTick = stripGains->getApvGain(firstStrip / 128, stripGains->getRange(hitCluster.det, 0), 1);
           }
           charge = hitCluster.strip->charge();
-          saturation = std::any_of(ampls.begin(), ampls.end(), [] ( uint8_t amp ) { return amp >= 254; });
+          saturation = std::any_of(ampls.begin(), ampls.end(), [](uint8_t amp) { return amp >= 254; });
 
-          overlapping = ( ((firstStrip%128) == 0) || ( (firstStrip/128) != ((firstStrip+nStrips)/128) ) || ( ((firstStrip+nStrips)%128) == 127 ) );
+          overlapping = (((firstStrip % 128) == 0) || ((firstStrip / 128) != ((firstStrip + nStrips) / 128)) ||
+                         (((firstStrip + nStrips) % 128) == 127));
         } else if (hitCluster.pixel) {
           const auto& ampls = hitCluster.pixel->pixelADC();
           const int firstRow = hitCluster.pixel->minPixelRow();
           const int firstCol = hitCluster.pixel->minPixelCol();
           firstStrip = ((firstRow / 80) << 3 | (firstCol / 52)) * 128;  //Hack to save the APVId
           nStrips = 0;
-          for ( const auto amp : ampls ) {
+          for (const auto amp : ampls) {
             charge += amp;
             if (amp >= 254)
               saturation = true;
@@ -216,8 +219,9 @@ void SiStripGainCalibTableProducer::produce(edm::Event& iEvent, const edm::Event
         }
         const auto trackDir = trajState.localDirection();
         const auto cosine = trackDir.z() / trackDir.mag();
-        const auto path = (10.*thickness(hitCluster.det, tGeom.product())) / std::abs(cosine);
-        const auto farFromEdge = (hitCluster.strip ? isFarFromBorder(trajState, hitCluster.det, tGeom.product()) : true);
+        const auto path = (10. * thickness(hitCluster.det, tGeom.product())) / std::abs(cosine);
+        const auto farFromEdge =
+            (hitCluster.strip ? isFarFromBorder(trajState, hitCluster.det, tGeom.product()) : true);
         c_trackindex.push_back(findTrackIndex(*tracks, track));
         c_rawid.push_back(hitCluster.det);
         c_localdirx.push_back(trackDir.x());
@@ -238,7 +242,7 @@ void SiStripGainCalibTableProducer::produce(edm::Event& iEvent, const edm::Event
 
   auto out = std::make_unique<nanoaod::FlatTable>(c_trackindex.size(), m_name, false, m_extension);
   addColumn(out.get(), "trackindex", c_trackindex, "<doc>");
-  // addColumn(out.get(), "rawid", c_rawid, "<doc>");
+  addColumn(out.get(), "rawid", c_rawid, "<doc>");
   // addColumn(out.get(), "localdirx", c_localdirx, "<doc>");
   // addColumn(out.get(), "localdiry", c_localdiry, "<doc>");
   // addColumn(out.get(), "localdirz", c_localdirz, "<doc>");
