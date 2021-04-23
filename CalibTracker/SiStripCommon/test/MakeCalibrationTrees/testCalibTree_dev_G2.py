@@ -53,49 +53,26 @@ process.tracksTable = cms.EDProducer("SimpleTrackFlatTableProducer",
         singleton=cms.bool(False),
         extension=cms.bool(False),
         variables=cms.PSet(
-            #chi2=Var("chi2()", float),
-            #ndof=Var("ndof()", int),
             chi2ndof=Var("chi2()/ndof", float),
-            #charge=Var("charge()", float),
-            momentum=Var("p()", float),
             pt=Var("pt()", float),
-            #pterr=Var("ptError()", float),
             hitsvalid=Var("numberOfValidHits()", int), ## unsigned?
-            #hitslost=Var("numberOfLostHits()", int), ## unsigned?
-            #theta=Var("theta()", float),
-            #thetaerr=Var("thetaError()", float),
             phi=Var("phi()", float),
-            #phierr=Var("phiError()", float),
             eta=Var("eta()", float),
-            #etaerr=Var("etaError()", float),
-            #dxy=Var("dxy()", float),
-            #dxyerr=Var("dxyError()", float),
-            #dsz=Var("dsz()", float),
-            #dszerr=Var("dszError()", float),
-            #qoverp=Var("qoverp()", float),
-            #qoverperr=Var("qoverpError()", float),
-            #vx=Var("vx()", float),
-            #vy=Var("vy()", float),
-            #vz=Var("vz()", float),
-            algo=Var("algo()", int)
             )
         )
 process.load("CalibTracker.SiStripCommon.tkInstLumiTable_cfi")
 process.tkInstLumiTable.extension = True
-process.load("CalibTracker.SiStripCommon.siStripOnTrackClusterBasicTable_cfi")
 process.load("CalibTracker.SiStripCommon.siStripGainCalibTable_cfi")
-process.siStripOnTrackClusterBasicTable.Tracks = tracksForCalib
 process.siStripGainCalibTable.Tracks = tracksForCalib
 
 process.nanoCTPath = cms.Path(process.TkCalSeq*
         process.nanoMetadata*process.tkInstLumiTable
         *process.tracksTable
-        *process.siStripOnTrackClusterBasicTable
         *process.siStripGainCalibTable
         )
 
 process.out = cms.OutputModule("NanoAODOutputModule",
-        fileName=cms.untracked.string("CalibTreeMC_nano.root"),
+        fileName=cms.untracked.string("CalibTreeMC_nano_G2.root"),
         outputCommands=process.NANOAODEventContent.outputCommands
         )
 
