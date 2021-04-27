@@ -19,7 +19,7 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
-    desc.add<std::string>("name", "GainCalibration");
+    desc.add<std::string>("name", "cluster");
     desc.add<std::string>("doc", "");
     desc.add<bool>("extension", false);
     desc.add<edm::InputTag>("Tracks", edm::InputTag{"generalTracks"});
