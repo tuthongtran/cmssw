@@ -18,7 +18,7 @@ public:
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
-    desc.add<std::string>("name", "LA");
+    desc.add<std::string>("name", "cluster");
     desc.add<std::string>("doc", "On-track cluster properties for Lorentz angle and backplane correction measurement");
     desc.add<bool>("extension", false);
     desc.add<edm::InputTag>("Tracks", edm::InputTag{"generalTracks"});
@@ -34,9 +34,7 @@ private:
 void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrackCluster>& clusters, const edm::View<reco::Track>& tracks, nanoaod::FlatTable* table, const edm::EventSetup& iSetup) {
   const auto& tkGeom = iSetup.getData(m_tkGeomToken);
   std::vector<uint32_t> c_nstrips;
-  std::vector<float> c_barycenter, c_variance;
-  std::vector<double> c_localdirx, c_localdiry, c_localdirz;
-  std::vector<float> c_localx, c_rhlocalx, c_rhlocalxerr;
+  std::vector<float> c_barycenter, c_variance, c_localdirx, c_localdiry, c_localdirz, c_localx, c_rhlocalx, c_rhlocalxerr;
   for ( const auto clus : clusters ) {
     c_nstrips.push_back(clus.cluster->amplitudes().size());
     c_barycenter.push_back(clus.cluster->barycenter());
