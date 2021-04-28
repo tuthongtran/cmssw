@@ -72,32 +72,21 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.StandardSequences.Services_cff')
 
 process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))
-#import runs
-print("Input files: {0}".format(options.inputFiles))
-if options.runNumber == -1:
-   process.source = cms.Source (
-     "PoolSource",
-     fileNames = cms.untracked.vstring(options.inputFiles)
-   )
-else:
-   if not 'Cosmics' in options.inputCollection:  # FIXME: this should be improved
+
+process.source = cms.Source("PoolSource", fileNames=cms.untracked.vstring(options.inputFiles))
+if options.runNumber != -1:
+   if 'Cosmics' not in options.inputCollection:  # FIXME: this should be improved
       print("Restricting to the following events :")
       print('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-      process.source = cms.Source (
-           "PoolSource",
-            fileNames = cms.untracked.vstring( options.inputFiles ),
-            eventsToProcess = cms.untracked.VEventRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-            )
+      process.source.eventsToProcess = cms.untracked.VEventRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
    else:
       print("Restricting to the following lumis for Cosmic runs only:")
       print('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-      process.source = cms.Source (
-           "PoolSource",
-            fileNames = cms.untracked.vstring( options.inputFiles ),
-            lumisToProcess = cms.untracked.VLuminosityBlockRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-            )
+      process.source.lumisToProcess = cms.untracked.VLuminosityBlockRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
 
-process.options   = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
+process.options = cms.untracked.PSet(
+        wantSummary = cms.untracked.bool(True)
+        )
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
 
 inTracks = cms.InputTag(options.inputCollection)
@@ -160,18 +149,21 @@ process.siStripPositionCorrectionsTable.Tracks = tracksForCalib
 process.load("CalibTracker.SiStripCommon.siStripLorentzAngleRunInfoTable_cfi")
 
 process.nanoCTPath = cms.Path(process.TkCalSeq*
-        process.nanoMetadata
-        *process.tracksTable
-        *process.siStripPositionCorrectionsTable
-        *process.siStripLorentzAngleRunInfoTable
+        process.nanoMetadata*
+        process.tracksTable*
+        process.siStripPositionCorrectionsTable*
+        process.siStripLorentzAngleRunInfoTable
         )
-process.schedule = cms.Schedule(process.nanoCTPath)
 
 process.out = cms.OutputModule("NanoAODOutputModule",
         fileName=cms.untracked.string(options.outputFile),
         outputCommands=process.NANOAODEventContent.outputCommands+[
             "drop edmTriggerResults_*_*_*"
-            ]
+            ],
+        SelectEvents=cms.untracked.PSet(
+            SelectEvents=cms.vstring("nanoCTPath")
+            )
         )
-
 process.end = cms.EndPath(process.out)
+
+process.schedule = cms.Schedule(process.nanoCTPath, process.end)
