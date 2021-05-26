@@ -37,7 +37,6 @@ void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrac
   std::vector<float> c_barycenter, c_variance, c_localdirx, c_localdiry, c_localdirz, c_localx, c_rhlocalx, c_rhlocalxerr;
   for ( const auto clus : clusters ) {
     c_nstrips.push_back(clus.cluster->amplitudes().size());
-    c_barycenter.push_back(clus.cluster->barycenter());
     m_clusterInfo.setCluster(*clus.cluster, clus.det);
     c_variance.push_back(m_clusterInfo.variance());
     const auto& trajState = clus.measurement.updatedState();
@@ -47,6 +46,7 @@ void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrac
     c_localdirz.push_back(trackDir.z());
     const auto hit = clus.measurement.recHit()->hit();
     const auto stripDet = dynamic_cast<const StripGeomDetUnit*>(tkGeom.idToDet(hit->geographicalId()));
+    c_barycenter.push_back(stripDet->specificTopology().localPosition(clus.cluster->barycenter()).x());
     c_localx.push_back(stripDet->toLocal(trajState.globalPosition()).x());
     c_rhlocalx.push_back(hit->localPosition().x());
     c_rhlocalxerr.push_back(hit->localPositionError().xx());
