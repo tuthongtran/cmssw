@@ -27,12 +27,18 @@ public:
     const Trajectory* traj;
     const reco::Track* track;
     const TrajectoryMeasurement& measurement;
-    OnTrackCluster(uint32_t detId, const SiStripCluster* stripCluster,
-        const Trajectory* trajectory, const reco::Track* track_, const TrajectoryMeasurement& measurement_) :
-      det{detId}, cluster{stripCluster}, traj{trajectory}, track{track_}, measurement{measurement_} {}
+    OnTrackCluster(uint32_t detId,
+                   const SiStripCluster* stripCluster,
+                   const Trajectory* trajectory,
+                   const reco::Track* track_,
+                   const TrajectoryMeasurement& measurement_)
+        : det{detId}, cluster{stripCluster}, traj{trajectory}, track{track_}, measurement{measurement_} {}
   };
 
-  virtual void fillTable(const std::vector<OnTrackCluster>& clusters, const edm::View<reco::Track>& tracks, nanoaod::FlatTable* table, const edm::EventSetup& iSetup) = 0;
+  virtual void fillTable(const std::vector<OnTrackCluster>& clusters,
+                         const edm::View<reco::Track>& tracks,
+                         nanoaod::FlatTable* table,
+                         const edm::EventSetup& iSetup) = 0;
 
   template <typename VALUES>
   static void addColumn(nanoaod::FlatTable* table, const std::string& name, VALUES&& values, const std::string& doc) {

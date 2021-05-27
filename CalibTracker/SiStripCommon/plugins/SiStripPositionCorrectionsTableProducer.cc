@@ -12,9 +12,9 @@
 class SiStripPositionCorrectionsTableProducer : public SiStripOnTrackClusterTableProducerBase {
 public:
   explicit SiStripPositionCorrectionsTableProducer(const edm::ParameterSet& params)
-    : SiStripOnTrackClusterTableProducerBase(params),
-    m_clusterInfo(consumesCollector()),
-    m_tkGeomToken{esConsumes<>()} {}
+      : SiStripOnTrackClusterTableProducerBase(params),
+        m_clusterInfo(consumesCollector()),
+        m_tkGeomToken{esConsumes<>()} {}
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
@@ -25,17 +25,25 @@ public:
     descriptions.add("siStripPositionCorrectionsTable", desc);
   }
 
-  void fillTable(const std::vector<OnTrackCluster>& clusters, const edm::View<reco::Track>& tracks, nanoaod::FlatTable* table, const edm::EventSetup& iSetup) final;
+  void fillTable(const std::vector<OnTrackCluster>& clusters,
+                 const edm::View<reco::Track>& tracks,
+                 nanoaod::FlatTable* table,
+                 const edm::EventSetup& iSetup) final;
+
 private:
   SiStripClusterInfo m_clusterInfo;
-  edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> m_tkGeomToken;
+  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> m_tkGeomToken;
 };
 
-void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrackCluster>& clusters, const edm::View<reco::Track>& tracks, nanoaod::FlatTable* table, const edm::EventSetup& iSetup) {
+void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrackCluster>& clusters,
+                                                        const edm::View<reco::Track>& tracks,
+                                                        nanoaod::FlatTable* table,
+                                                        const edm::EventSetup& iSetup) {
   const auto& tkGeom = iSetup.getData(m_tkGeomToken);
   std::vector<uint32_t> c_nstrips;
-  std::vector<float> c_barycenter, c_variance, c_localdirx, c_localdiry, c_localdirz, c_localx, c_rhlocalx, c_rhlocalxerr;
-  for ( const auto clus : clusters ) {
+  std::vector<float> c_barycenter, c_variance, c_localdirx, c_localdiry, c_localdirz, c_localx, c_rhlocalx,
+      c_rhlocalxerr;
+  for (const auto clus : clusters) {
     c_nstrips.push_back(clus.cluster->amplitudes().size());
     m_clusterInfo.setCluster(*clus.cluster, clus.det);
     c_variance.push_back(m_clusterInfo.variance());

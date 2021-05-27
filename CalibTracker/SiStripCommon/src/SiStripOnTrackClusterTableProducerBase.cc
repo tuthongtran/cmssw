@@ -52,9 +52,11 @@ void SiStripOnTrackClusterTableProducerBase::produce(edm::Event& iEvent, const e
 
   auto out = std::make_unique<nanoaod::FlatTable>(clusters.size(), m_name, false, m_extension);
   if (!m_extension) {
-    std::vector<int> c_trackindex; c_trackindex.reserve(clusters.size());
-    std::vector<uint32_t> c_rawid; c_rawid.reserve(clusters.size());
-    for ( const auto clus : clusters ) {
+    std::vector<int> c_trackindex;
+    c_trackindex.reserve(clusters.size());
+    std::vector<uint32_t> c_rawid;
+    c_rawid.reserve(clusters.size());
+    for (const auto clus : clusters) {
       c_trackindex.push_back(findTrackIndex(*tracks, clus.track));
       c_rawid.push_back(clus.det);
     }
