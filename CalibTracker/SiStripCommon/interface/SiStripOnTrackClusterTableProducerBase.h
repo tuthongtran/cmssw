@@ -17,7 +17,7 @@ public:
         m_association_token(consumes<TrajTrackAssociationCollection>(params.getParameter<edm::InputTag>("Tracks"))) {
     produces<nanoaod::FlatTable>();
   }
-  virtual ~SiStripOnTrackClusterTableProducerBase();
+  ~SiStripOnTrackClusterTableProducerBase() override;
 
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) final;
 

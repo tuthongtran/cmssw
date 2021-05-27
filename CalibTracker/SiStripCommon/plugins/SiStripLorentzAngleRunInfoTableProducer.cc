@@ -27,7 +27,7 @@ public:
     produces<nanoaod::FlatTable, edm::Transition::BeginRun>();
   }
 
-  void produce(edm::StreamID, edm::Event&, edm::EventSetup const&) const {}
+  void produce(edm::StreamID, edm::Event&, edm::EventSetup const&) const override {}
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
@@ -36,7 +36,7 @@ public:
     descriptions.add("siStripLorentzAngleRunInfoTable", desc);
   }
 
-  void globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const;
+  void globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const override;
 
 private:
   const std::string m_name;
