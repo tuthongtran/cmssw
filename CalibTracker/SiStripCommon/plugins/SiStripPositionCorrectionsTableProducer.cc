@@ -37,7 +37,6 @@ void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrac
   std::vector<float> c_barycenter, c_variance, c_localdirx, c_localdiry, c_localdirz, c_localx, c_rhlocalx, c_rhlocalxerr;
   for ( const auto clus : clusters ) {
     c_nstrips.push_back(clus.cluster->amplitudes().size());
-    c_barycenter.push_back(clus.cluster->barycenter());
     m_clusterInfo.setCluster(*clus.cluster, clus.det);
     c_variance.push_back(m_clusterInfo.variance());
     const auto& trajState = clus.measurement.updatedState();
@@ -47,16 +46,17 @@ void SiStripPositionCorrectionsTableProducer::fillTable(const std::vector<OnTrac
     c_localdirz.push_back(trackDir.z());
     const auto hit = clus.measurement.recHit()->hit();
     const auto stripDet = dynamic_cast<const StripGeomDetUnit*>(tkGeom.idToDet(hit->geographicalId()));
+    c_barycenter.push_back(stripDet->specificTopology().localPosition(clus.cluster->barycenter()).x());
     c_localx.push_back(stripDet->toLocal(trajState.globalPosition()).x());
     c_rhlocalx.push_back(hit->localPosition().x());
     c_rhlocalxerr.push_back(hit->localPositionError().xx());
   }
   addColumn(table, "nstrips", c_nstrips, "cluster width");
-  addColumn(table, "barycenter", c_barycenter, "Cluster barycenter (local x without corrections)");
   addColumn(table, "variance", c_variance, "Cluster variance");
   addColumn(table, "localdirx", c_localdirx, "x component of the local track direction");
   addColumn(table, "localdiry", c_localdiry, "y component of the local track direction");
   addColumn(table, "localdirz", c_localdirz, "z component of the local track direction");
+  addColumn(table, "barycenter", c_barycenter, "Cluster barycenter (local x without corrections)");
   addColumn(table, "localx", c_localx, "Track local x");
   addColumn(table, "rhlocalx", c_rhlocalx, "RecHit local x");
   addColumn(table, "rhlocalxerr", c_rhlocalxerr, "RecHit local x uncertainty");
