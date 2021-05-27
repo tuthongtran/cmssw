@@ -19,12 +19,11 @@
 class SiStripLorentzAngleRunInfoTableProducer : public edm::global::EDProducer<edm::BeginRunProducer> {
 public:
   explicit SiStripLorentzAngleRunInfoTableProducer(const edm::ParameterSet& params)
-    : m_name{params.getParameter<std::string>("name")},
-      m_doc{params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""},
-      m_tkGeomToken{esConsumes<edm::Transition::BeginRun>()},
-      m_magFieldToken{esConsumes<edm::Transition::BeginRun>()},
-      m_lorentzAngleToken{esConsumes<edm::Transition::BeginRun>()}
-  {
+      : m_name{params.getParameter<std::string>("name")},
+        m_doc{params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""},
+        m_tkGeomToken{esConsumes<edm::Transition::BeginRun>()},
+        m_magFieldToken{esConsumes<edm::Transition::BeginRun>()},
+        m_lorentzAngleToken{esConsumes<edm::Transition::BeginRun>()} {
     produces<nanoaod::FlatTable, edm::Transition::BeginRun>();
   }
 
@@ -38,12 +37,13 @@ public:
   }
 
   void globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const;
+
 private:
   const std::string m_name;
   const std::string m_doc;
-  edm::ESGetToken<TrackerGeometry,TrackerDigiGeometryRecord> m_tkGeomToken;
-  edm::ESGetToken<MagneticField,IdealMagneticFieldRecord> m_magFieldToken;
-  edm::ESGetToken<SiStripLorentzAngle,SiStripLorentzAngleDepRcd> m_lorentzAngleToken;
+  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> m_tkGeomToken;
+  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> m_magFieldToken;
+  edm::ESGetToken<SiStripLorentzAngle, SiStripLorentzAngleDepRcd> m_lorentzAngleToken;
 };
 
 namespace {
@@ -52,9 +52,10 @@ namespace {
     using value_type = typename std::remove_reference<VALUES>::type::value_type;
     table->template addColumn<value_type>(name, values, doc);
   }
-}
+}  // namespace
 
-void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const {
+void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iRun,
+                                                                    edm::EventSetup const& iSetup) const {
   const auto& tkGeom = iSetup.getData(m_tkGeomToken);
   const auto& magField = iSetup.getData(m_magFieldToken);
   const auto& lorentzAngle = iSetup.getData(m_lorentzAngleToken);
@@ -63,12 +64,12 @@ void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iR
 
   auto dets = tkGeom.detsTIB();
   dets.insert(dets.end(), tkGeom.detsTOB().begin(), tkGeom.detsTOB().end());
-  for ( auto det : dets ) {
+  for (auto det : dets) {
     auto detid = det->geographicalId().rawId();
     const StripGeomDetUnit* stripDet = dynamic_cast<const StripGeomDetUnit*>(tkGeom.idToDet(det->geographicalId()));
-    if ( stripDet ) {
+    if (stripDet) {
       c_rawid.push_back(detid);
-      c_globalZofunitlocalY.push_back(stripDet->toGlobal(LocalVector(0,1,0)).z());
+      c_globalZofunitlocalY.push_back(stripDet->toGlobal(LocalVector(0, 1, 0)).z());
       const auto locB = magField.inTesla(stripDet->surface().position());
       c_localB.push_back(locB.mag());
       c_BdotY.push_back(stripDet->surface().toLocal(locB).y());
