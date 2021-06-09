@@ -4,7 +4,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
-#include "CalibTracker/SiStripESProducers/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
 #include "DQMServices/Core/interface/DQMEDHarvester.h"
 #include "CondFormats/SiStripObjects/interface/SiStripBadStrip.h"
 

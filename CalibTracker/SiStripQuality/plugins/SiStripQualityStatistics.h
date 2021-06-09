@@ -11,7 +11,7 @@
 #include "DQM/SiStripCommon/interface/TkHistoMap.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
-#include "CalibTracker/SiStripESProducers/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
 
 class SiStripDetInfoFileReader;
 class SiStripFedCabling;

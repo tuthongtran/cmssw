@@ -3,7 +3,7 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "CondFormats/DataRecord/interface/SiStripFedCablingRcd.h"
 
-#include "CalibTracker/SiStripESProducers/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
 
 using dqm::harvesting::DQMStore;
 using dqm::harvesting::MonitorElement;

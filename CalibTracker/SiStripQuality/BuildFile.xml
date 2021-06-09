@@ -3,6 +3,7 @@
 <use name="DQMServices/Core"/>
 <use name="FWCore/MessageLogger"/>
 <use name="CalibFormats/SiStripObjects"/>
+<use name="CalibTracker/Records"/>
 <use name="Geometry/TrackerGeometryBuilder"/>
 <export>
   <lib name="1"/>
