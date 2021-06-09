@@ -4,7 +4,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
-#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityWithFromFedErrorsHelper.h"
 #include "DQMServices/Core/interface/DQMEDHarvester.h"
 #include "CondFormats/SiStripObjects/interface/SiStripBadStrip.h"
 
@@ -21,30 +21,30 @@ public:
 private:
   std::string rcdName_, openIOVAt_;
   uint32_t openIOVAtTime_;
-  sistrip::MergedQualityWithFromFedErr helper_;
+  SiStripQualityWithFromFedErrorsHelper withFedErrHelper_;
 };
 
 SiStripBadStripFromQualityDBWriter::SiStripBadStripFromQualityDBWriter(const edm::ParameterSet& iConfig)
     : rcdName_{iConfig.getParameter<std::string>("record")},
       openIOVAt_{iConfig.getUntrackedParameter<std::string>("OpenIovAt", "beginOfTime")},
       openIOVAtTime_{iConfig.getUntrackedParameter<uint32_t>("OpenIovAtTime", 1)},
-      helper_{iConfig, consumesCollector(), true} {}
+      withFedErrHelper_{iConfig, consumesCollector(), true} {}
 
 void SiStripBadStripFromQualityDBWriter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<std::string>("record", "");
   desc.addUntracked<std::string>("OpenIovAt", "beginOfTime");
   desc.addUntracked<uint32_t>("OpenIovAtTime", 1);
-  sistrip::MergedQualityWithFromFedErr::fillDescription(desc);
+  SiStripQualityWithFromFedErrorsHelper::fillDescription(desc);
   descriptions.add("siStripBadStripFromQualityDBWriter", desc);
 }
 
 void SiStripBadStripFromQualityDBWriter::endRun(edm::Run const& /*run*/, edm::EventSetup const& iSetup) {
-  helper_.endRun(iSetup);
+  withFedErrHelper_.endRun(iSetup);
 }
 
 void SiStripBadStripFromQualityDBWriter::dqmEndJob(DQMStore::IBooker& /*booker*/, DQMStore::IGetter& getter) {
-  auto payload = std::make_unique<SiStripBadStrip>(helper_.getMergedQuality(getter));
+  auto payload = std::make_unique<SiStripBadStrip>(withFedErrHelper_.getMergedQuality(getter));
   cond::Time_t time;
   edm::Service<cond::service::PoolDBOutputService> dbservice;
   if (dbservice.isAvailable()) {

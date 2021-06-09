@@ -3,7 +3,7 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "CondFormats/DataRecord/interface/SiStripFedCablingRcd.h"
 
-#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityWithFromFedErrorsHelper.h"
 
 using dqm::harvesting::DQMStore;
 using dqm::harvesting::MonitorElement;
@@ -178,7 +178,7 @@ std::unique_ptr<SiStripQuality> sistrip::badStripFromFedErrLegacyDQMFile(const s
   return quality;
 }
 
-bool sistrip::MergedQualityWithFromFedErr::endRun(const edm::EventSetup& iSetup) {
+bool SiStripQualityWithFromFedErrorsHelper::endRun(const edm::EventSetup& iSetup) {
   if (stripQualityWatcher_.check(iSetup)) {
     if (keepCopy_) {
       mergedQuality_ = std::make_unique<SiStripQuality>(iSetup.getData(stripQualityToken_));
@@ -193,7 +193,7 @@ bool sistrip::MergedQualityWithFromFedErr::endRun(const edm::EventSetup& iSetup)
   }
 }
 
-const SiStripQuality& sistrip::MergedQualityWithFromFedErr::getMergedQuality(
+const SiStripQuality& SiStripQualityWithFromFedErrorsHelper::getMergedQuality(
     dqm::harvesting::DQMStore::IGetter& getter) {
   if (!merged_) {
     if (addBadCompFromFedErr_) {

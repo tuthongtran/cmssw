@@ -30,7 +30,7 @@
 #include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
 #include "DQMServices/Core/interface/DQMStore.h"
-#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityWithFromFedErrorsHelper.h"
 
 #include <fstream>
 #include <iostream>
@@ -69,6 +69,6 @@ private:
 
   edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> tTopoToken_;
   std::unique_ptr<TrackerTopology> tTopo_;
-  sistrip::MergedQualityWithFromFedErr helper_;
+  SiStripQualityWithFromFedErrorsHelper withFedErrHelper_;
 };
 #endif

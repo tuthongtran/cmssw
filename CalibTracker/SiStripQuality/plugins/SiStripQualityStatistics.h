@@ -11,7 +11,7 @@
 #include "DQM/SiStripCommon/interface/TkHistoMap.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
 #include "Geometry/Records/interface/TrackerTopologyRcd.h"
-#include "CalibTracker/SiStripQuality/interface/SiStripQualityHelpers.h"
+#include "CalibTracker/SiStripQuality/interface/SiStripQualityWithFromFedErrorsHelper.h"
 
 class SiStripDetInfoFileReader;
 class SiStripFedCabling;
@@ -46,6 +46,6 @@ private:
   edm::ESGetToken<TrackerTopology, TrackerTopologyRcd> tTopoToken_;
   edm::ESGetToken<TkDetMap, TrackerTopologyRcd> tkDetMapToken_;
   std::unique_ptr<TrackerTopology> tTopo_;
-  sistrip::MergedQualityWithFromFedErr helper_;
+  SiStripQualityWithFromFedErrorsHelper withFedErrHelper_;
 };
 #endif

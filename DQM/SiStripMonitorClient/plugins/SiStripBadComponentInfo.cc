@@ -24,7 +24,7 @@ SiStripBadComponentInfo::SiStripBadComponentInfo(edm::ParameterSet const& pSet)
     : bookedStatus_(false),
       nSubSystem_(6),
       tTopoToken_(esConsumes<edm::Transition::EndRun>()),
-      helper_{pSet, consumesCollector()} {
+      withFedErrHelper_{pSet, consumesCollector()} {
   // Create MessageSender
   LogDebug("SiStripBadComponentInfo") << "SiStripBadComponentInfo::Creating SiStripBadComponentInfo ";
 }
@@ -42,8 +42,8 @@ void SiStripBadComponentInfo::endRun(edm::Run const& run, edm::EventSetup const&
   // Retrieve tracker topology from geometry
   tTopo_ = std::make_unique<TrackerTopology>(eSetup.getData(tTopoToken_));
 
-  if (helper_.endRun(eSetup) && !helper_.addBadCompFromFedErr()) {
-    fillBadComponentMaps(&eSetup.getData(helper_.qualityToken()));
+  if (withFedErrHelper_.endRun(eSetup) && !withFedErrHelper_.addBadCompFromFedErr()) {
+    fillBadComponentMaps(&eSetup.getData(withFedErrHelper_.qualityToken()));
   }
 }
 
@@ -141,8 +141,8 @@ void SiStripBadComponentInfo::fillBadComponentMaps(const SiStripQuality* siStrip
 
 void SiStripBadComponentInfo::dqmEndJob(DQMStore::IBooker& ibooker, DQMStore::IGetter& igetter) {
   LogDebug("SiStripBadComponentInfo") << "SiStripBadComponentInfo::dqmEndRun";
-  if (helper_.addBadCompFromFedErr()) {
-    fillBadComponentMaps(&helper_.getMergedQuality(igetter));
+  if (withFedErrHelper_.addBadCompFromFedErr()) {
+    fillBadComponentMaps(&withFedErrHelper_.getMergedQuality(igetter));
   }
   bookBadComponentHistos(ibooker, igetter);
   createSummary(badAPVME_, mapBadAPV);

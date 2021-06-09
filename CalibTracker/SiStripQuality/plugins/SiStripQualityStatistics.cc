@@ -33,7 +33,7 @@ SiStripQualityStatistics::SiStripQualityStatistics(const edm::ParameterSet& iCon
       tkMapFullIOVs(nullptr),
       tTopoToken_(esConsumes<edm::Transition::EndRun>()),
       tkDetMapToken_(esConsumes<edm::Transition::EndRun>()),
-      helper_{iConfig, consumesCollector(), true} {
+      withFedErrHelper_{iConfig, consumesCollector(), true} {
   reader = new SiStripDetInfoFileReader(
       iConfig
           .getUntrackedParameter<edm::FileInPath>("file",
@@ -47,8 +47,8 @@ SiStripQualityStatistics::SiStripQualityStatistics(const edm::ParameterSet& iCon
 SiStripQualityStatistics::~SiStripQualityStatistics() {}
 
 void SiStripQualityStatistics::dqmEndJob(DQMStore::IBooker& booker, DQMStore::IGetter& getter) {
-  if (helper_.addBadCompFromFedErr()) {
-    updateAndSave(&helper_.getMergedQuality(getter));
+  if (withFedErrHelper_.addBadCompFromFedErr()) {
+    updateAndSave(&withFedErrHelper_.getMergedQuality(getter));
   }
   std::string filename = TkMapFileName_;
   if (!filename.empty()) {
@@ -70,9 +70,9 @@ void SiStripQualityStatistics::endRun(edm::Run const& run, edm::EventSetup const
     tkhisto = std::make_unique<TkHistoMap>(&iSetup.getData(tkDetMapToken_), "BadComp", "BadComp", -1.);
   }
 
-  if (helper_.endRun(iSetup) && !helper_.addBadCompFromFedErr()) {
+  if (withFedErrHelper_.endRun(iSetup) && !withFedErrHelper_.addBadCompFromFedErr()) {
     run_ = run.id();
-    updateAndSave(&iSetup.getData(helper_.qualityToken()));
+    updateAndSave(&iSetup.getData(withFedErrHelper_.qualityToken()));
   }
 }
 
