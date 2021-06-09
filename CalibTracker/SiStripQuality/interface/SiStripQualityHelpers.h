@@ -39,7 +39,7 @@ namespace sistrip {
    */
   class MergedQualityWithFromFedErr {
   public:
-    MergedQualityWithFromFedErr(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC, bool keepCopy=false) {
+    MergedQualityWithFromFedErr(const edm::ParameterSet& iConfig, edm::ConsumesCollector iC, bool keepCopy = false) {
       const auto& fedErrConfig = iConfig.getUntrackedParameter<edm::ParameterSet>("BadComponentsFromFedErrors", {});
       addBadCompFromFedErr_ = fedErrConfig.getUntrackedParameter<bool>("Add", false);
       fedErrCutoff_ = float(fedErrConfig.getUntrackedParameter<double>("Cutoff", 0.8));

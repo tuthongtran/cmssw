@@ -211,8 +211,7 @@ void SiStripQualityStatistics::updateAndSave(const SiStripQuality* siStripQualit
   //&&&&&&&&&&&&&&&&&&
 
   ss.str("");
-  ss << "\n-----------------\nNew IOV starting from run " << run_.run()
-     << "\n-----------------\n";
+  ss << "\n-----------------\nNew IOV starting from run " << run_.run() << "\n-----------------\n";
   ss << "\n-----------------\nGlobal Info\n-----------------";
   ss << "\nBadComponent \t   Modules \tFibers "
         "\tApvs\tStrips\n----------------------------------------------------------------";
