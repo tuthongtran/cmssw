@@ -20,11 +20,13 @@ class SiStripLorentzAngleRunInfoTableProducer : public edm::global::EDProducer<e
 public:
   explicit SiStripLorentzAngleRunInfoTableProducer(const edm::ParameterSet& params)
       : m_name{params.getParameter<std::string>("name")},
+        m_magFieldName{params.getParameter<std::string>("magFieldName")},
         m_doc{params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""},
         m_tkGeomToken{esConsumes<edm::Transition::BeginRun>()},
         m_magFieldToken{esConsumes<edm::Transition::BeginRun>()},
         m_lorentzAngleToken{esConsumes<edm::Transition::BeginRun>()} {
     produces<nanoaod::FlatTable, edm::Transition::BeginRun>();
+    produces<nanoaod::FlatTable, edm::Transition::BeginRun>("magField");
   }
 
   void produce(edm::StreamID, edm::Event&, edm::EventSetup const&) const override {}
@@ -32,6 +34,7 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
     desc.add<std::string>("name", "Det");
+    desc.add<std::string>("magFieldName", "magField");
     desc.add<std::string>("doc", "Run info for the Lorentz angle measurement");
     descriptions.add("siStripLorentzAngleRunInfoTable", desc);
   }
@@ -39,7 +42,7 @@ public:
   void globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const override;
 
 private:
-  const std::string m_name;
+  const std::string m_name, m_magFieldName;
   const std::string m_doc;
   edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> m_tkGeomToken;
   edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> m_magFieldToken;
@@ -63,7 +66,9 @@ void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iR
   std::vector<float> c_globalZofunitlocalY, c_localB, c_BdotY, c_driftx, c_drifty, c_driftz, c_lorentzAngle;
 
   auto dets = tkGeom.detsTIB();
+  dets.insert(dets.end(), tkGeom.detsTID().begin(), tkGeom.detsTID().end());
   dets.insert(dets.end(), tkGeom.detsTOB().begin(), tkGeom.detsTOB().end());
+  dets.insert(dets.end(), tkGeom.detsTEC().begin(), tkGeom.detsTEC().end());
   for (auto det : dets) {
     auto detid = det->geographicalId().rawId();
     const StripGeomDetUnit* stripDet = dynamic_cast<const StripGeomDetUnit*>(tkGeom.idToDet(det->geographicalId()));
@@ -90,6 +95,11 @@ void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iR
   addColumn(out.get(), "driftz", c_driftz, "z component of the drift vector");
   addColumn(out.get(), "lorentzAngle", c_lorentzAngle, "Lorentz angle from database");
   iRun.put(std::move(out));
+
+  auto out2 = std::make_unique<nanoaod::FlatTable>(1, m_magFieldName, true, false);
+  out2->addColumnValue<float>(
+      "origin", magField.inTesla(GlobalPoint(0, 0, 0)).z(), "z-component of the magnetic field at (0,0,0) in Tesla");
+  iRun.put(std::move(out2), "magField");
 }
 
 #include "FWCore/PluginManager/interface/ModuleDef.h"
