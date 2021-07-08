@@ -119,8 +119,10 @@ process.TkCalSeq = cms.Sequence(
         process.prescaleEvent*
         process.IsolatedMuonFilter*
         process.siStripBFieldOnFilter*
-        process.MeasurementTrackerEvent*
-        process.trackFilterRefit
+        process.CalibrationTracks,
+        cms.Task(process.MeasurementTrackerEvent),
+        cms.Task(process.offlineBeamSpot),
+        cms.Task(process.CalibrationTracksRefit)
         )
 
 process.load("PhysicsTools.NanoAOD.nano_cff")
@@ -148,12 +150,14 @@ process.load("CalibTracker.SiStripCommon.siStripPositionCorrectionsTable_cfi")
 process.siStripPositionCorrectionsTable.Tracks = tracksForCalib
 process.load("CalibTracker.SiStripCommon.siStripLorentzAngleRunInfoTable_cfi")
 
-process.nanoCTPath = cms.Path(process.TkCalSeq*
-        process.nanoMetadata*
-        process.tracksTable*
-        process.siStripPositionCorrectionsTable*
+siStripCalCosmicsNanoTables = cms.Task(
+        process.nanoMetadata,
+        process.tracksTable,
+        process.siStripPositionCorrectionsTable,
         process.siStripLorentzAngleRunInfoTable
         )
+
+process.nanoCTPath = cms.Path(process.TkCalSeq, siStripCalCosmicsNanoTables)
 
 process.out = cms.OutputModule("NanoAODOutputModule",
         fileName=cms.untracked.string(options.outputFile),
